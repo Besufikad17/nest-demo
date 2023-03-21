@@ -22,8 +22,11 @@
   "dependencies": {
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
+    "@nestjs/jwt": "^10.0.2",
     "@nestjs/platform-express": "^9.0.0",
     "@prisma/client": "^4.11.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
     "prisma": "^4.11.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0"

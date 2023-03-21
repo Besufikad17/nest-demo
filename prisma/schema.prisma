@@ -15,3 +15,10 @@ model Employee {
   gender        String
   salary        Float
 }
+
+model User {
+   id            Int      @id @default(autoincrement())
+   username      String
+   email         String
+   password      String
+}

@@ -9,7 +9,7 @@ export class EmployeeController {
 
   @Post("/add")
   async addEmployee(
-    @Body() employeeData: {name: string, dept: string, date_of_birth: IDate, gender: string, salary: number }
+    @Body() employeeData: { name: string, dept: string, date_of_birth: IDate, gender: string, salary: number }
   ): Promise<EmployeeModel> {
 
     const { name, dept, date_of_birth, gender, salary} = employeeData;
