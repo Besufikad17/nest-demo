@@ -60,28 +60,28 @@ $ npm run start:prod
     <td rowspan="4">Employee</td>
     <td>Add</td>
     <td>POST</td>
-    <td>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }</td>
+    <td>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }<br><br>Header: { x-auth-token: token }</td>
     <td>{ employee }</td>
     <td>/api/employee/add</td>
   </tr>
   <tr>
     <td>GetAll</td>
     <td>GET</td>
-    <td>Query: { skip, take, orderby, searchString }</td>
+    <td>Query: { skip, take, orderby, searchString }<br><br>Header: { x-auth-token: token }</td>
     <td>[ employees ]</td>
     <td>/api/employee/all?skip=skip&amp;<br>take=take&amp;orderby=orderby&amp;<br>searchString=searchString</td>
   </tr>
   <tr>
     <td>Update</td>
     <td>PUT</td>
-    <td>Param: { id }<br><br>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }</td>
+    <td>Param: { id }<br><br>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }<br><br>Header: { x-auth-token: token }</td>
     <td>{}</td>
     <td>/api/employee/update/:id</td>
   </tr>
   <tr>
     <td>Delete</td>
     <td>DELETE</td>
-    <td>Param: { id }</td>
+    <td>Param: { id }<br><br>Header: { x-auth-token: token }</td>
     <td>{}</td>
     <td>/api/employee/delete/:id</td>
   </tr>
