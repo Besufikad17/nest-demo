@@ -38,4 +38,4 @@ lerna-debug.log*
 .env
 
 # Migration files
-./prisma/migrations/*
+prisma/migrations/*
