@@ -7,19 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Employee {
-  id            Int      @id @default(autoincrement())
-  name          String
-  dept          String
-  date_of_birth DateTime
-  gender        String
-  salary        Float
-}
-
 model User {
-  id       Int    @id @default(autoincrement())
-  username String
-  email    String
-  password String
+  id             String              @id @default(uuid())
+  email          String?             @unique
+  phoneNumber    String?             @unique
+  passwordHash   String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  lastLogin      DateTime?
+  isActive       Boolean             @default(true)
+  accountStatus  USER_ACCOUNT_STATUS @default(ACTIVE)
+  twoStepEnabled Boolean             @default(false)
 }
 
+enum USER_ACCOUNT_STATUS {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
+}
