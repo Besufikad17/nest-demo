@@ -52,6 +52,7 @@ export class AuthService {
 
 			const isPasswordMatched = await bcrypt.compare(loginDto.password, user.passwordHash);
 			if(isPasswordMatched) {
+				await this.authRepository.updateLastLogin(user.id);
 				const token = jwt.sign({
 					firstName: user.firstName,
 					lastName: user.lastName,

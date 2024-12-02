@@ -23,4 +23,15 @@ export class AuthRepository {
 			]
 		}});
 	}
+
+	async updateLastLogin(userId: string) {
+		return await this.prismaService.user.update({
+			where: {
+				id: userId
+			},
+			data: {
+				lastLogin: new Date()
+			}
+		});
+	}
 }

@@ -17,8 +17,8 @@ model User {
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   lastLogin      DateTime?
-  isActive       Boolean             @default(true)
-  accountStatus  USER_ACCOUNT_STATUS @default(ACTIVE)
+  isActive       Boolean             @default(false)
+  accountStatus  USER_ACCOUNT_STATUS @default(INACTIVE)
   twoStepEnabled Boolean             @default(false)
 }
 
