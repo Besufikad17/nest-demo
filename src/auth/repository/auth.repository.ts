@@ -15,4 +15,12 @@ export class AuthRepository {
 		return await this.prismaService.user.create({ data: newUser });
 	}
 
+	async findUserByEmailOrPhoneNumber(loginText: string): Promise<User> {
+		return await this.prismaService.user.findFirst({ where: {
+			OR: [
+				{ email: loginText },
+				{ phoneNumber: loginText }
+			]
+		}});
+	}
 }

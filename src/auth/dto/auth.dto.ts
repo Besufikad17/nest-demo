@@ -16,4 +16,18 @@ export class SignUpDto {
 
 	@IsNotEmpty()
 	readonly password: string;
+
+	@IsNotEmpty()
+	readonly rememberMe: boolean;
+}
+
+export class LoginDto {
+	@IsNotEmpty()
+	readonly loginText: string;
+
+	@IsNotEmpty()
+	readonly password: string;
+
+	@IsNotEmpty()
+	readonly rememberMe: boolean;
 }

@@ -5,3 +5,10 @@ export interface IUser {
     phoneNumber: string;
     passwordHash: string;
 }
+
+export interface ISignUpResponse {
+    message: string;
+    token: string;
+}
+
+export interface ILoginResponse extends ISignUpResponse {}
