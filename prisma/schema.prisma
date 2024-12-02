@@ -17,8 +17,9 @@ model Employee {
 }
 
 model User {
-   id            Int      @id @default(autoincrement())
-   username      String
-   email         String
-   password      String
+  id       Int    @id @default(autoincrement())
+  username String
+  email    String
+  password String
 }
+

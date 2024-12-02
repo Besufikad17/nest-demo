@@ -1,8 +1,30 @@
-# NestDemo
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
+</p>
+
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
+
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 ## Description
 
-A simple employee management API made by using [Nest](https://github.com/nestjs/nest).
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
 ## Installation
 
@@ -23,70 +45,28 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Usage
+## Test
 
-- Swagger documentation is available under http://localhost:3000/api
-- [Postman collection](https://github.com/Besufikad17/nest-demo/releases/download/%23testing/NestDemo.postman_collection.json)
+```bash
+# unit tests
+$ npm run test
 
-### Endpoints
+# e2e tests
+$ npm run test:e2e
 
-<table>
-<thead>
-  <tr>
-    <th colspan="2">Endpoint</th>
-    <th>Request type</th>
-    <th>Body/Params</th>
-    <th>Response</th>
-    <th>Route</th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td rowspan="2">User</td>
-    <td>Signup</td>
-    <td>POST</td>
-    <td>Body: { username, email, password }</td>
-    <td>{ token, user }</td>
-    <td>/api/user/signup</td>
-  </tr>
-  <tr>
-    <td>Login</td>
-    <td>Post</td>
-    <td>Body: { username, password }</td>
-    <td>{ token, user }</td>
-    <td>/api/user/login</td>
-  </tr>
-  <tr>
-    <td rowspan="4">Employee</td>
-    <td>Add</td>
-    <td>POST</td>
-    <td>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }<br><br>Header: { x-auth-token: token }</td>
-    <td>{ employee }</td>
-    <td>/api/employee/add</td>
-  </tr>
-  <tr>
-    <td>GetAll</td>
-    <td>GET</td>
-    <td>Query: { skip, take, orderby, searchString }<br><br>Header: { x-auth-token: token }</td>
-    <td>[ employees ]</td>
-    <td>/api/employee/all?skip=skip&amp;<br>take=take&amp;orderby=orderby&amp;<br>searchString=searchString</td>
-  </tr>
-  <tr>
-    <td>Update</td>
-    <td>PUT</td>
-    <td>Param: { id }<br><br>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }<br><br>Header: { x-auth-token: token }</td>
-    <td>{}</td>
-    <td>/api/employee/update/:id</td>
-  </tr>
-  <tr>
-    <td>Delete</td>
-    <td>DELETE</td>
-    <td>Param: { id }<br><br>Header: { x-auth-token: token }</td>
-    <td>{}</td>
-    <td>/api/employee/delete/:id</td>
-  </tr>
-</tbody>
-</table>
+# test coverage
+$ npm run test:cov
+```
+
+## Support
+
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+
+## Stay in touch
+
+- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
 
 ## License
 
