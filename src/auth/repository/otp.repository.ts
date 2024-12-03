@@ -39,4 +39,12 @@ export class OTPRepository {
             }
         });
     }
+
+    async deleteOTP(id: string) {
+        return await this.prismaService.oTP.delete({
+            where: {
+                id: id
+            }
+        });
+    }
 }

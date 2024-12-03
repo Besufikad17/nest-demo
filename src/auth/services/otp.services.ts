@@ -4,16 +4,16 @@ import { GenerateOTPDto, VerifyOTPDto } from "../dto/otp.dto";
 import * as bcrypt from "bcryptjs";
 import { AuthRepository } from "../repository/auth.repository";
 import { IOTPResponse } from "../interfaces/auth.interface";
+import { BcryptUtils } from "../utils/bcrypt";
 
 @Injectable()
 export class OTPService {
-	constructor(private otpRepository: OTPRepository, private authRepository: AuthRepository) { }
+	constructor(private otpRepository: OTPRepository, private authRepository: AuthRepository, private bcryptUtils: BcryptUtils) { }
 
 	async createOTP(generateOtpDto: GenerateOTPDto): Promise<IOTPResponse> {
 		try {
 			let value: string = `${Math.floor(100000 + Math.random() * 900000)}`;
-			let salt: string = await bcrypt.genSalt(10);
-			let otpCode: string = await bcrypt.hash(value, salt);
+			let otpCode: string = await this.bcryptUtils.hash(value);
 			await this.otpRepository.createOTP({
 				...generateOtpDto,
 				value: value,
@@ -31,6 +31,29 @@ export class OTPService {
 				);
 			}
 		}
+	}
+
+	async resendOTP(generateOTPDto: GenerateOTPDto): Promise<IOTPResponse> {
+		try {
+			const otp = await this.otpRepository.getOTP(generateOTPDto.userId, generateOTPDto.activity);
+
+			if (otp) {
+				await this.otpRepository.deleteOTP(otp.id);
+			}
+
+			return await this.createOTP(generateOTPDto);
+		} catch (error) {
+			console.log(error);
+			if (error instanceof HttpException) {
+				throw new HttpException(error, HttpStatus.BAD_REQUEST);
+			} else {
+				throw new HttpException(
+					error.meta || 'Error occurred check the log in the server',
+					HttpStatus.INTERNAL_SERVER_ERROR,
+				);
+			}
+		}
+
 	}
 
 	async verifyOtp(verifyOtpDto: VerifyOTPDto): Promise<IOTPResponse> {

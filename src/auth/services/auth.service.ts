@@ -1,22 +1,21 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { LoginDto, SignUpDto } from "../dto/auth.dto";
 import { AuthRepository } from "../repository/auth.repository";
-import * as jwt from "jsonwebtoken";
-import * as bcrypt from 'bcryptjs';
 import { IAuthResponse } from "../interfaces/auth.interface";
 import { OTPService } from "./otp.services";
+import * as jwt from "jsonwebtoken";
+import { BcryptUtils } from "../utils/bcrypt";
 
 @Injectable()
 export class AuthService {
 
-	constructor(private authRepository: AuthRepository, private otpService: OTPService) { }
+	constructor(private authRepository: AuthRepository, private otpService: OTPService, private bcryptUtils: BcryptUtils) { }
 
 	async signUp(signUpDto: SignUpDto): Promise<IAuthResponse> {
 		try {
 			const { password, rememberMe, ...userWithoutPassword } = signUpDto;
 
-			let salt: string = await bcrypt.genSalt(10);
-			let hashedPassword: string = await bcrypt.hash(password, salt);
+			let hashedPassword: string = await this.bcryptUtils.hash(password);
 			const newUser = await this.authRepository.createUser({ passwordHash: hashedPassword, ...userWithoutPassword });
 
 			this.otpService.createOTP({ userId: newUser.id, activity: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
@@ -53,7 +52,7 @@ export class AuthService {
 				throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 			}
 
-			const isPasswordMatched = await bcrypt.compare(loginDto.password, user.passwordHash);
+			const isPasswordMatched = await this.bcryptUtils.compare(loginDto.password, user.passwordHash);
 			if (isPasswordMatched) {
 				if (user.twoStepEnabled) {
 					await this.otpService.createOTP({ userId: user.id, activity: "TWO_FACTOR_AUTHENTICATION", identifier: "EMAIL" });
