@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty } from "class-validator";
+import { USER_ACCOUNT_STATUS } from "@prisma/client";
+import { IsBoolean, IsDate, IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID } from "class-validator";
 
 export class SignUpDto {
 	@IsNotEmpty()
@@ -30,4 +31,28 @@ export class LoginDto {
 
 	@IsNotEmpty()
 	readonly rememberMe: boolean;
+}
+
+export class UpdateUserDto {
+	@IsString()
+	readonly firstName?: string;
+
+	@IsString()
+	readonly lastName?: string;
+
+	@IsString()
+	readonly email?: string;
+
+	@IsString()
+	readonly phoneNumber?: string;
+
+	@IsDate()
+	readonly lastLogin?: Date;
+
+	@IsBoolean()
+	readonly isActive?: boolean;
+
+	@IsEnum(USER_ACCOUNT_STATUS)
+	@IsNotEmpty()
+	readonly accountStatus?: USER_ACCOUNT_STATUS;
 }

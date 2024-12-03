@@ -6,9 +6,11 @@ export interface IUser {
     passwordHash: string;
 }
 
-export interface ISignUpResponse {
+export interface IAuthResponse {
     message: string;
-    token: string;
+    token?: string;
 }
 
-export interface ILoginResponse extends ISignUpResponse {}
+export interface IOTPResponse {
+    message: string;
+}

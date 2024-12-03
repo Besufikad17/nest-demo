@@ -3,20 +3,23 @@ import { LoginDto, SignUpDto } from "../dto/auth.dto";
 import { AuthRepository } from "../repository/auth.repository";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from 'bcryptjs';
-import { ILoginResponse, ISignUpResponse } from "../interfaces/auth.interface";
+import { IAuthResponse } from "../interfaces/auth.interface";
+import { OTPService } from "./otp.services";
 
 @Injectable()
 export class AuthService {
 
-	constructor(private authRepository: AuthRepository) { }
+	constructor(private authRepository: AuthRepository, private otpService: OTPService) { }
 
-	async signUp(signUpDto: SignUpDto): Promise<ISignUpResponse> {
+	async signUp(signUpDto: SignUpDto): Promise<IAuthResponse> {
 		try {
 			const { password, rememberMe, ...userWithoutPassword } = signUpDto;
 
 			let salt: string = await bcrypt.genSalt(10);
 			let hashedPassword: string = await bcrypt.hash(password, salt);
 			const newUser = await this.authRepository.createUser({ passwordHash: hashedPassword, ...userWithoutPassword });
+
+			this.otpService.createOTP({ userId: newUser.id, activity: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
 
 			const token = jwt.sign({
 				firstName: newUser.firstName,
@@ -31,7 +34,7 @@ export class AuthService {
 			console.log(error);
 			if (error instanceof HttpException) {
 				throw new HttpException(error, HttpStatus.BAD_REQUEST);
-			} else if(error.code === 'P2002') {
+			} else if (error.code === 'P2002') {
 				throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
 			} else {
 				throw new HttpException(
@@ -42,26 +45,31 @@ export class AuthService {
 		}
 	}
 
-	async login(loginDto: LoginDto): Promise<ILoginResponse> {
+	async login(loginDto: LoginDto): Promise<IAuthResponse> {
 		try {
 			const user = await this.authRepository.findUserByEmailOrPhoneNumber(loginDto.loginText);
 
-			if(!user) {
+			if (!user) {
 				throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 			}
 
 			const isPasswordMatched = await bcrypt.compare(loginDto.password, user.passwordHash);
-			if(isPasswordMatched) {
-				await this.authRepository.updateLastLogin(user.id);
-				const token = jwt.sign({
-					firstName: user.firstName,
-					lastName: user.lastName,
-					email: user.email,
-				}, process.env.JWT_SECRET, {
-					expiresIn: loginDto.rememberMe ? '7 days' : '24h',
-				});
-	
-				return { message: 'User logged in successfully', token: token };
+			if (isPasswordMatched) {
+				if (user.twoStepEnabled) {
+					await this.otpService.createOTP({ userId: user.id, activity: "TWO_FACTOR_AUTHENTICATION", identifier: "EMAIL" });
+					return { message: "Verification code sent!!" };
+				} else {
+					await this.authRepository.updateUser(user.id, { lastLogin: new Date() });
+					const token = jwt.sign({
+						firstName: user.firstName,
+						lastName: user.lastName,
+						email: user.email,
+					}, process.env.JWT_SECRET, {
+						expiresIn: loginDto.rememberMe ? '7 days' : '24h',
+					});
+
+					return { message: 'User logged in successfully', token: token };
+				}
 			} else {
 				throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
 			}
@@ -75,6 +83,6 @@ export class AuthService {
 					HttpStatus.INTERNAL_SERVER_ERROR,
 				);
 			}
-		}	
+		}
 	}
 }

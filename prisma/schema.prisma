@@ -20,6 +20,20 @@ model User {
   isActive       Boolean             @default(false)
   accountStatus  USER_ACCOUNT_STATUS @default(INACTIVE)
   twoStepEnabled Boolean             @default(false)
+  OTP            OTP[]
+}
+
+model OTP {
+  id         String         @id @default(uuid())
+  userId     String?        @unique
+  identifier OTP_IDENTIFIER
+  activity   OTP_ACTIVITY
+  status     OTP_STATUS     @default(PENDING)
+  value      String         @unique
+  otpCode    String         @unique
+  createdAt  DateTime       @default(now())
+  attempts   Int            @default(5)
+  User       User?          @relation(fields: [userId], references: [id])
 }
 
 enum USER_ACCOUNT_STATUS {
@@ -27,4 +41,22 @@ enum USER_ACCOUNT_STATUS {
   INACTIVE
   SUSPENDED
   DELETED
+}
+
+enum OTP_IDENTIFIER {
+  EMAIL
+  PHONE
+}
+
+enum OTP_ACTIVITY {
+  ACCOUNT_VERIFICATION
+  ACCOUNT_RECOVERY
+  TWO_FACTOR_AUTHENTICATION
+  PASSWORD_RESET
+}
+
+enum OTP_STATUS {
+  PENDING
+  VERIFIED
+  EXPIRED
 }

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { SignUpDto } from "../dto/auth.dto";
+import { UpdateUserDto } from "../dto/auth.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IUser } from "../interfaces/auth.interface";
 import { User } from "@prisma/client";
@@ -15,22 +15,28 @@ export class AuthRepository {
 		return await this.prismaService.user.create({ data: newUser });
 	}
 
-	async findUserByEmailOrPhoneNumber(loginText: string): Promise<User> {
-		return await this.prismaService.user.findFirst({ where: {
-			OR: [
-				{ email: loginText },
-				{ phoneNumber: loginText }
-			]
-		}});
+	async findUser(id: string): Promise<User> {
+		return await this.prismaService.user.findFirst({ where: { id: id } });
 	}
 
-	async updateLastLogin(userId: string) {
+	async findUserByEmailOrPhoneNumber(loginText: string): Promise<User> {
+		return await this.prismaService.user.findFirst({
+			where: {
+				OR: [
+					{ email: loginText },
+					{ phoneNumber: loginText }
+				]
+			}
+		});
+	}
+
+	async updateUser(userId: string, data: UpdateUserDto) {
 		return await this.prismaService.user.update({
 			where: {
 				id: userId
 			},
 			data: {
-				lastLogin: new Date()
+				...data
 			}
 		});
 	}
