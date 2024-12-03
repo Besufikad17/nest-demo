@@ -14,10 +14,14 @@ export class OTPService {
 		try {
 			let value: string = `${Math.floor(100000 + Math.random() * 900000)}`;
 			let otpCode: string = await this.bcryptUtils.hash(value);
+			var expiresAt = new Date();
+			expiresAt.setHours(expiresAt.getHours() + 1);
+
 			await this.otpRepository.createOTP({
 				...generateOtpDto,
 				value: value,
-				otpCode: otpCode
+				otpCode: otpCode,
+				expiresAt: expiresAt
 			});
 			return { message: "Verification code sent" };
 		} catch (error) {
@@ -65,26 +69,30 @@ export class OTPService {
 			}
 
 			if (otp.attempts > 0) {
-				let otpMatch: boolean = await bcrypt.compare(verifyOtpDto.value, otp.otpCode);
+				if (otp.expiresAt > new Date()) {
+					let otpMatch: boolean = await bcrypt.compare(verifyOtpDto.value, otp.otpCode);
 
-				if (otpMatch) {
-					console.log(otp.status);
-					if (otp.status === "PENDING") {
-						const user = await this.authRepository.findUser(otp.userId);
-						if (otp.activity === "ACCOUNT_VERIFICATION" && !user.isActive && user.accountStatus !== "ACTIVE") {
-							await this.authRepository.updateUser(otp.userId, {
-								isActive: true,
-								accountStatus: "ACTIVE"
-							});
+					if (otpMatch) {
+						if (otp.status === "PENDING") {
+							const user = await this.authRepository.findUser(otp.userId);
+							if (otp.activity === "ACCOUNT_VERIFICATION" && !user.isActive && user.accountStatus !== "ACTIVE") {
+								await this.authRepository.updateUser(otp.userId, {
+									isActive: true,
+									accountStatus: "ACTIVE"
+								});
+							}
+							await this.otpRepository.updateOTP(otp.id, { status: "VERIFIED" });
+							return { message: "Verification completed" };
+						} else {
+							throw new HttpException(`OTP has ${otp.status.toLowerCase()}!!`, HttpStatus.BAD_REQUEST);
 						}
-						await this.otpRepository.updateOTP(otp.id, { status: "VERIFIED" });
-						return { message: "Verification completed" };
 					} else {
-						throw new HttpException(`OTP has ${otp.status.toLowerCase()}!!`, HttpStatus.BAD_REQUEST);
+						await this.otpRepository.updateOTP(otp.id, { attempts: otp.attempts - 1 });
+						throw new HttpException("Invalid code!!", HttpStatus.BAD_REQUEST);
 					}
 				} else {
-					await this.otpRepository.updateOTP(otp.id, { attempts: otp.attempts - 1 });
-					throw new HttpException("Invalid code!!", HttpStatus.BAD_REQUEST);
+					await this.otpRepository.updateOTP(otp.id, { status: "EXPIRED" });
+					throw new HttpException("OTP expired!!", HttpStatus.BAD_REQUEST);
 				}
 			} else {
 				throw new HttpException("You have reached maximum trial!!", HttpStatus.BAD_REQUEST);

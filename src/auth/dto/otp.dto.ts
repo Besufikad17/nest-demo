@@ -1,5 +1,5 @@
 import { OTP_ACTIVITY, OTP_IDENTIFIER, OTP_STATUS } from '@prisma/client';
-import { IsString, IsNotEmpty, IsEnum, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate } from 'class-validator';
 
 export class GenerateOTPDto {
   @IsEnum(OTP_ACTIVITY)
@@ -33,6 +33,10 @@ export class CreateOTPDto {
   @IsString()
   @IsNotEmpty()
   readonly otpCode: string;
+
+  @IsDate()
+  @IsNotEmpty()
+  readonly expiresAt: Date;
 }
 
 export class UpdateOTPDto {
