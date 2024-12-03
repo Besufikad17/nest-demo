@@ -1,5 +1,5 @@
 import { USER_ACCOUNT_STATUS } from "@prisma/client";
-import { IsBoolean, IsDate, IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { IsBoolean, IsDate, IsEmail, IsEnum, IsNotEmpty, IsString } from "class-validator";
 
 export class SignUpDto {
 	@IsNotEmpty()
@@ -55,4 +55,14 @@ export class UpdateUserDto {
 	@IsEnum(USER_ACCOUNT_STATUS)
 	@IsNotEmpty()
 	readonly accountStatus?: USER_ACCOUNT_STATUS;
+}
+
+export class UpdatePasswordDto {
+	@IsNotEmpty()
+	@IsString()
+	readonly oldPassword: string;
+
+	@IsNotEmpty()
+	@IsString()
+	readonly newPassword: string;
 }

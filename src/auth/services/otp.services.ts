@@ -5,6 +5,7 @@ import * as bcrypt from "bcryptjs";
 import { AuthRepository } from "../repository/auth.repository";
 import { IOTPResponse } from "../interfaces/auth.interface";
 import { BcryptUtils } from "../utils/bcrypt";
+import { OTP } from "@prisma/client";
 
 @Injectable()
 export class OTPService {
@@ -37,9 +38,25 @@ export class OTPService {
 		}
 	}
 
+	async getOTP(generateOTPDto: GenerateOTPDto): Promise<OTP> {
+		try {
+			return await this.otpRepository.getOTP(generateOTPDto.userId, generateOTPDto.activity);
+		} catch (error) {
+			console.log(error);
+			if (error instanceof HttpException) {
+				throw new HttpException(error, HttpStatus.BAD_REQUEST);
+			} else {
+				throw new HttpException(
+					error.meta || 'Error occurred check the log in the server',
+					HttpStatus.INTERNAL_SERVER_ERROR,
+				);
+			}
+		}
+	}
+
 	async resendOTP(generateOTPDto: GenerateOTPDto): Promise<IOTPResponse> {
 		try {
-			const otp = await this.otpRepository.getOTP(generateOTPDto.userId, generateOTPDto.activity);
+			const otp = await this.getOTP(generateOTPDto);
 
 			if (otp) {
 				await this.otpRepository.deleteOTP(otp.id);

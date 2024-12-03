@@ -15,7 +15,7 @@ model User {
   phoneNumber    String?             @unique @map("phone_number")
   passwordHash   String              @map("password_hash")
   createdAt      DateTime            @default(now()) @map("created_at")
-  updatedAt      DateTime            @updatedAt @map("updated_at")
+  updatedAt      DateTime            @updatedAt() @map("updated_at")
   lastLogin      DateTime?           @map("last_login")
   isActive       Boolean             @default(false) @map("is_active")
   accountStatus  USER_ACCOUNT_STATUS @default(INACTIVE) @map("account_status")
@@ -25,13 +25,14 @@ model User {
 
 model OTP {
   id         String         @id @default(uuid())
-  userId     String?        @unique @map("user_id")
+  userId     String?        @map("user_id")
   identifier OTP_IDENTIFIER
   activity   OTP_ACTIVITY
   status     OTP_STATUS     @default(PENDING)
   value      String         @unique
   otpCode    String         @unique @map("otp_code")
   createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt() @map("updated_at")
   expiresAt  DateTime       @map("expires_at")
   attempts   Int            @default(5)
   User       User?          @relation(fields: [userId], references: [id])

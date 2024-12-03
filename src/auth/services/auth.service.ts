@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { LoginDto, SignUpDto } from "../dto/auth.dto";
+import { LoginDto, SignUpDto, UpdatePasswordDto } from "../dto/auth.dto";
 import { AuthRepository } from "../repository/auth.repository";
 import { IAuthResponse } from "../interfaces/auth.interface";
 import { OTPService } from "./otp.services";
-import * as jwt from "jsonwebtoken";
 import { BcryptUtils } from "../utils/bcrypt";
+import * as jwt from "jsonwebtoken";
 
 @Injectable()
 export class AuthService {
@@ -21,6 +21,7 @@ export class AuthService {
 			this.otpService.createOTP({ userId: newUser.id, activity: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
 
 			const token = jwt.sign({
+				id: newUser.id,
 				firstName: newUser.firstName,
 				lastName: newUser.lastName,
 				email: newUser.email,
@@ -60,6 +61,7 @@ export class AuthService {
 				} else {
 					await this.authRepository.updateUser(user.id, { lastLogin: new Date() });
 					const token = jwt.sign({
+						id: user.id,
 						firstName: user.firstName,
 						lastName: user.lastName,
 						email: user.email,
@@ -71,6 +73,40 @@ export class AuthService {
 				}
 			} else {
 				throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+			}
+		} catch (error) {
+			console.log(error);
+			if (error instanceof HttpException) {
+				throw new HttpException(error, HttpStatus.BAD_REQUEST);
+			} else {
+				throw new HttpException(
+					error.meta || 'Error occurred check the log in the server',
+					HttpStatus.INTERNAL_SERVER_ERROR,
+				);
+			}
+		}
+	}
+
+	async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto): Promise<IAuthResponse> {
+		try {
+			const otp = await this.otpService.getOTP({ userId: userId, activity: "PASSWORD_RESET", identifier: "EMAIL" });
+
+			let yesterday = new Date();
+			yesterday.setDate(yesterday.getDay() + 1);
+			if (otp) {
+				if (otp.status === "VERIFIED" && otp.updatedAt <= yesterday) {
+					const user = await this.authRepository.findUser(userId);
+					const passowordMatch = await this.bcryptUtils.compare(updatePasswordDto.oldPassword, user.passwordHash);
+					if (passowordMatch) {
+						const hashed = await this.bcryptUtils.hash(updatePasswordDto.newPassword);
+						await this.authRepository.updateUserPassword(userId, hashed);
+						return { message: "Password updated" };
+					} else {
+						throw new HttpException("Invalid credentials!!", HttpStatus.BAD_REQUEST);
+					}
+				}
+			} else {
+				throw new HttpException("Action verification required!!", HttpStatus.BAD_REQUEST);
 			}
 		} catch (error) {
 			console.log(error);

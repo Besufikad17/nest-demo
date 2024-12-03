@@ -40,4 +40,15 @@ export class AuthRepository {
 			}
 		});
 	}
+
+	async updateUserPassword(userId: string, newPassword: string) {
+		return await this.prismaService.user.update({
+			where: {
+				id: userId
+			},
+			data: {
+				passwordHash: newPassword
+			}
+		});
+	}
 }
