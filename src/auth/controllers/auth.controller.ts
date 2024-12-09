@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Req } from "@nestjs/common";
-import { LoginDto, SignUpDto, UpdatePasswordDto } from "../dto/auth.dto";
+import { LoginDto, RecoverAccountDto, ResetPasswordDto, SignUpDto, UpdatePasswordDto } from "../dto/auth.dto";
 import { AuthService } from "../services/auth.service";
 import { Request } from "express";
 
@@ -21,5 +21,20 @@ export class AuthController {
 	@Post('/update-password')
 	async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto, @Req() request: Request) {
 		return await this.authService.updatePassword(request['user'].userId, updatePasswordDto);
+	}
+
+	@Post('/recover-account')
+	async recoverAccount(@Body() recoverAccountDto: RecoverAccountDto) {
+
+	}
+
+	@Post('/reset-password')
+	async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+
+	}
+
+	@Post('/enable-2fa')
+	async enable2FA(@Req() request: Request) {
+
 	}
 }

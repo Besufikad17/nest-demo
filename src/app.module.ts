@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import * as Joi from "joi";
 import { AuthMiddleware } from './middleware/auth.middleware';
+import { UserModule } from './user/user.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -16,7 +18,9 @@ import { AuthMiddleware } from './middleware/auth.middleware';
         DATABASE_URL: Joi.string().required(),
       }),
     }),
-    PrismaModule
+    PrismaModule,
+    UserModule,
+    CommonModule
   ],
   controllers: [AppController],
   providers: [AppService],
