@@ -1,62 +1,116 @@
-import { OTP_ACTIVITY, OTP_IDENTIFIER, OTP_STATUS } from '@prisma/client';
-import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate } from 'class-validator';
+import { OTP_TYPE, OTP_IDENTIFIER, OTP_STATUS } from '@prisma/client';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate, ValidateIf } from 'class-validator';
 
 export class GenerateOTPDto {
-  @IsEnum(OTP_ACTIVITY)
+  @ApiProperty()
+  @IsEnum(OTP_TYPE)
   @IsNotEmpty()
-  activity: OTP_ACTIVITY;
+  readonly type: OTP_TYPE;
 
-  @IsEnum(OTP_IDENTIFIER)
-  @IsNotEmpty()
-  identifier: OTP_IDENTIFIER;
-
-  @IsUUID()
-  userId?: string;
-}
-
-export class CreateOTPDto {
-  @IsEnum(OTP_ACTIVITY)
-  @IsNotEmpty()
-  readonly activity: OTP_ACTIVITY;
-
+  @ApiProperty()
   @IsEnum(OTP_IDENTIFIER)
   @IsNotEmpty()
   readonly identifier: OTP_IDENTIFIER;
 
-  @IsUUID()
-  userId?: string;
-
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   readonly value: string;
 
+  @ApiProperty()
+  @IsUUID()
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  readonly userId?: string;
+}
+
+export class CreateOTPDto {
+  @ApiProperty()
+  @IsEnum(OTP_TYPE)
+  @IsNotEmpty()
+  readonly type: OTP_TYPE;
+
+  @ApiProperty()
+  @IsEnum(OTP_IDENTIFIER)
+  @IsNotEmpty()
+  readonly identifier: OTP_IDENTIFIER;
+
+  @ApiProperty()
+  @IsUUID()
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  userId?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly value: string;
+
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   readonly otpCode: string;
 
+  @ApiProperty()
   @IsDate()
   @IsNotEmpty()
   readonly expiresAt: Date;
 }
 
+export class FindOTPDto {
+  @ApiProperty()
+  @IsUUID()
+  readonly id?: string;
+
+  @ApiProperty()
+  @IsEnum(OTP_TYPE)
+  @IsNotEmpty()
+  readonly type: OTP_TYPE;
+
+  @ApiProperty()
+  @IsEnum(OTP_IDENTIFIER)
+  @IsNotEmpty()
+  @ValidateIf((obj) => obj.identifier !== undefined && obj.identifier !== null && obj.identifier !== '')
+  readonly identifier?: OTP_IDENTIFIER;
+
+  @ApiProperty()
+  @IsUUID()
+  userId?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly value: string;
+}
+
 export class UpdateOTPDto {
+  @ApiProperty()
   @IsEnum(OTP_STATUS)
   @IsNotEmpty()
   readonly status?: OTP_STATUS;
 
+  @ApiProperty()
   @IsNotEmpty()
   readonly attempts?: number;
 }
 
 export class VerifyOTPDto {
-  @IsUUID()
-  readonly userId: string;
-
+  @ApiProperty()
   @IsNotEmpty()
-  @IsString()
   readonly value: string;
 
-  @IsEnum(OTP_ACTIVITY)
+  @ApiProperty()
+  @IsUUID()
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  readonly userId?: string;
+
+  @ApiProperty()
   @IsNotEmpty()
-  readonly activity: OTP_ACTIVITY;
+  @IsString()
+  readonly otpCode: string;
+
+  @ApiProperty()
+  @IsEnum(OTP_TYPE)
+  @IsNotEmpty()
+  readonly type: OTP_TYPE;
 }
+

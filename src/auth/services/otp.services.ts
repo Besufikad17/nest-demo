@@ -1,15 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { OTPRepository } from "../repository/otp.repository";
-import { GenerateOTPDto, VerifyOTPDto } from "../dto/otp.dto";
-import * as bcrypt from "bcryptjs";
-import { AuthRepository } from "../repository/auth.repository";
-import { IOTPResponse } from "../interfaces/auth.interface";
+import { FindOTPDto, GenerateOTPDto, VerifyOTPDto } from "../dto/otp.dto";
 import { BcryptUtils } from "../utils/bcrypt";
 import { OTP } from "@prisma/client";
+import { IOTPRepository, IOTPResponse, IOTPService } from "../interfaces";
 
 @Injectable()
-export class OTPService {
-	constructor(private otpRepository: OTPRepository, private authRepository: AuthRepository, private bcryptUtils: BcryptUtils) { }
+export class OTPService implements IOTPService {
+	constructor(private otpRepository: IOTPRepository, private bcryptUtils: BcryptUtils) { }
 
 	async createOTP(generateOtpDto: GenerateOTPDto): Promise<IOTPResponse> {
 		try {
@@ -20,7 +17,6 @@ export class OTPService {
 
 			await this.otpRepository.createOTP({
 				...generateOtpDto,
-				value: value,
 				otpCode: otpCode,
 				expiresAt: expiresAt
 			});
@@ -38,9 +34,9 @@ export class OTPService {
 		}
 	}
 
-	async getOTP(generateOTPDto: GenerateOTPDto): Promise<OTP> {
+	async findOTP(findOTPDto: FindOTPDto): Promise<OTP> {
 		try {
-			return await this.otpRepository.getOTP(generateOTPDto.userId, generateOTPDto.activity);
+			return await this.otpRepository.findOTP(findOTPDto);
 		} catch (error) {
 			console.log(error);
 			if (error instanceof HttpException) {
@@ -56,7 +52,7 @@ export class OTPService {
 
 	async resendOTP(generateOTPDto: GenerateOTPDto): Promise<IOTPResponse> {
 		try {
-			const otp = await this.getOTP(generateOTPDto);
+			const otp = await this.findOTP({ ...generateOTPDto });
 
 			if (otp) {
 				await this.otpRepository.deleteOTP(otp.id);
@@ -77,9 +73,12 @@ export class OTPService {
 
 	}
 
-	async verifyOtp(verifyOtpDto: VerifyOTPDto): Promise<IOTPResponse> {
+	async verifyOTP(verifyOtpDto: VerifyOTPDto): Promise<IOTPResponse> {
 		try {
-			const otp = await this.otpRepository.getOTP(verifyOtpDto.userId, verifyOtpDto.activity);
+			const otp = await this.otpRepository.findOTP({
+				value: verifyOtpDto.value,
+				type: verifyOtpDto.type
+			});
 
 			if (!otp) {
 				throw new HttpException("Invalid code!!", HttpStatus.BAD_REQUEST);
@@ -87,17 +86,10 @@ export class OTPService {
 
 			if (otp.attempts > 0) {
 				if (otp.expiresAt > new Date()) {
-					let otpMatch: boolean = await bcrypt.compare(verifyOtpDto.value, otp.otpCode);
+					let otpMatch: boolean = await this.bcryptUtils.compare(verifyOtpDto.otpCode, otp.otpCode);
 
 					if (otpMatch) {
 						if (otp.status === "PENDING") {
-							const user = await this.authRepository.findUser(otp.userId);
-							if (otp.activity === "ACCOUNT_VERIFICATION" && !user.isActive && user.accountStatus !== "ACTIVE") {
-								await this.authRepository.updateUser(otp.userId, {
-									isActive: true,
-									accountStatus: "ACTIVE"
-								});
-							}
 							await this.otpRepository.updateOTP(otp.id, { status: "VERIFIED" });
 							return { message: "Verification completed" };
 						} else {

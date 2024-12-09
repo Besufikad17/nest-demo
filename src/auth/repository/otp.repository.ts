@@ -1,25 +1,29 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CreateOTPDto, UpdateOTPDto } from "../dto/otp.dto";
-import { OTP_ACTIVITY } from "@prisma/client";
+import { CreateOTPDto, FindOTPDto, UpdateOTPDto } from "../dto/otp.dto";
+import { OTP } from "@prisma/client";
+import { IOTPRepository } from "../interfaces";
 
 @Injectable()
-export class OTPRepository {
+export class OTPRepository implements IOTPRepository {
     constructor(private prismaService: PrismaService) { }
 
-    async createOTP(data: CreateOTPDto) {
-        return await this.prismaService.oTP.create({ data });
+    async createOTP(createOTPDto: CreateOTPDto): Promise<OTP> {
+        return await this.prismaService.oTP.create({ data: createOTPDto });
     }
 
-    async getOTP(userId: string, activity: OTP_ACTIVITY) {
+    async findOTP(findOTPDto: FindOTPDto): Promise<OTP | null> {
         return await this.prismaService.oTP.findFirst({
             where: {
-                AND: [
+                OR: [
                     {
-                        userId: userId
+                        userId: findOTPDto.userId
                     },
                     {
-                        activity: activity
+                        value: findOTPDto.value
+                    },
+                    {
+                        type: findOTPDto.type
                     }
                 ]
             },
@@ -29,7 +33,7 @@ export class OTPRepository {
         });
     }
 
-    async updateOTP(id: string, data: UpdateOTPDto) {
+    async updateOTP(id: string, data: UpdateOTPDto): Promise<OTP> {
         return await this.prismaService.oTP.update({
             where: {
                 id: id
