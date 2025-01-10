@@ -73,6 +73,7 @@ export class OTPService implements IOtpService {
         }
       });
 
+      console.log(value);
       // const notificationPayload: IOTPNotification = {
       //   userId: generateOTPDto.userId,
       //   emailOrPhone: generateOTPDto.value,

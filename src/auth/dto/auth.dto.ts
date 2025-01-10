@@ -23,14 +23,14 @@ export class LoginDto {
 
 export class RegisterDto {
   @ApiProperty()
+  @IsNotEmpty()
   @IsString()
-  @ValidateIf((obj) => obj.firstName !== undefined && obj.firstName !== null && obj.firstName !== "")
-  readonly firstName?: string;
+  readonly firstName: string;
 
   @ApiProperty()
+  @IsNotEmpty()
   @IsString()
-  @ValidateIf((obj) => obj.lastName !== undefined && obj.lastName !== null && obj.lastName !== "")
-  readonly lastName?: string;
+  readonly lastName: string;
 
   @ApiProperty()
   @IsString()

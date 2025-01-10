@@ -11,13 +11,13 @@ import { ApiTags } from '@nestjs/swagger';
 export class OTPController {
   constructor(private readonly optService: IOtpService) { }
 
-  @Post('send')
+  @Post('request')
   @HttpCode(HttpStatus.CREATED)
   async sendOTP(@Body() generateOTPDto: GenerateOTPDto) {
     return await this.optService.createOTP(generateOTPDto);
   }
 
-  @Post('user/send')
+  @Post('user/request')
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtGuard)
   async sendUserOTP(@Body() generateOTPDto: GenerateOTPDto, @GetUser() user: IUser, @Headers('device-info') deviceInfo: string, @Ip() ip: string) {

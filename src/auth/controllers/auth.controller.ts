@@ -44,7 +44,7 @@ export class AuthController {
     return await this.authService.registerUserByGoogleSSO(req.user);
   }
 
-  @Post('reset/password')
+  @Post('password/reset')
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
   async resetPassword(
@@ -67,7 +67,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtGuard)
-  @Post('refresh-tokens')
+  @Post('token/refresh')
   refreshTokens(@Headers('authorization') auth: string, @GetUser() user: IUser) {
     return this.authService.refreshToken(user.id, user.email!, auth.split(' ')[1]);
   }

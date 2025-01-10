@@ -224,7 +224,7 @@ export class AuthService implements IAuthService {
 
   async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: string, ip: string): Promise<IAuthResponse> {
     try {
-      const user = await this.userService.findUser({ id: userId }, RoleEnums.USER);
+      const user = await this.userService.findUser({ id: userId }, RoleEnums.USER, userId);
       const twoFactorMethod = await this.userTwoStepService.finUserTwoStepVerification(userId);
 
       if (twoFactorMethod?.methodType === "EMAIL" || twoFactorMethod?.methodType === "SMS") {
@@ -300,12 +300,6 @@ export class AuthService implements IAuthService {
         if (!otp || otp.status !== "VERIFIED" || otp.updatedAt < addMinutes(new Date(), -3)) {
           throw new HttpException("Please verify your account first", HttpStatus.BAD_REQUEST);
         }
-      }
-
-      const newPasswordMatch: boolean = await compare(recoverAccountDto.newPassword, user?.passwordHash || "");
-
-      if (newPasswordMatch) {
-        throw new HttpException("Please enter new password!!", HttpStatus.BAD_REQUEST);
       }
 
       const newPassword = await hash(recoverAccountDto.newPassword, this.configService.get<number>("BCRYPT_SALT") || 10);
