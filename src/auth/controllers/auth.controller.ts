@@ -1,40 +1,74 @@
-import { Body, Controller, Post, Req } from "@nestjs/common";
-import { LoginDto, RecoverAccountDto, ResetPasswordDto, SignUpDto, UpdatePasswordDto } from "../dto/auth.dto";
-import { AuthService } from "../services/auth.service";
-import { Request } from "express";
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Post, Req, UseGuards } from '@nestjs/common';
+import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto, } from '../dto';
+import { IAuthService } from '../interfaces';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiTags } from '@nestjs/swagger';
+import { JwtGuard } from '../guards/JwtAuthGuard';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
+import { IUser } from 'src/common/interfaces';
 
-@Controller('/auth')
+@ApiTags('auth')
+@Controller('auth')
 export class AuthController {
+  constructor(private authService: IAuthService) { }
 
-	constructor(private authService: AuthService) { }
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(
+    @Body() loginDto: LoginDto,
+    @Headers('device-info') deviceInfo: string,
+    @Ip() ip: string
+  ) {
+    return await this.authService.login(loginDto, deviceInfo, ip);
+  }
 
-	@Post('/signup')
-	async signup(@Body() signUpDto: SignUpDto) {
-		return await this.authService.signUp(signUpDto);
-	}
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Headers('device-info') deviceInfo: string,
+    @Ip() ip: string
+  ) {
+    return await this.authService.register(registerDto, deviceInfo, ip);
+  }
 
-	@Post('/login')
-	async login(@Body() loginDto: LoginDto) {
-		return await this.authService.login(loginDto);
-	}
+  @Get('register/google')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('google'))
+  async googleAuthForRegister() { }
 
-	@Post('/update-password')
-	async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto, @Req() request: Request) {
-		return await this.authService.updatePassword(request['user'].userId, updatePasswordDto);
-	}
+  @Get('register/google/callback')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirectForRegister(@Req() req: any) {
+    return await this.authService.registerUserByGoogleSSO(req.user);
+  }
 
-	@Post('/recover-account')
-	async recoverAccount(@Body() recoverAccountDto: RecoverAccountDto) {
+  @Post('reset/password')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @UseGuards(JwtGuard)
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @GetUser() user: IUser,
+    @Headers('device-info') deviceInfo: string,
+    @Ip() ip: string
+  ) {
+    return await this.authService.resetPassword(resetPasswordDto, user.id, deviceInfo, ip);
+  }
 
-	}
+  @Post('recover')
+  @HttpCode(HttpStatus.OK)
+  async recoverAccount(
+    @Body() recoverAccountDto: RecoverAccountDto,
+    @Headers('device-info') deviceInfo: string,
+    @Ip() ip: string
+  ) {
+    return await this.authService.recoverAccount(recoverAccountDto, deviceInfo, ip);
+  }
 
-	@Post('/reset-password')
-	async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-
-	}
-
-	@Post('/enable-2fa')
-	async enable2FA(@Req() request: Request) {
-
-	}
+  @UseGuards(JwtGuard)
+  @Post('refresh-tokens')
+  refreshTokens(@Headers('authorization') auth: string, @GetUser() user: IUser) {
+    return this.authService.refreshToken(user.id, user.email!, auth.split(' ')[1]);
+  }
 }

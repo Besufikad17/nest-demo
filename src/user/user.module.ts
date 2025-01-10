@@ -1,17 +1,31 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { UserController } from './controllers/user.controller';
 import { UserService } from './services/user.service';
-import * as Interfaces from './interfaces';
-import { UserRepository } from './repository/user.repository';
+import * as Interface from './interfaces';
+import { UserRepository } from './repositories/user.repository';
+import { DeletedUserRepository } from './repositories/deleted-user.repository';
+import { UserActivityModule } from 'src/user-activity/user-activity.module';
 
+@Global()
 @Module({
   controllers: [UserController],
   providers: [
-    { provide: Interfaces.IUserRepository, useClass: UserRepository },
-    { provide: Interfaces.IUserService, useClass: UserService },
-    UserRepository,
-    UserService,
+    {
+      provide: Interface.IUserService,
+      useClass: UserService,
+    },
+    {
+      provide: Interface.IUserRepository,
+      useClass: UserRepository,
+    },
+    {
+      provide: Interface.IDeletedUserRepository,
+      useClass: DeletedUserRepository
+    }
   ],
-  exports: [Interfaces.IUserRepository, Interfaces.IUserService]
+  imports: [
+    UserActivityModule,
+  ],
+  exports: [Interface.IDeletedUserRepository, Interface.IUserService, Interface.IUserRepository],
 })
 export class UserModule { }

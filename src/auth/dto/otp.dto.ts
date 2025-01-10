@@ -3,12 +3,12 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate, ValidateIf } from 'class-validator';
 
 export class GenerateOTPDto {
-  @ApiProperty()
+  @ApiProperty({ enum: OTP_TYPE })
   @IsEnum(OTP_TYPE)
   @IsNotEmpty()
   readonly type: OTP_TYPE;
 
-  @ApiProperty()
+  @ApiProperty({ enum: OTP_IDENTIFIER })
   @IsEnum(OTP_IDENTIFIER)
   @IsNotEmpty()
   readonly identifier: OTP_IDENTIFIER;
@@ -108,9 +108,8 @@ export class VerifyOTPDto {
   @IsString()
   readonly otpCode: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: OTP_TYPE })
   @IsEnum(OTP_TYPE)
   @IsNotEmpty()
   readonly type: OTP_TYPE;
 }
-

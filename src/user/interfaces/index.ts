@@ -1,3 +1,3 @@
-export * from "./user.repository.interface";
-export * from "./user.service.interface";
-
+export * from './deleted-user.repository.interface'
+export * from './user.repository.interface'
+export * from './user.service.interface'

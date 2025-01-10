@@ -1,8 +1,9 @@
-import { User } from "@prisma/client";
-import { CreateUserDto, FindUserDto, UpdateUserDto } from "../dto/user.dto";
+import { Prisma, User } from '@prisma/client';
 
 export abstract class IUserRepository {
-  abstract createUser(createUserDto: CreateUserDto): Promise<User>;
-  abstract findUser(findUserDto: FindUserDto): Promise<User | null>;
-  abstract updateUser(userId: string, updateUserDto: UpdateUserDto): Promise<User>;
+  abstract createUser(createUserArgs: Prisma.UserCreateArgs): Promise<User>;
+  abstract findUser(findFirstUserArgs: Prisma.UserFindFirstArgs): Promise<User | null>;
+  abstract findUsers(findUsersArgs: Prisma.UserFindManyArgs): Promise<User[]>;
+  abstract updateUser(updateUserArgs: Prisma.UserUpdateArgs): Promise<User>;
+  abstract deleteUser(deleteUserArgs: Prisma.UserDeleteArgs): Promise<any>;
 }
