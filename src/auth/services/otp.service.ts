@@ -73,7 +73,9 @@ export class OTPService implements IOtpService {
         }
       });
 
-      console.log(value);
+      if (generateOTPDto.identifier === "EMAIL") {
+        console.log(value);
+      }
       // const notificationPayload: IOTPNotification = {
       //   userId: generateOTPDto.userId,
       //   emailOrPhone: generateOTPDto.value,

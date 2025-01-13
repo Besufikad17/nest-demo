@@ -47,6 +47,8 @@ export class UserService implements IUserService {
         },
         select: {
           id: true,
+          firstName: true,
+          lastName: true,
           email: true,
           phoneNumber: true,
           isActive: true,
@@ -90,6 +92,8 @@ export class UserService implements IUserService {
         },
         select: {
           id: true,
+          firstName: true,
+          lastName: true,
           email: true,
           phoneNumber: true,
           isActive: true,

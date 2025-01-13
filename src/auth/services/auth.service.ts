@@ -142,39 +142,44 @@ export class AuthService implements IAuthService {
     try {
       const { password, ...userWithoutPassword } = registerDto;
 
-      const otp = await this.otpService.getOTP({ value: userWithoutPassword.email, type: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
+      const otpWithEmail = await this.otpService.getOTP({ value: userWithoutPassword.email, type: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
+      const otpWithPhone = await this.otpService.getOTP({ value: userWithoutPassword.phoneNumber, type: "ACCOUNT_VERIFICATION", identifier: "PHONE" });
 
-      if (otp && otp.status === "VERIFIED" && otp.updatedAt >= addMinutes(new Date(), -3)) {
-        let hashedPassword: string = await hash(password, this.configService.get<number>('BCRYPT_SALT') || 10);
-        const newUser = await this.userService.createUser({
-          passwordHash: hashedPassword,
-          ...userWithoutPassword
-        });
-
-        await this.userTwoStepService.createUserTwoStepVerification({
-          userId: newUser.id,
-          methodType: "EMAIL",
-          methodDetail: "OTP code is sent via email",
-          isEnabled: true,
-          isPrimary: true
-        }, "", deviceInfo, ip);
-
-        await this.userActivityService.addUserActivity({
-          userId: newUser.id,
-          action: "REGISTER_WITH_EMAIL",
-          actionTimestamp: new Date(),
-          deviceInfo: deviceInfo,
-          ipAddress: ip
-        });
-
-        return {
-          message: 'User registered successfully',
-          accessToken: await this.generateToken(newUser.id, userWithoutPassword.email),
-          refreshToken: await this.generateRefreshToken(newUser.id, userWithoutPassword.email)
-        };
-      } else {
-        throw new HttpException("Please verify your account first", HttpStatus.BAD_REQUEST);
+      if (
+        (otpWithEmail && (otpWithEmail.status !== "VERIFIED" || otpWithEmail.updatedAt < addMinutes(new Date(), -3))) ||
+        (otpWithPhone && (otpWithPhone.status !== "VERIFIED" || otpWithPhone.updatedAt < addMinutes(new Date(), -3))) ||
+        (!otpWithEmail && !otpWithPhone)
+      ) {
+        return new HttpException("Please verify your account first!!", HttpStatus.BAD_REQUEST);
       }
+
+      let hashedPassword: string = await hash(password, this.configService.get<number>('BCRYPT_SALT') || 10);
+      const newUser = await this.userService.createUser({
+        passwordHash: hashedPassword,
+        ...userWithoutPassword
+      });
+
+      await this.userTwoStepService.createUserTwoStepVerification({
+        userId: newUser.id,
+        methodType: "EMAIL",
+        methodDetail: "OTP code is sent via email",
+        isEnabled: true,
+        isPrimary: true
+      }, "", deviceInfo, ip);
+
+      await this.userActivityService.addUserActivity({
+        userId: newUser.id,
+        action: "REGISTER_WITH_EMAIL",
+        actionTimestamp: new Date(),
+        deviceInfo: deviceInfo,
+        ipAddress: ip
+      });
+
+      return {
+        message: 'User registered successfully',
+        accessToken: await this.generateToken(newUser.id, userWithoutPassword.email),
+        refreshToken: await this.generateRefreshToken(newUser.id, userWithoutPassword.email)
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
