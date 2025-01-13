@@ -10,6 +10,7 @@ import { UserActivityModule } from './user-activity/user-activity.module';
 import { UserSsoModule } from './user-sso/user-sso.module';
 import { UserTwoStepVerificationModule } from './user-two-step-verification/user-two-step-verification.module';
 import { WebAuthnCredentialModule } from './web-authn-credential/web-authn-credential.module';
+import { NotificationSettingsModule } from './notification-settings/notification-settings.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { WebAuthnCredentialModule } from './web-authn-credential/web-authn-crede
         PORT: Joi.number().required()
       }),
     }),
+    NotificationSettingsModule,
     PrismaModule,
     RoleModule,
     UserModule,

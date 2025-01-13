@@ -14,6 +14,9 @@ import { IUserActivityService } from 'src/user-activity/interfaces';
 import { IRefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
 import { decodeToken } from 'src/common/utils/jwt.utils';
 import { RoleEnums } from 'src/user-role/enums/role.enum';
+import { IUserRoleService } from 'src/user-role/interfaces';
+import { INotificationSettingsService } from 'src/notification-settings/interfaces';
+import { IRoleService } from 'src/role/interfaces';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -25,7 +28,10 @@ export class AuthService implements IAuthService {
     private refreshTokenRepository: IRefreshTokenRepository,
     private configService: ConfigService,
     private jwtService: JwtService,
-    private otpService: OTPService
+    private otpService: OTPService,
+    private notificationSettingsService: INotificationSettingsService,
+    private userRoleService: IUserRoleService,
+    private roleService: IRoleService
   ) { }
 
   private async generateToken(userId: string, email: string): Promise<string> {
@@ -159,6 +165,18 @@ export class AuthService implements IAuthService {
         ...userWithoutPassword
       });
 
+      const userRole = await this.roleService.getRole({ roleName: 'user' });
+
+      await this.userRoleService.addUserRole({
+        userId: newUser.id,
+        roleId: userRole?.id!
+      });
+
+      await this.notificationSettingsService.addNotificationSetting({
+        userId: newUser.id,
+        notifcationType: "EMAIL"
+      });
+
       await this.userTwoStepService.createUserTwoStepVerification({
         userId: newUser.id,
         methodType: "EMAIL",
@@ -166,6 +184,10 @@ export class AuthService implements IAuthService {
         isEnabled: true,
         isPrimary: true
       }, "", deviceInfo, ip);
+
+      await this.userService.updateUser({
+        twoStepEnabled: true
+      }, newUser.id);
 
       await this.userActivityService.addUserActivity({
         userId: newUser.id,

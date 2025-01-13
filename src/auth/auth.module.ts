@@ -16,6 +16,9 @@ import { UserTwoStepVerificationModule } from 'src/user-two-step-verification/us
 import { UserSsoModule } from 'src/user-sso/user-sso.module';
 import { UserActivityModule } from 'src/user-activity/user-activity.module';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
+import { RoleModule } from 'src/role/role.module';
+import { UserRoleModule } from 'src/user-role/user-role.module';
+import { NotificationSettingsModule } from 'src/notification-settings/notification-settings.module';
 
 @Module({
   providers: [
@@ -39,6 +42,9 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
     UserTwoStepVerificationModule,
     ConfigModule,
     UserActivityModule,
+    RoleModule,
+    UserRoleModule,
+    NotificationSettingsModule,
     JwtModule.registerAsync({
       useFactory: async (config: ConfigService) => ({
         global: true,
