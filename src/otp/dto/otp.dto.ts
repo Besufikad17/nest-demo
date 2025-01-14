@@ -2,7 +2,7 @@ import { OTP_TYPE, OTP_IDENTIFIER, OTP_STATUS } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate, ValidateIf } from 'class-validator';
 
-export class GenerateOTPDto {
+export class GenerateOtpDto {
   @ApiProperty({ enum: OTP_TYPE })
   @IsEnum(OTP_TYPE)
   @IsNotEmpty()
@@ -24,7 +24,7 @@ export class GenerateOTPDto {
   readonly userId?: string;
 }
 
-export class CreateOTPDto {
+export class CreateOtpDto {
   @ApiProperty()
   @IsEnum(OTP_TYPE)
   @IsNotEmpty()
@@ -56,7 +56,7 @@ export class CreateOTPDto {
   readonly expiresAt: Date;
 }
 
-export class FindOTPDto {
+export class FindOtpDto {
   @ApiProperty()
   @IsUUID()
   readonly id?: string;
@@ -82,7 +82,7 @@ export class FindOTPDto {
   readonly value: string;
 }
 
-export class UpdateOTPDto {
+export class UpdateOtpDto {
   @ApiProperty()
   @IsEnum(OTP_STATUS)
   @IsNotEmpty()
@@ -93,7 +93,7 @@ export class UpdateOTPDto {
   readonly attempts?: number;
 }
 
-export class VerifyOTPDto {
+export class VerifyOtpDto {
   @ApiProperty()
   @IsNotEmpty()
   readonly value: string;

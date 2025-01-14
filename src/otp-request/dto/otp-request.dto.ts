@@ -1,16 +1,16 @@
 import { IsNotEmpty, IsNumber } from "class-validator";
 
-export class CreateOTPRequestDto {
+export class CreateOtpRequestDto {
   @IsNotEmpty()
   readonly value: string;
 }
 
-export class GetOTPRequestDto {
+export class GetOtpRequestDto {
   @IsNotEmpty()
   readonly value: string;
 }
 
-export class UpdateOTPRequestDto {
+export class UpdateOtpRequestDto {
   @IsNotEmpty()
   readonly value: string;
 
@@ -19,7 +19,7 @@ export class UpdateOTPRequestDto {
   readonly count: number;
 }
 
-export class DeleteOTPRequestDto {
+export class DeleteOtpRequestDto {
   @IsNotEmpty()
   readonly value: string;
 }

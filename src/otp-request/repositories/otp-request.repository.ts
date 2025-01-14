@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { IOTPRequestRepository } from "../interfaces/otp-request.repository.interface";
+import { IOtpRequestRepository } from "../interfaces/otp-request.repository.interface";
 import { PrismaService } from "src/prisma/prisma.service";
 import { OTPRequests, Prisma } from "@prisma/client";
 
 @Injectable()
-export class OTPRequestRepository implements IOTPRequestRepository {
+export class OtpRequestRepository implements IOtpRequestRepository {
   constructor(private prisma: PrismaService) { }
 
   async createOTPRequest(createOTPRequestArgs: Prisma.OTPRequestsCreateArgs): Promise<OTPRequests> {

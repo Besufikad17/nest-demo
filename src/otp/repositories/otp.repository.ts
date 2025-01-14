@@ -4,7 +4,7 @@ import { IOtpRepository } from "../interfaces";
 import { Prisma } from "@prisma/client";
 
 @Injectable()
-export class OTPRepository implements IOtpRepository {
+export class OtpRepository implements IOtpRepository {
   constructor(private prismaService: PrismaService) { }
 
   async createOTP(createOTPArgs: Prisma.OTPCreateArgs) {

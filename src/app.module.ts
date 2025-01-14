@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import * as Joi from "joi";
-import { AuthMiddleware } from './middleware/auth.middleware';
 import { UserModule } from './user/user.module';
 import { RoleModule } from './role/role.module';
 import { UserActivityModule } from './user-activity/user-activity.module';
@@ -11,6 +10,8 @@ import { UserSsoModule } from './user-sso/user-sso.module';
 import { UserTwoStepVerificationModule } from './user-two-step-verification/user-two-step-verification.module';
 import { WebAuthnCredentialModule } from './web-authn-credential/web-authn-credential.module';
 import { NotificationSettingsModule } from './notification-settings/notification-settings.module';
+import { OtpModule } from './otp/otp.module';
+import { OtpRequestModule } from './otp-request/otp-request.module';
 
 @Module({
   imports: [
@@ -33,13 +34,9 @@ import { NotificationSettingsModule } from './notification-settings/notification
     UserActivityModule,
     UserSsoModule,
     UserTwoStepVerificationModule,
-    WebAuthnCredentialModule
+    WebAuthnCredentialModule,
+    OtpModule,
+    OtpRequestModule
   ],
 })
-export class AppModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      .forRoutes('/auth/update-password')
-  }
-}
+export class AppModule { }

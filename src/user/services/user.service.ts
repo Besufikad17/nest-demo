@@ -137,6 +137,8 @@ export class UserService implements IUserService {
 
   async deleteUser(id: string, deviceInfo: string, ip: string): Promise<IUserResponse> {
     try {
+
+
       const user = await this.userRepository.findUser({
         where: {
           id: id

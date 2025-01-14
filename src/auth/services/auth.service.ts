@@ -5,7 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto } from '../dto';
 import { hash, compare } from 'src/common/utils/hash.utils';
 import { JwtService } from '@nestjs/jwt';
-import { OTPService } from './otp.service';
 import { IUserService } from 'src/user/interfaces';
 import { IUserTwoStepVerificationService } from 'src/user-two-step-verification/interfaces';
 import { IUserSSOService } from 'src/user-sso/interfaces';
@@ -17,6 +16,7 @@ import { RoleEnums } from 'src/user-role/enums/role.enum';
 import { IUserRoleService } from 'src/user-role/interfaces';
 import { INotificationSettingsService } from 'src/notification-settings/interfaces';
 import { IRoleService } from 'src/role/interfaces';
+import { IOtpService } from 'src/otp/interfaces';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -28,10 +28,10 @@ export class AuthService implements IAuthService {
     private refreshTokenRepository: IRefreshTokenRepository,
     private configService: ConfigService,
     private jwtService: JwtService,
-    private otpService: OTPService,
     private notificationSettingsService: INotificationSettingsService,
     private userRoleService: IUserRoleService,
-    private roleService: IRoleService
+    private roleService: IRoleService,
+    private otpService: IOtpService
   ) { }
 
   private async generateToken(userId: string, email: string): Promise<string> {
