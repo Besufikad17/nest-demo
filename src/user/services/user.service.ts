@@ -4,11 +4,14 @@ import { User, USER_ACCOUNT_STATUS } from '@prisma/client';
 import { CreateUserDto, FindUserDto, FindUsersDto, UpdateUserDto } from '../dto/user.dto';
 import { IUserActivityService } from 'src/user-activity/interfaces';
 import { RoleEnums } from 'src/user-role/enums/role.enum';
+import { IOtpService } from 'src/otp/interfaces';
+import { addMinutes } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class UserService implements IUserService {
   constructor(
     private deletedUserRepository: IDeletedUserRepository,
+    private otpService: IOtpService,
     private userActivityService: IUserActivityService,
     private userRepository: IUserRepository,
   ) { }
@@ -114,14 +117,26 @@ export class UserService implements IUserService {
     }
   }
 
-  async updateUser(updateUserDto: UpdateUserDto, userId: string): Promise<User> {
+  async updateUser(updateUserDto: UpdateUserDto, userId: string, deviceInfo?: string, ip?: string): Promise<IUserResponse> {
     try {
-      return await this.userRepository.updateUser({
+      const updatedUser = await this.userRepository.updateUser({
         where: {
           id: userId
         },
-        data: updateUserDto
+        data: updateUserDto,
       });
+
+      await this.userActivityService.addUserActivity({
+        userId: userId,
+        deviceInfo: deviceInfo,
+        ipAddress: ip,
+        action: "UPDATE_USER",
+        actionTimestamp: new Date()
+      });
+
+      return {
+        message: "User updated successfully"
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
@@ -137,7 +152,11 @@ export class UserService implements IUserService {
 
   async deleteUser(id: string, deviceInfo: string, ip: string): Promise<IUserResponse> {
     try {
+      const otp = await this.otpService.getOTP({ userId: id, type: "TWO_FACTOR_AUTHENTICATION" });
 
+      if ((otp && (otp.status !== "VERIFIED" || otp.updatedAt < addMinutes(new Date(), -3))) || !otp) {
+        throw new HttpException("Please verify your action first!!", HttpStatus.BAD_REQUEST);
+      }
 
       const user = await this.userRepository.findUser({
         where: {

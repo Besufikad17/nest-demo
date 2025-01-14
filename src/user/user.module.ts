@@ -5,6 +5,7 @@ import * as Interface from './interfaces';
 import { UserRepository } from './repositories/user.repository';
 import { DeletedUserRepository } from './repositories/deleted-user.repository';
 import { UserActivityModule } from 'src/user-activity/user-activity.module';
+import { OtpModule } from 'src/otp/otp.module';
 
 @Global()
 @Module({
@@ -24,6 +25,7 @@ import { UserActivityModule } from 'src/user-activity/user-activity.module';
     }
   ],
   imports: [
+    OtpModule,
     UserActivityModule,
   ],
   exports: [Interface.IDeletedUserRepository, Interface.IUserService, Interface.IUserRepository],

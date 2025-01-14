@@ -40,6 +40,14 @@ export class FindUserDto {
 }
 
 export class UpdateUserDto {
+  @IsString()
+  @ValidateIf((obj) => obj.firstName !== undefined && obj.firstName !== null && obj.firstName !== "")
+  readonly firstName?: string;
+
+  @IsString()
+  @ValidateIf((obj) => obj.firstName !== undefined && obj.firstName !== null && obj.firstName !== "")
+  readonly lastName?: string;
+
   @ApiProperty()
   @IsEmail()
   @ValidateIf((obj) => obj.email !== undefined && obj.email !== null && obj.email !== '')

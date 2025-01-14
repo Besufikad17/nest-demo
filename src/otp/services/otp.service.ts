@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
 import { IOTPResponse, IOtpService } from "../interfaces/otp.service.interface";
 import { OTP } from "@prisma/client";
@@ -181,7 +181,8 @@ export class OtpService implements IOtpService {
       const otp = await this.otpRepository.getOTP({
         where: {
           value: verifyOtpDto.value,
-          type: verifyOtpDto.type
+          type: verifyOtpDto.type,
+          userId: verifyOtpDto.userId
         }
       });
 

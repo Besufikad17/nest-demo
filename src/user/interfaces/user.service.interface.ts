@@ -11,6 +11,6 @@ export abstract class IUserService {
   abstract createUser(createUserDto: CreateUserDto): Promise<User>;
   abstract findUser(findUserDto: FindUserDto, role: RoleEnums, id?: string): Promise<User | null>;
   abstract findUsers(findUsersDto: FindUsersDto, text?: string, skip?: number, take?: number, status?: USER_ACCOUNT_STATUS, active?: boolean): Promise<User[]>;
-  abstract updateUser(updateUserDto: UpdateUserDto, userId: string): Promise<User>;
+  abstract updateUser(updateUserDto: UpdateUserDto, userId: string, deviceInfo?: string, ip?: string): Promise<IUserResponse>;
   abstract deleteUser(id: string, deviceInfo: string, ip: string): Promise<IUserResponse>;
 }

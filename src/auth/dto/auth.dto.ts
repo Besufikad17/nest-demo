@@ -11,9 +11,14 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
   @ApiProperty()
-  @IsNotEmpty()
   @IsEmail()
-  readonly email: string;
+  @ValidateIf((obj) => obj.email !== undefined && obj.email !== null && obj.email !== '')
+  readonly email?: string;
+
+  @ApiProperty()
+  @IsString()
+  @ValidateIf((obj) => obj.phoneNumber !== undefined && obj.phoneNumber !== null && obj.phoneNumber !== '')
+  readonly phoneNumber?: string;
 
   @ApiProperty()
   @IsNotEmpty()

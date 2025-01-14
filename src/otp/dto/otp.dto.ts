@@ -78,8 +78,8 @@ export class FindOtpDto {
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
-  readonly value: string;
+  @ValidateIf((obj) => obj.value !== undefined && obj.value !== null && obj.value !== '')
+  readonly value?: string;
 }
 
 export class UpdateOtpDto {

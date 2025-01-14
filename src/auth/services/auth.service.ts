@@ -87,9 +87,9 @@ export class AuthService implements IAuthService {
 
   async login(loginDto: LoginDto, deviceInfo: string, ip: string): Promise<IAuthResponse> {
     try {
-      const { email, password } = loginDto;
+      const { email, phoneNumber, password } = loginDto;
 
-      const user = await this.userService.findUser({ email }, RoleEnums.USER);
+      const user = await this.userService.findUser({ email: email, phoneNumber: phoneNumber }, RoleEnums.USER);
 
       if (user) {
         const passwordMatch: boolean = await compare(password, user.passwordHash!);
@@ -114,7 +114,7 @@ export class AuthService implements IAuthService {
 
           await this.userActivityService.addUserActivity({
             userId: user.id,
-            action: "LOGIN_WITH_EMAIL",
+            action: email ? "LOGIN_WITH_EMAIL" : "LOGIN_WITH_PHONE",
             actionTimestamp: new Date(),
             deviceInfo: deviceInfo,
             ipAddress: ip
