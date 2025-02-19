@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('/u/api/v1');
+  app.setGlobalPrefix('/api/v1');
 
   const config = new DocumentBuilder()
     .setTitle('Nest Demo API Documentation')
@@ -16,7 +16,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/u/docs', app, document);
+  SwaggerModule.setup('/docs', app, document);
 
   // validation config
   app.useGlobalPipes(

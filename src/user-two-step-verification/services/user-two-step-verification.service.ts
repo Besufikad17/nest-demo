@@ -58,7 +58,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
       if (createUserTwoStepVerificationDto.methodType === "AUTHENTICATOR") {
         const secret = authenticator.generateSecret();
-        const otpAuthUrl = authenticator.keyuri(email, 'Sefer', secret);
+        const otpAuthUrl = authenticator.keyuri(email, 'nest-demo', secret);
         const qrCode = await toDataURL(otpAuthUrl);
         await this.userTwoStepVerificationRepository.createUserTwoStepVerification({
           data: {
@@ -318,8 +318,8 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
       const passkeys = await this.webAuthnCredentialService.findWebAuthCredentials(user.id);
 
       const options = await generateRegistrationOptions({
-        rpName: 'Sefer',
-        rpID: 'sefer.com',
+        rpName: 'nest-demo',
+        rpID: 'nest-demo.com',
         userID: Buffer.from(user.id),
         userName: user.email || user.phoneNumber!,
         attestationType: 'none',
@@ -367,7 +367,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         response: addPasskeyDto.response,
         expectedChallenge: currentOptions.challenge,
         expectedOrigin: 'http://localhost:4000',
-        expectedRPID: 'sefer.com',
+        expectedRPID: 'nest-demo.com',
       });
 
       if (verified && registrationInfo) {
@@ -423,7 +423,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
       const options = await generateAuthenticationOptions({
         allowCredentials: [],
         userVerification: 'preferred',
-        rpID: 'sefer.com'
+        rpID: 'nest-demo.com'
       });
 
       await this.userActivityService.addUserActivity({
@@ -468,7 +468,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         response: verifyPasskeyDto.response,
         expectedChallenge: currentOptions.challenge,
         expectedOrigin: origin,
-        expectedRPID: 'sefer.com',
+        expectedRPID: 'nest-demo.com',
         credential: {
           id: passkey.id,
           publicKey: passkey.publicKey,
