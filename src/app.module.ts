@@ -42,7 +42,9 @@ import { NotificationModule } from './notification/notification.module';
         // MAIL_USER: Joi.string().required(),
         // MAIL_PASS: Joi.string().required(),
         // MAIL_FROM: Joi.string().required(),
-        PORT: Joi.number().required()
+        PORT: Joi.number().required(),
+        REDIS_PORT: Joi.number().required(),
+        REDIS_HOST: Joi.string().required()
       }),
     }),
     NotificationSettingsModule,
