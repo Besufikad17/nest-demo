@@ -12,6 +12,7 @@ import { WebAuthnCredentialModule } from './web-authn-credential/web-authn-crede
 import { NotificationSettingsModule } from './notification-settings/notification-settings.module';
 import { OtpModule } from './otp/otp.module';
 import { OtpRequestModule } from './otp-request/otp-request.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { OtpRequestModule } from './otp-request/otp-request.module';
     UserTwoStepVerificationModule,
     WebAuthnCredentialModule,
     OtpModule,
-    OtpRequestModule
+    OtpRequestModule,
+    NotificationModule
   ],
 })
 export class AppModule { }

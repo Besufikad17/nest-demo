@@ -27,6 +27,8 @@ model User {
   WebAuthnCredential       WebAuthnCredential[]
   UserActivityLogs         UserActivityLog[]
   NotificationSettings     NotificationSettings[]
+  FCMToken                 FCMToken[]
+  Notification             Notification[]
 
   @@map("users")
 }
@@ -175,6 +177,42 @@ model NotificationSettings {
   @@map("notification_settings")
 }
 
+model FCMToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fcm_tokens")
+}
+
+model Notification {
+  id               String              @id @default(uuid())
+  userId           String?             @map("user_id")
+  notificationType NOTIFICATION_TYPE   @map("notification_type")
+  message          String
+  status           NOTIFICATION_STATUS @default(PENDING)
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @default(now()) @map("updated_at")
+  User             User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NOTIFICATION_STATUS {
+  PENDING
+  SENT
+  READ
+}
+
+enum NOTIFICATION_TYPE {
+  EMAIL
+  SMS
+  PUSH
+}
+
 enum USER_PASSKEY_DEVICE_TYPE {
   singleDevice
   multiDevice
@@ -239,12 +277,6 @@ enum OTP_STATUS {
 enum PROFILE_STATUS {
   ACTIVE
   INACTIVE
-}
-
-enum NOTIFICATION_TYPE {
-  EMAIL
-  SMS
-  IN_APP
 }
 
 enum USER_ACTIONS {
