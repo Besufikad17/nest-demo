@@ -5,6 +5,7 @@ import * as Interface from './interfaces';
 import { FcmTokenRepository } from './repositories/fcm-token.repository';
 import { NotificationRepository } from './repositories/notification.repository';
 import { FcmTokenService } from './services/fcm-token.service';
+import { QueueProvider } from './providers/queue.provider';
 
 @Module({
   providers: [
@@ -15,7 +16,8 @@ import { FcmTokenService } from './services/fcm-token.service';
     FcmTokenRepository,
     FcmTokenService,
     NotificationRepository,
-    NotificationService
+    NotificationService,
+    QueueProvider
   ],
   controllers: [NotificationController]
 })

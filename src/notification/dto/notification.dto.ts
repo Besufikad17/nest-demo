@@ -16,4 +16,8 @@ export class SendPushNotificationDto {
   @IsNotEmpty()
   @IsString()
   readonly body: string;
+
+  @IsNotEmpty()
+  @IsUUID()
+  readonly userId: string;
 }
