@@ -9,6 +9,8 @@ import { QueueProvider } from './providers/queue.provider';
 import { MailService } from './services/mail.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { RoleModule } from 'src/role/role.module';
+import { UserRoleModule } from 'src/user-role/user-role.module';
 
 @Module({
   providers: [
@@ -43,8 +45,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
         },
       }),
       inject: [ConfigService],
-    })
-
+    }),
+    RoleModule,
+    UserRoleModule
   ],
   exports: [Interface.INotificationService]
 })
