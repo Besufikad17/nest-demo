@@ -51,7 +51,7 @@ export class OtpService implements IOtpService {
       }
 
       let value: string = `${Math.floor(100000 + Math.random() * 900000)}`;
-      let otpCode: string = await hash(generateOTPDto.identifier === "EMAIL" ? value : "000000", this.configService.get<number>('BCRYPT_SALT') || 10);
+      let otpCode: string = await hash(value, this.configService.get<number>('BCRYPT_SALT') || 10);
       var expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
 
@@ -73,7 +73,7 @@ export class OtpService implements IOtpService {
         }
       });
 
-      if (generateOTPDto.identifier === "EMAIL") {
+      if (generateOTPDto.identifier === "PHONE") {
         console.log(value);
       }
 
