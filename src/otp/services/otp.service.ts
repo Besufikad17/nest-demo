@@ -1,24 +1,24 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
 import { IOTPResponse, IOtpService } from "../interfaces/otp.service.interface";
-import { OTP } from "@prisma/client";
+import { NOTIFICATION_TYPE, OTP } from "@prisma/client";
 import { hash, compare } from "src/common/utils/hash.utils";
 import { ConfigService } from "@nestjs/config";
 import { addDays, addHours } from "src/common/utils/date.utils";
 import { IUserActivityService } from "src/user-activity/interfaces";
 import { IOtpRequestService } from "src/otp-request/interfaces";
 import { IOtpRepository } from "../interfaces";
-// import { ClientKafka } from "@nestjs/microservices";
-// import { IOTPNotification } from "src/common/interfaces/notification.interface";
+import { INotificationService } from "src/notification/interfaces";
+import { getMessageType } from "../utils/otp.util";
 
 @Injectable()
 export class OtpService implements IOtpService {
   constructor(
+    private notificationService: INotificationService,
     private otpRepository: IOtpRepository,
     private otpRequestService: IOtpRequestService,
     private userActivityService: IUserActivityService,
     private configService: ConfigService,
-    //@Inject('NOTIFICATION_SERVICE') private client: ClientKafka
   ) { }
 
   async createOTP(generateOTPDto: GenerateOtpDto, deviceInfo?: string, ip?: string, flag: string = "create"): Promise<IOTPResponse> {
@@ -76,16 +76,17 @@ export class OtpService implements IOtpService {
       if (generateOTPDto.identifier === "EMAIL") {
         console.log(value);
       }
-      // const notificationPayload: IOTPNotification = {
-      //   userId: generateOTPDto.userId,
-      //   emailOrPhone: generateOTPDto.value,
-      //   type: generateOTPDto.identifier === "PHONE" ? "SMS" : "EMAIL",
-      //   subject: "Account verification",
-      //   message: `${value}`,
-      //   messageType: otp?.type!
-      // };
-      //
-      // this.client.emit('notification.send.otp', notificationPayload);
+
+      const notificationPayload = {
+        userId: generateOTPDto.userId,
+        emailOrPhone: generateOTPDto.value,
+        type: generateOTPDto.identifier === "PHONE" ? NOTIFICATION_TYPE.SMS : NOTIFICATION_TYPE.EMAIL,
+        subject: "Account verification",
+        message: `${value}`,
+        messageType: getMessageType(otp?.type)
+      };
+
+      await this.notificationService.sendOTP({ ...notificationPayload });
 
       if (generateOTPDto.userId && flag === "create") {
         await this.userActivityService.addUserActivity({

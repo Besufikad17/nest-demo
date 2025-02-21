@@ -5,6 +5,7 @@ import { OtpRepository } from './repositories/otp.repository';
 import * as Interface from './interfaces';
 import { OtpRequestModule } from 'src/otp-request/otp-request.module';
 import { UserActivityModule } from 'src/user-activity/user-activity.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   providers: [
@@ -14,6 +15,6 @@ import { UserActivityModule } from 'src/user-activity/user-activity.module';
   ],
   controllers: [OtpController],
   exports: [Interface.IOtpRepository, Interface.IOtpService],
-  imports: [OtpRequestModule, UserActivityModule]
+  imports: [NotificationModule, OtpRequestModule, UserActivityModule]
 })
 export class OtpModule { }
