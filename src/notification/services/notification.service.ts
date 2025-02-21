@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { INotificationRepository, INotificationService, INotificationResponse, IFcmTokenRepository, IQueueProvider, IMailService } from '../interfaces';
-import { SendOTPDto, SendPushNotificationDto } from '../dto/notification.dto';
+import { SendLoginNotificationDto, SendOTPDto, SendPushNotificationDto } from '../dto/notification.dto';
 import { getEmailHtml } from '../utils/mail.util';
 
 
@@ -114,6 +114,52 @@ export class NotificationService implements INotificationService {
 
       return {
         message: 'OTP sent'
+      };
+    } catch (error) {
+      console.log(error);
+      if (error instanceof HttpException) {
+        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+      } else {
+        throw new HttpException(
+          error.meta || 'Error occurred check the log in the server',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+    }
+  }
+
+  async sendLoginNotification(sendLoginNotificationDto: SendLoginNotificationDto): Promise<INotificationResponse> {
+    try {
+      const html = `<p><strong>	We noticed a login to your account from a new device.</strong></p>
+        <p>Device: ${sendLoginNotificationDto.deviceInfo}</p>
+        <p>Ip Address: ${sendLoginNotificationDto.ip}</p>
+      `;
+
+      const notification = await this.notificationRepository.createNotification({
+        data: {
+          userId: sendLoginNotificationDto.userId,
+          message: html,
+          notificationType: "EMAIL"
+        }
+      });
+
+      await this.mailService.sendEmail({
+        to: sendLoginNotificationDto.email,
+        subject: "Login Attempt",
+        html: getEmailHtml(html)
+      });
+
+      await this.notificationRepository.updateNotification({
+        where: {
+          id: notification.id
+        },
+        data: {
+          status: "SENT"
+        }
+      });
+
+      return {
+        message: "Notification sent!!"
       };
     } catch (error) {
       console.log(error);

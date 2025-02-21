@@ -16,6 +16,7 @@ import { RoleModule } from 'src/role/role.module';
 import { UserRoleModule } from 'src/user-role/user-role.module';
 import { NotificationSettingsModule } from 'src/notification-settings/notification-settings.module';
 import { OtpModule } from 'src/otp/otp.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   providers: [
@@ -35,6 +36,7 @@ import { OtpModule } from 'src/otp/otp.module';
     UserActivityModule,
     RoleModule,
     UserRoleModule,
+    NotificationModule,
     NotificationSettingsModule,
     OtpModule,
     JwtModule.registerAsync({

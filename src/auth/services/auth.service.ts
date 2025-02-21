@@ -17,6 +17,7 @@ import { IUserRoleService } from 'src/user-role/interfaces';
 import { INotificationSettingsService } from 'src/notification-settings/interfaces';
 import { IRoleService } from 'src/role/interfaces';
 import { IOtpService } from 'src/otp/interfaces';
+import { INotificationService } from 'src/notification/interfaces';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -28,6 +29,7 @@ export class AuthService implements IAuthService {
     private refreshTokenRepository: IRefreshTokenRepository,
     private configService: ConfigService,
     private jwtService: JwtService,
+    private notificationService: INotificationService,
     private notificationSettingsService: INotificationSettingsService,
     private userRoleService: IUserRoleService,
     private roleService: IRoleService,
@@ -118,6 +120,13 @@ export class AuthService implements IAuthService {
             actionTimestamp: new Date(),
             deviceInfo: deviceInfo,
             ipAddress: ip
+          });
+
+          await this.notificationService.sendLoginNotification({
+            deviceInfo,
+            email: email,
+            ip,
+            userId: user.id
           });
 
           return {

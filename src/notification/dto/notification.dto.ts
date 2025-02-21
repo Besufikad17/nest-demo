@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
+import { IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
 import { NOTIFICATION_TYPE } from "@prisma/client";
 import { MESSAGE_TYPE } from "../enums/notification.enum";
 
@@ -34,6 +34,24 @@ export class SendOTPDto {
   @IsNotEmpty()
   @IsEnum(MESSAGE_TYPE)
   readonly messageType: MESSAGE_TYPE;
+}
+
+export class SendLoginNotificationDto {
+  @IsUUID()
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  readonly userId?: string;
+
+  @IsNotEmpty()
+  @IsEmail()
+  readonly email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  readonly deviceInfo: string;
+
+  @IsNotEmpty()
+  @IsString()
+  readonly ip: string;
 }
 
 export class SendPushNotificationDto {
