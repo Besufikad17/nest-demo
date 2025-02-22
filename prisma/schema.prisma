@@ -7,18 +7,303 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Employee {
-  id            Int      @id @default(autoincrement())
-  name          String
-  dept          String
-  date_of_birth DateTime
-  gender        String
-  salary        Float
+model User {
+  id                       String                    @id @default(uuid())
+  firstName                String?                   @map("first_name")
+  lastName                 String?                   @map("last_name")
+  email                    String?                   @unique
+  phoneNumber              String?                   @unique @map("phone_number")
+  passwordHash             String?                   @map("password_hash")
+  createdAt                DateTime                  @default(now()) @map("created_at")
+  updatedAt                DateTime                  @updatedAt() @map("updated_at")
+  lastLogin                DateTime?                 @map("last_login")
+  isActive                 Boolean                   @default(false) @map("is_active")
+  accountStatus            USER_ACCOUNT_STATUS       @default(INACTIVE) @map("account_status")
+  twoStepEnabled           Boolean                   @default(false) @map("two_step_enabled")
+  OTP                      OTP[]
+  UserTwoStepVerifications UserTwoStepVerification[]
+  UserRole                 UserRole[]
+  UserSSO                  UserSSO[]
+  WebAuthnCredential       WebAuthnCredential[]
+  UserActivityLogs         UserActivityLog[]
+  NotificationSettings     NotificationSettings[]
+  FCMToken                 FCMToken[]
+  Notification             Notification[]
+
+  @@map("users")
 }
 
-model User {
-   id            Int      @id @default(autoincrement())
-   username      String
-   email         String
-   password      String
+model UserTwoStepVerification {
+  id           String                      @id @default(uuid())
+  userId       String                      @map("user_id")
+  methodType   USER_TWO_FACTOR_METHOD_TYPE @map("method_type")
+  methodDetail String                      @map("method_detail")
+  secret       String?
+  isPrimary    Boolean                     @map("is_primary")
+  isEnabled    Boolean                     @map("is_enabled")
+  addedAt      DateTime                    @default(now()) @map("added_at")
+  createdAt    DateTime                    @default(now()) @map("created_at")
+  updatedAt    DateTime                    @default(now()) @map("updated_at")
+  User         User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_two_step_verification")
+}
+
+model UserSSO {
+  id             String            @id @default(uuid())
+  userId         String            @map("user_id")
+  provider       USER_SSO_PROVIDER
+  providerUserId String            @map("provider_user_id")
+  email          String
+  linkedAt       DateTime          @default(now()) @map("linked_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @default(now()) @map("updated_at")
+  User           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sso")
+}
+
+model Roles {
+  id          String     @id @default(uuid())
+  roleName    String     @map("role_name")
+  description String
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @default(now()) @map("updated_at")
+  UserRoles   UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Role      Roles    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_role")
+}
+
+model OTP {
+  id         String         @id @default(uuid())
+  userId     String?        @map("user_id")
+  identifier OTP_IDENTIFIER
+  type       OTP_TYPE
+  status     OTP_STATUS     @default(PENDING)
+  value      String
+  otpCode    String         @unique @map("otp_code")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt() @map("updated_at")
+  expiresAt  DateTime       @map("expires_at")
+  attempts   Int            @default(5)
+  User       User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp")
+}
+
+model OTPRequests {
+  id        String   @id @default(uuid())
+  value     String   @unique
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("otp_requests")
+}
+
+model WebAuthnCredential {
+  id           String                   @id @default(uuid())
+  credentialId Bytes                    @map("credential_id")
+  publicKey    Bytes                    @map("public_key")
+  counter      Int
+  userId       String?                  @map("user_id")
+  deviceType   USER_PASSKEY_DEVICE_TYPE @map("device_type")
+  backedUp     Boolean
+  transports   String
+  createdAt    DateTime                 @default(now()) @map("created_at")
+  updatedAt    DateTime                 @default(now()) @map("updated_at")
+  User         User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("web_auth_credential")
+}
+
+model RefreshTokens {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  refreshToken String   @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @map("updated_at")
+
+  @@map("refresh_tokens")
+}
+
+model DeletedUser {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  data      Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("deleted_user")
+}
+
+model UserActivityLog {
+  id              String       @id @default(uuid())
+  userId          String       @map("user_id")
+  action          USER_ACTIONS
+  actionTimestamp DateTime     @map("action_timestamp")
+  ipAddress       String?      @map("ip_address")
+  deviceInfo      String?      @map("device_info")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @default(now()) @map("updated_at")
+  User            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_activity_log")
+}
+
+model NotificationSettings {
+  id               String            @id @default(uuid())
+  userId           String            @map("user_id")
+  notificationType NOTIFICATION_TYPE @map("notification_type")
+  isEnabled        Boolean           @default(true) @map("is_enabled")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @default(now()) @map("updated_at")
+  User             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_settings")
+}
+
+model FCMToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fcm_tokens")
+}
+
+model Notification {
+  id               String              @id @default(uuid())
+  userId           String?             @map("user_id")
+  notificationType NOTIFICATION_TYPE   @map("notification_type")
+  message          String
+  status           NOTIFICATION_STATUS @default(PENDING)
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @default(now()) @map("updated_at")
+  User             User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NOTIFICATION_STATUS {
+  PENDING
+  SENT
+  READ
+}
+
+enum NOTIFICATION_TYPE {
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum USER_PASSKEY_DEVICE_TYPE {
+  singleDevice
+  multiDevice
+}
+
+enum USER_PROFILE_VERIFCATION_STATUS {
+  PENDING
+  VERIFIED
+  UNVERIFIED
+  DECLINED
+}
+
+enum USER_PROFILE_VISIBILITY {
+  PUBLIC
+  PRIVATE
+}
+
+enum PERSONAL_PROFILE_VERIFICATION_DOCUMENT_TYPE {
+  GOVERNMENT_ID
+  NATIONAL_ID
+  PASSPORT
+  DRIVER_LICENSE
+}
+
+enum USER_ACCOUNT_STATUS {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum USER_TWO_FACTOR_METHOD_TYPE {
+  AUTHENTICATOR
+  EMAIL
+  PASSKEYS
+  SMS
+}
+
+enum USER_SSO_PROVIDER {
+  APPLE
+  GOOGLE
+}
+
+enum OTP_IDENTIFIER {
+  EMAIL
+  PHONE
+}
+
+enum OTP_TYPE {
+  ACCOUNT_VERIFICATION
+  ACCOUNT_RECOVERY
+  TWO_FACTOR_AUTHENTICATION
+  PASSWORD_RESET
+}
+
+enum OTP_STATUS {
+  PENDING
+  VERIFIED
+  EXPIRED
+}
+
+enum PROFILE_STATUS {
+  ACTIVE
+  INACTIVE
+}
+
+enum USER_ACTIONS {
+  REGISTER_WITH_EMAIL
+  REGISTER_WITH_GOOGLE_SSO
+  REGISTER_WITH_APPLE_SSO
+  LOGIN_WITH_EMAIL
+  LOGIN_WITH_PHONE
+  LOGIN_WITH_GOOGLE_SSO
+  LOGIN_WITH_APPLE_SSO
+  ACCOUNT_RECOVERY
+  PASSWORD_RESET
+  ADD_TWO_STEP_VERIFICATION
+  UPDATE_TWO_STEP_VERIFICATION
+  DELETE_TWO_STEP_VERIFICATION
+  VERIFY_TWO_FACTOR_CODE
+  ADD_PASSKEY_REQUEST
+  ADD_PASSKEY
+  VERIFY_PASSKEY_REQUEST
+  VERIFY_PASSKEY
+  REQUEST_OTP
+  REQUEST_RESEND_OTP
+  VALIDATE_OTP
+  REFRESH_TOKEN
+  FILE_UPLOAD
+  EXPORT_DATA
+  DELETE_ACCOUNT
+  UPDATE_NOTIFICATION_SETTINGS
+  UPDATE_USER
 }

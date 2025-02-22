@@ -1,93 +1,91 @@
-# NestDemo
+<p align="center">
+ <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
+
+<h1 align="center">
+   nest-demo
+</h1>
+
+<p align="center">A simple Nest.js boilerplate</p>
 
 ## Description
 
-A simple employee management API made by using [Nest](https://github.com/nestjs/nest).
+- This project implements basic authentication, authorization, and role-based access control (RBAC) using Nest.js, Prisma and PostgresSQL. Additional features include:
+  
+  - ✅ Two step verification using authenticators and passkeys,
+  - ✅ Push notification,
+  - ✅ Tracking user's activity.
 
-## Installation
+## Tools Used
 
-```bash
-$ npm install
-```
+- **[@nestjs/config](https://www.npmjs.com/package/@nestjs/config)**: Configuration module for Nest based on the dotenv (to load process environment variables) package. 
+**[@nestjs-modules/mailer](https://www.npmjs.com/package/@nestjs-modules/mailer)**: A mailer module for Nest framework (node.js) using Nodemailer library.
+- **[@nestjs/jwt](https://www.npmjs.com/package/@nestjs/jwt)**: JWT utilities module for Nest based on the jsonwebtoken package.
+- **[@nestjs/passport](https://www.npmjs.com/package/@nestjs/passport)**: Passport utilities module for Nest.
+- **[@nestjs/swagger](https://www.npmjs.com/package/@nestjs/swagger)**: OpenAPI (Swagger) module for Nest.
+- **[@simplewebauthn/server](https://www.npmjs.com/package/@simplewebauthn/server)**: Library that help reduce the amount of work needed to incorporate WebAuthn into a website.
+- **[firebase-admin](https://www.npmjs.com/package/firebase-admin)**: Firebase Admin Node.js SDK.
+- **[bullmq](https://www.npmjs.com/package/bullmq)**: The fastest, most reliable, Redis-based distributed queue for Node.
+- **[joi](https://www.npmjs.com/package/joi)**: The most powerful schema description language and data validator for JavaScript.
 
-## Running the app
 
-```bash
-# development
-$ npm run start
+## Installation and Usage
 
-# watch mode
-$ npm run start:dev
+To use this project, follow these steps:
 
-# production mode
-$ npm run start:prod
-```
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/besufikad17/nest-demo.git
+    cd nest-demo
+    ```
+2. Install packages:
+    ```bash
+    npm install
+    ```
 
-## Usage
+3. Set up environment variables in the `.env` file.
+    ```.env
+    DATABASE_URL=
+    FIREBASE_APPLICATION_TYPE=
+    FIREBASE_AUTH_URI=
+    FIREBASE_AUTH_CERT_URL=
+    FIREBASE_CLIENT_CERT_URL=
+    FIREBASE_CLIENT_ID=
+    FIREBASE_PROJECT_ID=
+    FIREBASE_PRIVATE_ID=
+    FIREBASE_PRIVATE_KEY=
+    FIREBASE_TOKEN_URI=
+    FIREBASE_UNIVERSE_DOMAIN=
+    GOOGLE_CLIENT_ID=
+    GOOGLE_CLIENT_SECRET=
+    GOOGLE_CALLBACK_URL=
+    JWT_SECRET=
+    MAIL_HOST=
+    MAIL_PORT=
+    MAIL_SECURE=
+    MAIL_USER=
+    MAIL_PASS=
+    MAIL_FROM=
+    PORT=
+    REDIS_PORT=
+    REDIS_HOST=
+    ```
 
-- Swagger documentation is available under http://localhost:3000/api
-- [Postman collection](https://github.com/Besufikad17/nest-demo/releases/download/%23testing/NestDemo.postman_collection.json)
+4. Migrate the database schema:
+    ```bash
+    npx prisma migrate dev
+    ```
 
-### Endpoints
+5. Seed the database:
+    ```bash
+    npm run seed
+    ```
 
-<table>
-<thead>
-  <tr>
-    <th colspan="2">Endpoint</th>
-    <th>Request type</th>
-    <th>Body/Params</th>
-    <th>Response</th>
-    <th>Route</th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td rowspan="2">User</td>
-    <td>Signup</td>
-    <td>POST</td>
-    <td>Body: { username, email, password }</td>
-    <td>{ token, user }</td>
-    <td>/api/user/signup</td>
-  </tr>
-  <tr>
-    <td>Login</td>
-    <td>Post</td>
-    <td>Body: { username, password }</td>
-    <td>{ token, user }</td>
-    <td>/api/user/login</td>
-  </tr>
-  <tr>
-    <td rowspan="4">Employee</td>
-    <td>Add</td>
-    <td>POST</td>
-    <td>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }<br><br>Header: { x-auth-token: token }</td>
-    <td>{ employee }</td>
-    <td>/api/employee/add</td>
-  </tr>
-  <tr>
-    <td>GetAll</td>
-    <td>GET</td>
-    <td>Query: { skip, take, orderby, searchString }<br><br>Header: { x-auth-token: token }</td>
-    <td>[ employees ]</td>
-    <td>/api/employee/all?skip=skip&amp;<br>take=take&amp;orderby=orderby&amp;<br>searchString=searchString</td>
-  </tr>
-  <tr>
-    <td>Update</td>
-    <td>PUT</td>
-    <td>Param: { id }<br><br>Body: { name, dept, gender, salary, date_of_birth: <br> {year, month, day} }<br><br>Header: { x-auth-token: token }</td>
-    <td>{}</td>
-    <td>/api/employee/update/:id</td>
-  </tr>
-  <tr>
-    <td>Delete</td>
-    <td>DELETE</td>
-    <td>Param: { id }<br><br>Header: { x-auth-token: token }</td>
-    <td>{}</td>
-    <td>/api/employee/delete/:id</td>
-  </tr>
-</tbody>
-</table>
+6. Run the application:
+    ```bash
+    npm run start:dev    
+    ```
 
-## License
+7. Access the API documentation at `http://127.0.0.1:PORT/api/docs`.
 
-Nest is [MIT licensed](LICENSE).
+**⚠️ Note**: Make sure to run the seed script since roles need to be added first before registration.
