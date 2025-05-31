@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import * as Joi from "joi";
@@ -13,6 +13,10 @@ import { NotificationSettingsModule } from './notification-settings/notification
 import { OtpModule } from './otp/otp.module';
 import { OtpRequestModule } from './otp-request/otp-request.module';
 import { NotificationModule } from './notification/notification.module';
+import { PrometheusModule } from './prometheus/prometheus.module';
+import { LoggerModule } from 'nestjs-pino';
+import { PrometheusMiddleware } from './common/middlewares/prometheus.middleware';
+import { RequestIdMiddleware } from './common/middlewares/requestId.middleware';
 
 @Module({
   imports: [
@@ -47,6 +51,23 @@ import { NotificationModule } from './notification/notification.module';
         REDIS_HOST: Joi.string().required()
       }),
     }),
+    LoggerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          pinoHttp: {
+            level: configService.get<string>('LOG_LEVEL', 'info'),
+            transport: {
+              target: 'pino-pretty',
+              options: { colorize: true },
+            },
+            quietReqLogger: true,
+            quietResLogger: true,
+          },
+        };
+      },
+      inject: [ConfigService],
+    }),
     NotificationSettingsModule,
     PrismaModule,
     RoleModule,
@@ -57,7 +78,14 @@ import { NotificationModule } from './notification/notification.module';
     WebAuthnCredentialModule,
     OtpModule,
     OtpRequestModule,
-    NotificationModule
+    NotificationModule,
+    PrometheusModule
   ],
 })
-export class AppModule { }
+
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(PrometheusMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}
