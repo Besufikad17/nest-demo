@@ -159,6 +159,7 @@ export class AuthService implements IAuthService {
 
       const otpWithEmail = await this.otpService.getOTP({ value: userWithoutPassword.email, type: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
       const otpWithPhone = await this.otpService.getOTP({ value: userWithoutPassword.phoneNumber, type: "ACCOUNT_VERIFICATION", identifier: "PHONE" });
+      console.log(otpWithEmail, otpWithPhone);
 
       if (
         (otpWithEmail && (otpWithEmail.status !== "VERIFIED" || otpWithEmail.updatedAt < addMinutes(new Date(), -3))) ||

@@ -32,9 +32,9 @@ import { UserRoleModule } from 'src/user-role/user-role.module';
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => ({
         transport: {
-          host: config.get<string>('MAIL_HOST'),
-          port: config.get<number>('MAIL_PORT'),
-          secure: config.get<boolean>('MAIL_SECURE'),
+          service: 'gmail',
+          port: 587,
+          secure: false,
           auth: {
             user: config.get<string>('MAIL_USER'),
             pass: config.get<string>('MAIL_PASS'),

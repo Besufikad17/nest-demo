@@ -44,7 +44,11 @@ export class OtpService implements IOtpService {
         otpRequest = await this.otpRequestService.createOTPRequest({ data: { value: generateOTPDto.value } });
       }
 
-      const otp = await this.getOTP(generateOTPDto);
+      const otp = await this.getOTP({
+        value: generateOTPDto.value,
+        type: generateOTPDto.type,
+        identifier: generateOTPDto.identifier
+      });
 
       if (otp) {
         await this.otpRepository.deleteOTP({ where: { id: otp.id } });
