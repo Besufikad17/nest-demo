@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { WebAuthnCredentialController } from './web-authn-credential.controller';
+import { Test, TestingModule } from "@nestjs/testing";
+import { WebAuthnCredentialController } from "./web-authn-credential.controller";
 
-describe('WebAuthnCredentialController', () => {
+describe("WebAuthnCredentialController", () => {
   let controller: WebAuthnCredentialController;
 
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describe('WebAuthnCredentialController', () => {
     controller = module.get<WebAuthnCredentialController>(WebAuthnCredentialController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 });

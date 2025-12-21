@@ -1,4 +1,4 @@
-import { User, USER_ACCOUNT_STATUS } from "@prisma/client";
+import { User, USER_ACCOUNT_STATUS } from "generated/prisma/client";
 import { CreateUserDto, FindUserDto, FindUsersDto, UpdateUserDto } from "../dto/user.dto";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 

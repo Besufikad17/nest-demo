@@ -1,5 +1,5 @@
 import { Queue, Worker } from "bullmq";
-import { Notification, NOTIFICATION_STATUS, NOTIFICATION_TYPE } from "@prisma/client";
+import { Notification, NOTIFICATION_STATUS, NOTIFICATION_TYPE } from "generated/prisma/client";
 import { SendLoginNotificationDto, SendOTPDto, SendPushNotificationDto } from "../dto/notification.dto";
 
 export interface INotificationResponse {

@@ -1,5 +1,5 @@
 import { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/server";
-import { UserTwoStepVerification } from "@prisma/client";
+import { UserTwoStepVerification } from "generated/prisma/client";
 import {
   AddPasskeyDto,
   CreateUserTwoStepVerificationDto,

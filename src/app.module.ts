@@ -1,22 +1,22 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { PrismaModule } from './prisma/prisma.module';
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { AuthModule } from "./auth/auth.module";
+import { PrismaModule } from "./prisma/prisma.module";
 import * as Joi from "joi";
-import { UserModule } from './user/user.module';
-import { RoleModule } from './role/role.module';
-import { UserActivityModule } from './user-activity/user-activity.module';
-import { UserSsoModule } from './user-sso/user-sso.module';
-import { UserTwoStepVerificationModule } from './user-two-step-verification/user-two-step-verification.module';
-import { WebAuthnCredentialModule } from './web-authn-credential/web-authn-credential.module';
-import { NotificationSettingsModule } from './notification-settings/notification-settings.module';
-import { OtpModule } from './otp/otp.module';
-import { OtpRequestModule } from './otp-request/otp-request.module';
-import { NotificationModule } from './notification/notification.module';
-import { PrometheusModule } from './prometheus/prometheus.module';
-import { LoggerModule } from 'nestjs-pino';
-import { PrometheusMiddleware } from './common/middlewares/prometheus.middleware';
-import { RequestIdMiddleware } from './common/middlewares/requestId.middleware';
+import { UserModule } from "./user/user.module";
+import { RoleModule } from "./role/role.module";
+import { UserActivityModule } from "./user-activity/user-activity.module";
+import { UserSsoModule } from "./user-sso/user-sso.module";
+import { UserTwoStepVerificationModule } from "./user-two-step-verification/user-two-step-verification.module";
+import { WebAuthnCredentialModule } from "./web-authn-credential/web-authn-credential.module";
+import { NotificationSettingsModule } from "./notification-settings/notification-settings.module";
+import { OtpModule } from "./otp/otp.module";
+import { OtpRequestModule } from "./otp-request/otp-request.module";
+import { NotificationModule } from "./notification/notification.module";
+import { PrometheusModule } from "./prometheus/prometheus.module";
+import { LoggerModule } from "nestjs-pino";
+import { PrometheusMiddleware } from "./common/middlewares/prometheus.middleware";
+import { RequestIdMiddleware } from "./common/middlewares/requestId.middleware";
 
 @Module({
   imports: [
@@ -56,9 +56,9 @@ import { RequestIdMiddleware } from './common/middlewares/requestId.middleware';
       useFactory: async (configService: ConfigService) => {
         return {
           pinoHttp: {
-            level: configService.get<string>('LOG_LEVEL', 'info'),
+            level: configService.get<string>("LOG_LEVEL", "info"),
             transport: {
-              target: 'pino-pretty',
+              target: "pino-pretty",
               options: { colorize: true },
             },
             quietReqLogger: true,
@@ -85,7 +85,7 @@ import { RequestIdMiddleware } from './common/middlewares/requestId.middleware';
 
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(PrometheusMiddleware).forRoutes('*');
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(PrometheusMiddleware).forRoutes("*");
+    consumer.apply(RequestIdMiddleware).forRoutes("*");
   }
 }

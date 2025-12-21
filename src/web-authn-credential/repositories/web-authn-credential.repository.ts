@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { IWebAuthnCredentialRepository } from "../interfaces/web-authn-credential.repository.interface";
 import { PrismaService } from "src/prisma/prisma.service";
-import { WebAuthnCredential, Prisma } from "@prisma/client";
+import { WebAuthnCredential, Prisma } from "generated/prisma/client";
 
 @Injectable()
 export class WebAuthnCredentialRepository implements IWebAuthnCredentialRepository {

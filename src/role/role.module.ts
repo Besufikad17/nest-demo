@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { RoleRepository } from './repositories/role.repository';
-import { RoleService } from './services/role.service';
-import * as Interface from './interfaces';
+import { Module } from "@nestjs/common";
+import { RoleRepository } from "./repositories/role.repository";
+import { RoleService } from "./services/role.service";
+import * as Interface from "./interfaces";
 
 @Module({
   providers: [

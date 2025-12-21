@@ -1,7 +1,7 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { IRoleRepository, IRoleService } from '../interfaces';
-import { Roles } from '@prisma/client';
-import { AddRoleDto, GetRoleDto } from '../dto/role.dto';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { IRoleRepository, IRoleService } from "../interfaces";
+import { Roles } from "generated/prisma/client"
+import { AddRoleDto, GetRoleDto } from "../dto/role.dto";
 
 @Injectable()
 export class RoleService implements IRoleService {
@@ -18,7 +18,7 @@ export class RoleService implements IRoleService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -38,7 +38,7 @@ export class RoleService implements IRoleService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

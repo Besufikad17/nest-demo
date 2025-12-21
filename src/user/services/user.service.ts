@@ -1,11 +1,11 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { IDeletedUserRepository, IUserRepository, IUserResponse, IUserService } from '../interfaces';
-import { User, USER_ACCOUNT_STATUS } from '@prisma/client';
-import { CreateUserDto, FindUserDto, FindUsersDto, UpdateUserDto } from '../dto/user.dto';
-import { IUserActivityService } from 'src/user-activity/interfaces';
-import { RoleEnums } from 'src/user-role/enums/role.enum';
-import { IOtpService } from 'src/otp/interfaces';
-import { addMinutes } from 'src/common/utils/date.utils';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { IDeletedUserRepository, IUserRepository, IUserResponse, IUserService } from "../interfaces";
+import { User, USER_ACCOUNT_STATUS } from "generated/prisma/client"
+import { CreateUserDto, FindUserDto, FindUsersDto, UpdateUserDto } from "../dto/user.dto";
+import { IUserActivityService } from "src/user-activity/interfaces";
+import { RoleEnums } from "src/user-role/enums/role.enum";
+import { IOtpService } from "src/otp/interfaces";
+import { addMinutes } from "src/common/utils/date.utils";
 
 @Injectable()
 export class UserService implements IUserService {
@@ -27,11 +27,11 @@ export class UserService implements IUserService {
       console.log(error);
       if (error instanceof HttpException) {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
-      } else if (error.code === 'P2002') {
-        throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      } else if (error.code === "P2002") {
+        throw new HttpException("User already exists", HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
@@ -68,7 +68,7 @@ export class UserService implements IUserService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -80,10 +80,10 @@ export class UserService implements IUserService {
       return await this.userRepository.findUsers({
         where: {
           OR: [
-            { email: { contains: text, mode: 'insensitive' } },
-            { phoneNumber: { contains: text, mode: 'insensitive' } },
-            { firstName: { contains: text, mode: 'insensitive' } },
-            { lastName: { contains: text, mode: 'insensitive' } }
+            { email: { contains: text, mode: "insensitive" } },
+            { phoneNumber: { contains: text, mode: "insensitive" } },
+            { firstName: { contains: text, mode: "insensitive" } },
+            { lastName: { contains: text, mode: "insensitive" } }
           ],
           accountStatus: status,
           isActive: active
@@ -110,7 +110,7 @@ export class UserService implements IUserService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -143,7 +143,7 @@ export class UserService implements IUserService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -209,7 +209,7 @@ export class UserService implements IUserService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

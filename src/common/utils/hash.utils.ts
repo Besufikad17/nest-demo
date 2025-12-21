@@ -1,4 +1,4 @@
-import { hash as bcryptHash, compare as compareHash } from 'bcrypt';
+import { hash as bcryptHash, compare as compareHash } from "bcrypt";
 
 export const hash = async (
 	plainText: string,

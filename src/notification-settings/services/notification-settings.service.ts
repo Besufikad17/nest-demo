@@ -1,8 +1,8 @@
-import { Injectable, HttpException, HttpStatus, HttpCode } from '@nestjs/common';
-import { INotificationSettingsRepository, INotificationSettingsService } from '../interfaces';
-import { IUserActivityService } from 'src/user-activity/interfaces';
-import { NotificationSettings } from '@prisma/client';
-import { AddNotificationSettingDto, UpdateNotificationSettingsDto } from '../dto/notification-settings.dto';
+import { Injectable, HttpException, HttpStatus, HttpCode } from "@nestjs/common";
+import { INotificationSettingsRepository, INotificationSettingsService } from "../interfaces";
+import { IUserActivityService } from "src/user-activity/interfaces";
+import { NotificationSettings } from "generated/prisma/client";
+import { AddNotificationSettingDto, UpdateNotificationSettingsDto } from "../dto/notification-settings.dto";
 
 @Injectable()
 export class NotificationSettingsService implements INotificationSettingsService {
@@ -25,7 +25,7 @@ export class NotificationSettingsService implements INotificationSettingsService
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -45,7 +45,7 @@ export class NotificationSettingsService implements INotificationSettingsService
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -87,7 +87,7 @@ export class NotificationSettingsService implements INotificationSettingsService
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

@@ -1,7 +1,7 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response } from 'express';
-import { Counter, Gauge, Histogram } from 'prom-client';
-import * as os from 'os';
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { Request, Response } from "express";
+import { Counter, Gauge, Histogram } from "prom-client";
+import * as os from "os";
 
 @Injectable()
 export class PrometheusMiddleware implements NestMiddleware {
@@ -19,42 +19,42 @@ export class PrometheusMiddleware implements NestMiddleware {
 
   constructor() {
     this.requestCounter = new Counter({
-      name: 'http_requests_total',
-      help: 'Total number of HTTP requests',
-      labelNames: ['method', 'route', 'status'],
+      name: "http_requests_total",
+      help: "Total number of HTTP requests",
+      labelNames: ["method", "route", "status"],
     });
 
     this.responseDuration = new Histogram({
-      name: 'http_request_duration_seconds',
-      help: 'Histogram of HTTP request duration in seconds',
-      labelNames: ['method', 'route', 'status'],
+      name: "http_request_duration_seconds",
+      help: "Histogram of HTTP request duration in seconds",
+      labelNames: ["method", "route", "status"],
       buckets: [0.1, 0.5, 1, 2, 5, 10], // Seuils de durée
     });
 
     this.activeRequests = new Gauge({
-      name: 'http_requests_active',
-      help: 'Number of active HTTP requests',
+      name: "http_requests_active",
+      help: "Number of active HTTP requests",
     });
 
     this.errorCounter = new Counter({
-      name: 'http_requests_errors_total',
-      help: 'Total number of HTTP request errors',
-      labelNames: ['method', 'route'],
+      name: "http_requests_errors_total",
+      help: "Total number of HTTP request errors",
+      labelNames: ["method", "route"],
     });
 
     this.processStartTime = new Gauge({
-      name: 'process_start_time_seconds',
-      help: 'Start time of the process in UNIX timestamp (seconds)',
+      name: "process_start_time_seconds",
+      help: "Start time of the process in UNIX timestamp (seconds)",
     });
 
     this.processCpuSecondsTotal = new Gauge({
-      name: 'process_cpu_seconds_total',
-      help: 'Total CPU time the process has consumed in seconds (since start)',
+      name: "process_cpu_seconds_total",
+      help: "Total CPU time the process has consumed in seconds (since start)",
     });
 
     this.processResidentMemoryBytes = new Gauge({
-      name: 'process_resident_memory_bytes',
-      help: 'Resident memory size in bytes (RAM) used by the process',
+      name: "process_resident_memory_bytes",
+      help: "Resident memory size in bytes (RAM) used by the process",
     });
 
     this.processStartTime.set(Date.now() / 1000);
@@ -84,13 +84,13 @@ export class PrometheusMiddleware implements NestMiddleware {
   }
 
   use(req: Request, res: Response, next: () => void): void {
-    if (req.path === '/metrics') return next();
+    if (req.path === "/metrics") return next();
 
     this.activeRequests.inc();
 
     const start = Date.now();
 
-    res.on('finish', () => {
+    res.on("finish", () => {
       const duration = (Date.now() - start) / 1000;
 
       this.responseDuration.observe(

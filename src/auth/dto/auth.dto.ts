@@ -6,18 +6,18 @@ import {
   IsUUID,
   IsDate,
   ValidateIf,
-} from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+} from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class LoginDto {
   @ApiProperty()
   @IsEmail()
-  @ValidateIf((obj) => obj.email !== undefined && obj.email !== null && obj.email !== '')
+  @ValidateIf((obj) => obj.email !== undefined && obj.email !== null && obj.email !== "")
   readonly email?: string;
 
   @ApiProperty()
   @IsString()
-  @ValidateIf((obj) => obj.phoneNumber !== undefined && obj.phoneNumber !== null && obj.phoneNumber !== '')
+  @ValidateIf((obj) => obj.phoneNumber !== undefined && obj.phoneNumber !== null && obj.phoneNumber !== "")
   readonly phoneNumber?: string;
 
   @ApiProperty()
@@ -94,14 +94,14 @@ export class CreateRefreshTokenDto {
 
 export class FindRefreshTokenDto {
   @IsString()
-  @ValidateIf((obj) => obj.refreshToken !== undefined && obj.refreshToken !== null && obj.refreshToken !== '')
+  @ValidateIf((obj) => obj.refreshToken !== undefined && obj.refreshToken !== null && obj.refreshToken !== "")
   readonly refreshToken?: string;
 
   @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   readonly userId?: string;
 
   @IsDate()
-  @ValidateIf((obj) => obj.expiresAt !== undefined && obj.expiresAt !== null && obj.expiresAt !== '')
+  @ValidateIf((obj) => obj.expiresAt !== undefined && obj.expiresAt !== null && obj.expiresAt !== "")
   readonly expiresAt?: Date;
 }

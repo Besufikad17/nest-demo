@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { IFcmTokenRepository } from "../interfaces/fcm-token.repository.interface";
 import { PrismaService } from "src/prisma/prisma.service";
-import { Prisma, FCMToken } from "@prisma/client";
+import { Prisma, FCMToken } from "generated/prisma/client";
 
 @Injectable()
 export class FcmTokenRepository implements IFcmTokenRepository {

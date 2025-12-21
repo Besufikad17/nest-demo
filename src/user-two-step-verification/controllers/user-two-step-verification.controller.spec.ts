@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserTwoStepVerificationController } from './user-two-step-verification.controller';
+import { Test, TestingModule } from "@nestjs/testing";
+import { UserTwoStepVerificationController } from "./user-two-step-verification.controller";
 
-describe('UserTwoStepVerificationController', () => {
+describe("UserTwoStepVerificationController", () => {
   let controller: UserTwoStepVerificationController;
 
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describe('UserTwoStepVerificationController', () => {
     controller = module.get<UserTwoStepVerificationController>(UserTwoStepVerificationController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 });

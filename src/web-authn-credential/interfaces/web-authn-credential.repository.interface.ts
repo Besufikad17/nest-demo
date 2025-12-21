@@ -1,4 +1,4 @@
-import { WebAuthnCredential, Prisma } from "@prisma/client";
+import { WebAuthnCredential, Prisma } from "generated/prisma/client";
 
 export abstract class IWebAuthnCredentialRepository {
   abstract createWebAuthnCredential(createWebAuthnCredentialArgs: Prisma.WebAuthnCredentialCreateArgs): Promise<WebAuthnCredential>;

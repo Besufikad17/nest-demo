@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
 import { IOTPResponse, IOtpService } from "../interfaces/otp.service.interface";
-import { NOTIFICATION_TYPE, OTP } from "@prisma/client";
+import { NOTIFICATION_TYPE, OTP } from "generated/prisma/client";
 import { hash, compare } from "src/common/utils/hash.utils";
 import { ConfigService } from "@nestjs/config";
 import { addDays, addHours } from "src/common/utils/date.utils";
@@ -55,7 +55,7 @@ export class OtpService implements IOtpService {
       }
 
       let value: string = `${Math.floor(100000 + Math.random() * 900000)}`;
-      let otpCode: string = await hash(value, this.configService.get<number>('BCRYPT_SALT') || 10);
+      let otpCode: string = await hash(value, this.configService.get<number>("BCRYPT_SALT") || 10);
       var expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
 
@@ -109,7 +109,7 @@ export class OtpService implements IOtpService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
@@ -142,7 +142,7 @@ export class OtpService implements IOtpService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
@@ -174,7 +174,7 @@ export class OtpService implements IOtpService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
@@ -234,7 +234,7 @@ export class OtpService implements IOtpService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }

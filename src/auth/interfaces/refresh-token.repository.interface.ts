@@ -1,4 +1,4 @@
-import { RefreshTokens, Prisma } from "@prisma/client";
+import { RefreshTokens, Prisma } from "generated/prisma/client";
 
 export abstract class IRefreshTokenRepository {
   abstract createRefreshToken(createRefreshTokenArgs: Prisma.RefreshTokensCreateArgs): Promise<RefreshTokens>;

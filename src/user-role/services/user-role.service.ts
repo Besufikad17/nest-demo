@@ -1,7 +1,7 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { IUserRoleRepository, IUserRoleService } from '../interfaces';
-import { UserRole } from '@prisma/client';
-import { AddUserRoleDto, GetUserRolesDto } from '../dto/user-role.dto';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { IUserRoleRepository, IUserRoleService } from "../interfaces";
+import { UserRole } from "generated/prisma/client"
+import { AddUserRoleDto, GetUserRolesDto } from "../dto/user-role.dto";
 
 @Injectable()
 export class UserRoleService implements IUserRoleService {
@@ -16,11 +16,11 @@ export class UserRoleService implements IUserRoleService {
       console.log(error);
       if (error instanceof HttpException) {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
-      } else if (error.code === 'P2002') {
-        throw new HttpException('User role already exists', HttpStatus.BAD_REQUEST);
+      } else if (error.code === "P2002") {
+        throw new HttpException("User role already exists", HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -41,7 +41,7 @@ export class UserRoleService implements IUserRoleService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

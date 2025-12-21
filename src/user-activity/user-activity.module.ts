@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { UserActivityService } from './services/user-activity.service';
-import * as Interface from './interfaces';
-import { UserActivityRepository } from './repositories/user-activity.repository';
-import { PrismaModule } from 'src/prisma/prisma.module';
-import { UserActivityController } from './controllers/user-activity.controller';
+import { Module } from "@nestjs/common";
+import { UserActivityService } from "./services/user-activity.service";
+import * as Interface from "./interfaces";
+import { UserActivityRepository } from "./repositories/user-activity.repository";
+import { PrismaModule } from "src/prisma/prisma.module";
+import { UserActivityController } from "./controllers/user-activity.controller";
 
 @Module({
   providers: [

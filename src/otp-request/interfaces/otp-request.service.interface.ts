@@ -1,4 +1,4 @@
-import { OTPRequests, Prisma } from "@prisma/client";
+import { OTPRequests, Prisma } from "generated/prisma/client";
 
 export abstract class IOtpRequestService {
   abstract createOTPRequest(createOTPRequestArgs: Prisma.OTPRequestsCreateArgs): Promise<OTPRequests>;

@@ -1,6 +1,6 @@
-import { OTP_TYPE, OTP_IDENTIFIER, OTP_STATUS } from '@prisma/client';
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate, ValidateIf } from 'class-validator';
+import { OTP_TYPE, OTP_IDENTIFIER, OTP_STATUS } from "generated/prisma/client"
+import { ApiProperty } from "@nestjs/swagger";
+import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate, ValidateIf } from "class-validator";
 
 export class GenerateOtpDto {
   @ApiProperty({ enum: OTP_TYPE })
@@ -20,7 +20,7 @@ export class GenerateOtpDto {
 
   @ApiProperty()
   @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   readonly userId?: string;
 }
 
@@ -37,7 +37,7 @@ export class CreateOtpDto {
 
   @ApiProperty()
   @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   userId?: string;
 
   @ApiProperty()
@@ -69,7 +69,7 @@ export class FindOtpDto {
   @ApiProperty()
   @IsEnum(OTP_IDENTIFIER)
   @IsNotEmpty()
-  @ValidateIf((obj) => obj.identifier !== undefined && obj.identifier !== null && obj.identifier !== '')
+  @ValidateIf((obj) => obj.identifier !== undefined && obj.identifier !== null && obj.identifier !== "")
   readonly identifier?: OTP_IDENTIFIER;
 
   @ApiProperty()
@@ -78,7 +78,7 @@ export class FindOtpDto {
 
   @ApiProperty()
   @IsString()
-  @ValidateIf((obj) => obj.value !== undefined && obj.value !== null && obj.value !== '')
+  @ValidateIf((obj) => obj.value !== undefined && obj.value !== null && obj.value !== "")
   readonly value?: string;
 }
 
@@ -100,7 +100,7 @@ export class VerifyOtpDto {
 
   @ApiProperty()
   @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   readonly userId?: string;
 
   @ApiProperty()

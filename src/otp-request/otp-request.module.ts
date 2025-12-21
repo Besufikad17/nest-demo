@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { OtpRequestService } from './services/otp-request.service';
-import * as Interface from './interfaces';
-import { OtpRequestRepository } from './repositories/otp-request.repository';
+import { Module } from "@nestjs/common";
+import { OtpRequestService } from "./services/otp-request.service";
+import * as Interface from "./interfaces";
+import { OtpRequestRepository } from "./repositories/otp-request.repository";
 
 @Module({
   providers: [

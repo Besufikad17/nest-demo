@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import {
   INotificationRepository,
   INotificationService,
@@ -6,12 +6,12 @@ import {
   IFcmTokenRepository,
   IQueueProvider,
   IMailService
-} from '../interfaces';
-import { SendLoginNotificationDto, SendOTPDto, SendPushNotificationDto } from '../dto/notification.dto';
-import { Notification, NOTIFICATION_STATUS, NOTIFICATION_TYPE } from '@prisma/client';
-import { getEmailHtml } from '../utils/mail.util';
-import { IRoleService } from 'src/role/interfaces';
-import { IUserRoleService } from 'src/user-role/interfaces';
+} from "../interfaces";
+import { SendLoginNotificationDto, SendOTPDto, SendPushNotificationDto } from "../dto/notification.dto";
+import { Notification, NOTIFICATION_STATUS, NOTIFICATION_TYPE } from "generated/prisma/client";
+import { getEmailHtml } from "../utils/mail.util";
+import { IRoleService } from "src/role/interfaces";
+import { IUserRoleService } from "src/user-role/interfaces";
 
 
 @Injectable()
@@ -22,7 +22,7 @@ export class NotificationService implements INotificationService {
     private roleService: IRoleService,
     private userRoleService: IUserRoleService,
     private mailService: IMailService,
-    @Inject('QUEUE') private queueProvider: IQueueProvider
+    @Inject("QUEUE") private queueProvider: IQueueProvider
   ) { }
 
   async sendPushNotification(sendPushNotificationDto: SendPushNotificationDto): Promise<INotificationResponse> {
@@ -57,7 +57,7 @@ export class NotificationService implements INotificationService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -75,7 +75,7 @@ export class NotificationService implements INotificationService {
       });
 
       if (sendOTPDto.type === "EMAIL") {
-        let html = '';
+        let html = "";
         switch (sendOTPDto.messageType) {
           case "ACCOUNT_VERIFICATION":
             html = `<p><strong>Help us verify your email address, </strong></p>
@@ -88,21 +88,21 @@ export class NotificationService implements INotificationService {
                 This verification ensures the security of your account and enables us
                 to provide important updates about your service.
               </p>
-              <p>If you didn't request this, you can ignore this email.</p>
+              <p>If you didn"t request this, you can ignore this email.</p>
             `;
             break;
           default:
             html = `<p><strong>Help us verify your action, </strong></p>
               <p>Thank you for choosing Sefer.</p>
               <p>Please confirm your action address by using the following code:</p>
-              <div style = "text-align: center; width: 100%;">
-                <p style = "font-style: bold;">${sendOTPDto.message}</p>
+              <div style = \"text-align: center; width: 100%;\">
+                <p style = \"font-style: bold;\">${sendOTPDto.message}</p>
               </div>
               <p>
                 This verification ensures the security of your account and enables us
                 to provide important updates about your service.
               </p>
-              <p>If you didn't request this, you can ignore this email.</p>
+              <p>If you didn"t request this, you can ignore this email.</p>
             `;
         }
 
@@ -125,7 +125,7 @@ export class NotificationService implements INotificationService {
       });
 
       return {
-        message: 'OTP sent'
+        message: "OTP sent"
       };
     } catch (error) {
       console.log(error);
@@ -133,7 +133,7 @@ export class NotificationService implements INotificationService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -179,7 +179,7 @@ export class NotificationService implements INotificationService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -223,7 +223,7 @@ export class NotificationService implements INotificationService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -269,7 +269,7 @@ export class NotificationService implements INotificationService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

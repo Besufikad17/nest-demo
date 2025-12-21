@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
-import { IMailInterface, IMailService } from '../interfaces';
+import { Injectable } from "@nestjs/common";
+import { MailerService } from "@nestjs-modules/mailer";
+import { IMailInterface, IMailService } from "../interfaces";
 
 @Injectable()
 export class MailService implements IMailService {

@@ -1,4 +1,4 @@
-import { NotificationSettings } from "@prisma/client";
+import { NotificationSettings } from "generated/prisma/client";
 import { AddNotificationSettingDto, UpdateNotificationSettingsDto } from "../dto/notification-settings.dto";
 
 export abstract class INotificationSettingsService {

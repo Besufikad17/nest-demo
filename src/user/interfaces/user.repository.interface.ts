@@ -1,4 +1,4 @@
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User } from "generated/prisma/client"
 
 export abstract class IUserRepository {
   abstract createUser(createUserArgs: Prisma.UserCreateArgs): Promise<User>;

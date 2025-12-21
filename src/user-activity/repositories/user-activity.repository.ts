@@ -1,4 +1,4 @@
-import { Prisma, UserActivityLog } from "@prisma/client";
+import { Prisma, UserActivityLog } from "generated/prisma/client";
 import { IUserActivityRepository } from "../interfaces";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Injectable } from "@nestjs/common";

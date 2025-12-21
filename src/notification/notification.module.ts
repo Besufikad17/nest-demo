@@ -1,16 +1,16 @@
-import { Module } from '@nestjs/common';
-import { NotificationService } from './services/notification.service';
-import { NotificationController } from './controllers/notification.controller';
-import * as Interface from './interfaces';
-import { FcmTokenRepository } from './repositories/fcm-token.repository';
-import { NotificationRepository } from './repositories/notification.repository';
-import { FcmTokenService } from './services/fcm-token.service';
-import { QueueProvider } from './providers/queue.provider';
-import { MailService } from './services/mail.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { RoleModule } from 'src/role/role.module';
-import { UserRoleModule } from 'src/user-role/user-role.module';
+import { Module } from "@nestjs/common";
+import { NotificationService } from "./services/notification.service";
+import { NotificationController } from "./controllers/notification.controller";
+import * as Interface from "./interfaces";
+import { FcmTokenRepository } from "./repositories/fcm-token.repository";
+import { NotificationRepository } from "./repositories/notification.repository";
+import { FcmTokenService } from "./services/fcm-token.service";
+import { QueueProvider } from "./providers/queue.provider";
+import { MailService } from "./services/mail.service";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { MailerModule } from "@nestjs-modules/mailer";
+import { RoleModule } from "src/role/role.module";
+import { UserRoleModule } from "src/user-role/user-role.module";
 
 @Module({
   providers: [
@@ -32,16 +32,16 @@ import { UserRoleModule } from 'src/user-role/user-role.module';
     MailerModule.forRootAsync({
       useFactory: async (config: ConfigService) => ({
         transport: {
-          service: 'gmail',
+          service: "gmail",
           port: 587,
           secure: false,
           auth: {
-            user: config.get<string>('MAIL_USER'),
-            pass: config.get<string>('MAIL_PASS'),
+            user: config.get<string>("MAIL_USER"),
+            pass: config.get<string>("MAIL_PASS"),
           },
         },
         defaults: {
-          from: `"No Reply" <${config.get<string>('MAIL_FROM')}>`,
+          from: `"No Reply" <${config.get<string>("MAIL_FROM")}>`,
         },
       }),
       inject: [ConfigService],

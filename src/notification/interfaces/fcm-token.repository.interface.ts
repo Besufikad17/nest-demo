@@ -1,4 +1,4 @@
-import { FCMToken, Prisma } from "@prisma/client";
+import { FCMToken, Prisma } from "generated/prisma/client";
 
 export abstract class IFcmTokenRepository {
   abstract createFcmToken(createFcmTokenArgs: Prisma.FCMTokenCreateArgs): Promise<FCMToken>;

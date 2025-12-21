@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserTwoStepVerificationService } from './user-two-step-verification.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { UserTwoStepVerificationService } from "./user-two-step-verification.service";
 
-describe('UserTwoStepVerificationService', () => {
+describe("UserTwoStepVerificationService", () => {
   let service: UserTwoStepVerificationService;
 
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describe('UserTwoStepVerificationService', () => {
     service = module.get<UserTwoStepVerificationService>(UserTwoStepVerificationService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 });

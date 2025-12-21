@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { NotificationSettingsService } from './services/notification-settings.service';
-import { NotificationSettingsController } from './controllers/notification-settings.controller';
-import * as Interface from './interfaces';
-import { UserActivityModule } from 'src/user-activity/user-activity.module';
-import { NotificationSettingsRepository } from './repositories/notification-settings.repository';
+import { Module } from "@nestjs/common";
+import { NotificationSettingsService } from "./services/notification-settings.service";
+import { NotificationSettingsController } from "./controllers/notification-settings.controller";
+import * as Interface from "./interfaces";
+import { UserActivityModule } from "src/user-activity/user-activity.module";
+import { NotificationSettingsRepository } from "./repositories/notification-settings.repository";
 
 @Module({
   providers: [

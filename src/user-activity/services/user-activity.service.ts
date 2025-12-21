@@ -1,8 +1,8 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { IUserActivityRepository, IUserActivityService } from '../interfaces';
-import { UserActivityLog } from '@prisma/client';
-import { AddUserActivityDto, FileUploadEventDto, FindUserActivityDto } from '../dto/user-activity.dto';
-import { RoleEnums } from 'src/user-role/enums/role.enum';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { IUserActivityRepository, IUserActivityService } from "../interfaces";
+import { UserActivityLog } from "generated/prisma/client"
+import { AddUserActivityDto, FileUploadEventDto, FindUserActivityDto } from "../dto/user-activity.dto";
+import { RoleEnums } from "src/user-role/enums/role.enum";
 
 @Injectable()
 export class UserActivityService implements IUserActivityService {
@@ -17,7 +17,7 @@ export class UserActivityService implements IUserActivityService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -38,7 +38,7 @@ export class UserActivityService implements IUserActivityService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -66,7 +66,7 @@ export class UserActivityService implements IUserActivityService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -89,7 +89,7 @@ export class UserActivityService implements IUserActivityService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { WebAuthnCredentialService } from './web-authn-credential.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { WebAuthnCredentialService } from "./web-authn-credential.service";
 
-describe('WebAuthnCredentialService', () => {
+describe("WebAuthnCredentialService", () => {
   let service: WebAuthnCredentialService;
 
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describe('WebAuthnCredentialService', () => {
     service = module.get<WebAuthnCredentialService>(WebAuthnCredentialService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 });

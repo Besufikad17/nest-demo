@@ -1,5 +1,5 @@
-import { OTP } from '@prisma/client';
-import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from '../dto/otp.dto';
+import { OTP } from "generated/prisma/client"
+import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
 
 export interface IOTPResponse {
   message: string

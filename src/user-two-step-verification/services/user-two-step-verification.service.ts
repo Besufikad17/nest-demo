@@ -1,7 +1,7 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { I2FAResponse, IUserTwoStepVerificationService } from '../interfaces/user-two-step-verification.service.interface';
-import { UserTwoStepVerificationRepository } from '../repositories/user-two-step-verification.repository';
-import { UserTwoStepVerification } from '@prisma/client';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { I2FAResponse, IUserTwoStepVerificationService } from "../interfaces/user-two-step-verification.service.interface";
+import { UserTwoStepVerificationRepository } from "../repositories/user-two-step-verification.repository";
+import { UserTwoStepVerification } from "generated/prisma/client"
 import {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
@@ -9,7 +9,7 @@ import {
   generateRegistrationOptions,
   verifyAuthenticationResponse,
   verifyRegistrationResponse
-} from '@simplewebauthn/server';
+} from "@simplewebauthn/server";
 import {
   AddPasskeyDto,
   CreateUserTwoStepVerificationDto,
@@ -17,14 +17,14 @@ import {
   UpdateUserTwoStepVerifcationDto,
   VerifyPasskeyDto,
   VerifyUserTwoStepVerificationDto
-} from '../dto/user-two-step-verification.dto';
-import { authenticator } from 'otplib';
-import { toDataURL } from 'qrcode';
-import { IUserService } from 'src/user/interfaces';
-import { IWebAuthnCredentialService } from 'src/web-authn-credential/interfaces/web-authn-credential.service.interface';
-import { parseTransportsToFutureArray } from 'src/web-authn-credential/utils/strings';
-import { IUserActivityService } from 'src/user-activity/interfaces';
-import { RoleEnums } from 'src/user-role/enums/role.enum';
+} from "../dto/user-two-step-verification.dto";
+import { authenticator } from "otplib";
+import { toDataURL } from "qrcode";
+import { IUserService } from "src/user/interfaces";
+import { IWebAuthnCredentialService } from "src/web-authn-credential/interfaces/web-authn-credential.service.interface";
+import { parseTransportsToFutureArray } from "src/web-authn-credential/utils/strings";
+import { IUserActivityService } from "src/user-activity/interfaces";
+import { RoleEnums } from "src/user-role/enums/role.enum";
 
 @Injectable()
 export class UserTwoStepVerificationService implements IUserTwoStepVerificationService {
@@ -58,7 +58,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
       if (createUserTwoStepVerificationDto.methodType === "AUTHENTICATOR") {
         const secret = authenticator.generateSecret();
-        const otpAuthUrl = authenticator.keyuri(email, 'nest-demo', secret);
+        const otpAuthUrl = authenticator.keyuri(email, "nest-demo", secret);
         const qrCode = await toDataURL(otpAuthUrl);
         await this.userTwoStepVerificationRepository.createUserTwoStepVerification({
           data: {
@@ -92,7 +92,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -110,7 +110,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -126,7 +126,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -154,7 +154,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -213,7 +213,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -263,7 +263,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -298,7 +298,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -318,18 +318,18 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
       const passkeys = await this.webAuthnCredentialService.findWebAuthCredentials(user.id);
 
       const options = await generateRegistrationOptions({
-        rpName: 'nest-demo',
-        rpID: 'nest-demo.com',
+        rpName: "nest-demo",
+        rpID: "nest-demo.com",
         userID: Buffer.from(user.id),
         userName: user.email || user.phoneNumber!,
-        attestationType: 'none',
+        attestationType: "none",
         excludeCredentials: passkeys.map(passkey => ({
           id: passkey.id,
           transports: parseTransportsToFutureArray(passkey.transports)
         })),
         authenticatorSelection: {
-          residentKey: 'required',
-          userVerification: 'preferred',
+          residentKey: "required",
+          userVerification: "preferred",
         },
       });
 
@@ -348,7 +348,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -359,15 +359,15 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     try {
       const user = await this.userService.findUser({ id: userId }, RoleEnums.USER);
 
-      if (!user) throw new HttpException('User not found!!', HttpStatus.BAD_REQUEST);
+      if (!user) throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
 
       const currentOptions: PublicKeyCredentialCreationOptionsJSON = await this.requestAddPasskey(user.id, deviceInfo, ip);
 
       const { verified, registrationInfo } = await verifyRegistrationResponse({
         response: addPasskeyDto.response,
         expectedChallenge: currentOptions.challenge,
-        expectedOrigin: 'http://localhost:4000',
-        expectedRPID: 'nest-demo.com',
+        expectedOrigin: "http://localhost:4000",
+        expectedRPID: "nest-demo.com",
       });
 
       if (verified && registrationInfo) {
@@ -411,7 +411,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -422,8 +422,8 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     try {
       const options = await generateAuthenticationOptions({
         allowCredentials: [],
-        userVerification: 'preferred',
-        rpID: 'nest-demo.com'
+        userVerification: "preferred",
+        rpID: "nest-demo.com"
       });
 
       await this.userActivityService.addUserActivity({
@@ -441,7 +441,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -451,7 +451,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
   async verifyPasskey(verifyPasskeyDto: VerifyPasskeyDto, userId: string, deviceInfo: string, ip: string): Promise<I2FAResponse> {
     try {
       const user = await this.userService.findUser({ id: userId }, RoleEnums.USER);
-      if (!user) throw new Error('User not found');
+      if (!user) throw new Error("User not found");
 
       const currentOptions: PublicKeyCredentialRequestOptionsJSON = await this.requestVerifyPasskey(user.id, deviceInfo, ip);
 
@@ -468,7 +468,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         response: verifyPasskeyDto.response,
         expectedChallenge: currentOptions.challenge,
         expectedOrigin: origin,
-        expectedRPID: 'nest-demo.com',
+        expectedRPID: "nest-demo.com",
         credential: {
           id: passkey.id,
           publicKey: passkey.publicKey,
@@ -496,7 +496,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

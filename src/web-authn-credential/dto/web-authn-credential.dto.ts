@@ -1,4 +1,4 @@
-import { USER_PASSKEY_DEVICE_TYPE } from "@prisma/client";
+import { USER_PASSKEY_DEVICE_TYPE } from "generated/prisma/client";
 import { AuthenticatorTransportFuture } from "@simplewebauthn/server";
 import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsUUID } from "class-validator";
 
@@ -15,7 +15,7 @@ export class CreateWebAuthnCredentialDto {
 
   @IsNotEmpty()
   @IsUUID()
-  readonly userId: string;
+  readonly userId?: string;
 
   @IsNotEmpty()
   readonly transports: AuthenticatorTransportFuture[] | string;

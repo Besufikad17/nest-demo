@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { IDeletedUserRepository } from "../interfaces/deleted-user.repository.interface";
 import { PrismaService } from "src/prisma/prisma.service";
-import { Prisma, DeletedUser } from "@prisma/client";
+import { Prisma, DeletedUser } from "generated/prisma/client";
 
 @Injectable()
 export class DeletedUserRepository implements IDeletedUserRepository {

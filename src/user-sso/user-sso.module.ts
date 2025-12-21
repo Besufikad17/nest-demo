@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { UserSsoService } from './services/user-sso.service';
-import { UserSsoController } from './controllers/user-sso.controller';
-import * as Interfaces from './interfaces';
-import { UserSSORepository } from './repositories/user-sso.repository';
+import { Module } from "@nestjs/common";
+import { UserSsoService } from "./services/user-sso.service";
+import { UserSsoController } from "./controllers/user-sso.controller";
+import * as Interfaces from "./interfaces";
+import { UserSSORepository } from "./repositories/user-sso.repository";
 
 @Module({
   providers: [

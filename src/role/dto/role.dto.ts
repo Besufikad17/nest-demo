@@ -12,11 +12,11 @@ export class AddRoleDto {
 
 export class GetRoleDto {
   @IsUUID()
-  @ValidateIf((obj) => obj.id !== undefined && obj.id !== null && obj.id !== '')
+  @ValidateIf((obj) => obj.id !== undefined && obj.id !== null && obj.id !== "")
   readonly id?: string;
 
   @IsString()
-  @ValidateIf((obj) => obj.roleName !== undefined && obj.roleName !== null && obj.roleName !== '')
+  @ValidateIf((obj) => obj.roleName !== undefined && obj.roleName !== null && obj.roleName !== "")
   readonly roleName?: string;
 }
 

@@ -1,4 +1,4 @@
-import { UserSSO } from "@prisma/client";
+import { UserSSO } from "generated/prisma/client";
 import { CreateUserSSODto, FindUserSSODto } from "../dto/user-sso.dto";
 
 export abstract class IUserSSOService {

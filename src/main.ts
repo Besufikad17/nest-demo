@@ -1,22 +1,22 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('/api/v1');
+  app.setGlobalPrefix("/api/v1");
 
   const config = new DocumentBuilder()
-    .setTitle('Nest Demo API Documentation')
-    .setDescription('The user and employee account management service API.')
-    .setVersion('0.1')
-    .addTag('User and Employee Account Management')
+    .setTitle("Nest Demo API Documentation")
+    .setDescription("The user and employee account management service API.")
+    .setVersion("0.1")
+    .addTag("User and Employee Account Management")
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/api/docs', app, document);
+  SwaggerModule.setup("/api/docs", app, document);
 
   // validation config
   app.useGlobalPipes(
@@ -27,6 +27,6 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT || 4000);
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();

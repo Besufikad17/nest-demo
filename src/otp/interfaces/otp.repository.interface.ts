@@ -1,4 +1,4 @@
-import { OTP, Prisma } from '@prisma/client';
+import { OTP, Prisma } from "generated/prisma/client"
 
 export abstract class IOtpRepository {
   abstract createOTP(createOTPArgs: Prisma.OTPCreateArgs): Promise<OTP>;

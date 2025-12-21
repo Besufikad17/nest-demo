@@ -1,4 +1,4 @@
-import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto } from '../dto';
+import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto } from "../dto";
 
 export interface IAuthResponse {
   message: string;

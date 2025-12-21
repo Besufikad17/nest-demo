@@ -1,23 +1,23 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { IAuthResponse, IAuthService, IGoogleUser } from '../interfaces';
-import { ConfigService } from '@nestjs/config';
-import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto } from '../dto';
-import { hash, compare } from 'src/common/utils/hash.utils';
-import { JwtService } from '@nestjs/jwt';
-import { IUserService } from 'src/user/interfaces';
-import { IUserTwoStepVerificationService } from 'src/user-two-step-verification/interfaces';
-import { IUserSSOService } from 'src/user-sso/interfaces';
-import { addMinutes } from 'src/common/utils/date.utils';
-import { IUserActivityService } from 'src/user-activity/interfaces';
-import { IRefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
-import { decodeToken } from 'src/common/utils/jwt.utils';
-import { RoleEnums } from 'src/user-role/enums/role.enum';
-import { IUserRoleService } from 'src/user-role/interfaces';
-import { INotificationSettingsService } from 'src/notification-settings/interfaces';
-import { IRoleService } from 'src/role/interfaces';
-import { IOtpService } from 'src/otp/interfaces';
-import { INotificationService } from 'src/notification/interfaces';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { IAuthResponse, IAuthService, IGoogleUser } from "../interfaces";
+import { ConfigService } from "@nestjs/config";
+import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto } from "../dto";
+import { hash, compare } from "src/common/utils/hash.utils";
+import { JwtService } from "@nestjs/jwt";
+import { IUserService } from "src/user/interfaces";
+import { IUserTwoStepVerificationService } from "src/user-two-step-verification/interfaces";
+import { IUserSSOService } from "src/user-sso/interfaces";
+import { addMinutes } from "src/common/utils/date.utils";
+import { IUserActivityService } from "src/user-activity/interfaces";
+import { IRefreshTokenRepository } from "../interfaces/refresh-token.repository.interface";
+import { decodeToken } from "src/common/utils/jwt.utils";
+import { RoleEnums } from "src/user-role/enums/role.enum";
+import { IUserRoleService } from "src/user-role/interfaces";
+import { INotificationSettingsService } from "src/notification-settings/interfaces";
+import { IRoleService } from "src/role/interfaces";
+import { IOtpService } from "src/otp/interfaces";
+import { INotificationService } from "src/notification/interfaces";
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -37,29 +37,29 @@ export class AuthService implements IAuthService {
   ) { }
 
   private async generateToken(userId: string, email: string): Promise<string> {
-    const secretKey = this.configService.get<string>('JWT_SECRET');
+    const secretKey = this.configService.get<string>("JWT_SECRET");
     if (!secretKey) {
-      throw new Error('JWT_SECRET_KEY is not defined');
+      throw new Error("JWT_SECRET_KEY is not defined");
     }
 
-    return this.jwtService.sign(
+    return this.jwtService.sign<any>(
       {
         sub: userId,
         email: email
       },
       {
         secret: secretKey,
-        expiresIn: this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN') || '1hr',
+        expiresIn: this.configService.get("ACCESS_TOKEN_EXPIRES_IN") || "1hr",
       },
     );
   }
 
   private async generateRefreshToken(userId: string, email: string, currentRefreshToken?: string, currentRefreshTokenExpiryDate?: Date) {
-    const newRefreshToken = this.jwtService.sign(
+    const newRefreshToken = this.jwtService.sign<any>(
       { sub: userId, email: email },
       {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('REFRESH_TOKEN_EXPIRES_IN') || '30d'
+        secret: this.configService.get<string>("JWT_SECRET"),
+        expiresIn: this.configService.get("REFRESH_TOKEN_EXPIRES_IN") || "30d"
       },
     );
 
@@ -146,7 +146,7 @@ export class AuthService implements IAuthService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -169,13 +169,13 @@ export class AuthService implements IAuthService {
         return new HttpException("Please verify your account first!!", HttpStatus.BAD_REQUEST);
       }
 
-      let hashedPassword: string = await hash(password, this.configService.get<number>('BCRYPT_SALT') || 10);
+      let hashedPassword: string = await hash(password, this.configService.get<number>("BCRYPT_SALT") || 10);
       const newUser = await this.userService.createUser({
         passwordHash: hashedPassword,
         ...userWithoutPassword
       });
 
-      const userRole = await this.roleService.getRole({ roleName: 'user' });
+      const userRole = await this.roleService.getRole({ roleName: "user" });
 
       await this.userRoleService.addUserRole({
         userId: newUser.id,
@@ -208,7 +208,7 @@ export class AuthService implements IAuthService {
       });
 
       return {
-        message: 'User registered successfully',
+        message: "User registered successfully",
         accessToken: await this.generateToken(newUser.id, userWithoutPassword.email),
         refreshToken: await this.generateRefreshToken(newUser.id, userWithoutPassword.email)
       };
@@ -216,11 +216,11 @@ export class AuthService implements IAuthService {
       console.log(error);
       if (error instanceof HttpException) {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
-      } else if (error.code === 'P2002') {
-        throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
+      } else if (error.code === "P2002") {
+        throw new HttpException("User already exists", HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
@@ -252,7 +252,7 @@ export class AuthService implements IAuthService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -300,14 +300,14 @@ export class AuthService implements IAuthService {
         ipAddress: ip
       });
 
-      return { message: 'Password reset completed successfully' };
+      return { message: "Password reset completed successfully" };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -353,14 +353,14 @@ export class AuthService implements IAuthService {
         ipAddress: ip
       });
 
-      return { message: 'Password reset completed successfully' };
+      return { message: "Password reset completed successfully" };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -382,7 +382,7 @@ export class AuthService implements IAuthService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }
@@ -409,7 +409,7 @@ export class AuthService implements IAuthService {
         throw new HttpException(error, HttpStatus.BAD_REQUEST);
       } else {
         throw new HttpException(
-          error.meta || 'Error occurred check the log in the server',
+          error.meta || "Error occurred check the log in the server",
           HttpStatus.INTERNAL_SERVER_ERROR
         );
       }

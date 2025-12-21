@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IOtpRepository } from "../interfaces";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "generated/prisma/client";
 
 @Injectable()
 export class OtpRepository implements IOtpRepository {

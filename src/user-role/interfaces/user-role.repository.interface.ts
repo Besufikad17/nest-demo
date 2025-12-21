@@ -1,4 +1,4 @@
-import { Prisma, UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "generated/prisma/client";
 
 export abstract class IUserRoleRepository {
   abstract createUserRole(createUserRoleArgs: Prisma.UserRoleCreateArgs): Promise<UserRole>;

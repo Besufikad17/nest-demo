@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { IUserTwoStepVerificationRepository } from "../interfaces/user-two-step-verification.repository.interface";
 import { PrismaService } from "src/prisma/prisma.service";
-import { UserTwoStepVerification, Prisma } from "@prisma/client";
+import { UserTwoStepVerification, Prisma } from "generated/prisma/client";
 
 @Injectable()
 export class UserTwoStepVerificationRepository implements IUserTwoStepVerificationRepository {

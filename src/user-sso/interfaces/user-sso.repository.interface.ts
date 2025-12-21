@@ -1,4 +1,4 @@
-import { UserSSO, Prisma } from "@prisma/client";
+import { UserSSO, Prisma } from "generated/prisma/client";
 
 export abstract class IUserSSORepository {
   abstract createUserSSO(createUserSSOArgs: Prisma.UserSSOCreateArgs): Promise<UserSSO>;

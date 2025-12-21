@@ -1,4 +1,4 @@
-import { Notification, Prisma } from "@prisma/client";
+import { Notification, Prisma } from "generated/prisma/client";
 
 export abstract class INotificationRepository {
   abstract createNotification(createNotificationArgs: Prisma.NotificationCreateArgs): Promise<Notification>;

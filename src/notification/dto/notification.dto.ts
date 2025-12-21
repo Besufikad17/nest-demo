@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
-import { NOTIFICATION_TYPE } from "@prisma/client";
+import { NOTIFICATION_TYPE } from "generated/prisma/client";
 import { MESSAGE_TYPE } from "../enums/notification.enum";
 
 export class RegisterFcmTokenDto {
@@ -12,7 +12,7 @@ export class RegisterFcmTokenDto {
 
 export class SendOTPDto {
   @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   readonly userId?: string;
 
   @IsNotEmpty()
@@ -38,7 +38,7 @@ export class SendOTPDto {
 
 export class SendLoginNotificationDto {
   @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   readonly userId?: string;
 
   @IsNotEmpty()

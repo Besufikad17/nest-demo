@@ -3,10 +3,10 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RoleEnums } from 'src/user-role/enums/role.enum';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { PrismaService } from "src/prisma/prisma.service";
+import { RoleEnums } from "src/user-role/enums/role.enum";
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -17,7 +17,7 @@ export class RoleGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.get<RoleEnums[]>(
-      'roles',
+      "roles",
       context.getHandler(),
     );
     if (!requiredRoles) {
@@ -28,7 +28,7 @@ export class RoleGuard implements CanActivate {
     const userId = request.user?.id;
 
     if (!userId) {
-      throw new ForbiddenException('Access denied: no user ID found');
+      throw new ForbiddenException("Access denied: no user ID found");
     }
 
     const userRoles = await this.prisma.userRole.findMany({
@@ -41,13 +41,13 @@ export class RoleGuard implements CanActivate {
     });
 
     if (!userRoles || userRoles.length === 0) {
-      throw new ForbiddenException('Access denied: user has no roles');
+      throw new ForbiddenException("Access denied: user has no roles");
     }
 
     const userRoleNames = userRoles.map((userRole) => userRole.Role.roleName);
 
     if (!requiredRoles.some((role) => userRoleNames.includes(role.toString()))) {
-      throw new ForbiddenException('Access denied: insufficient role');
+      throw new ForbiddenException("Access denied: insufficient role");
     }
 
     return true;

@@ -4,17 +4,17 @@ export function parseTransportsToFutureArray(csvString: string | null): Authenti
   if (!csvString) return [];
 
   const validTransports: Set<AuthenticatorTransportFuture> = new Set([
-    'ble',
-    'cable',
-    'hybrid',
-    'internal',
-    'nfc',
-    'smart-card',
-    'usb',
+    "ble",
+    "cable",
+    "hybrid",
+    "internal",
+    "nfc",
+    "smart-card",
+    "usb",
   ]);
 
   return csvString
-    .split(',')
+    .split(",")
     .map((transport) => transport.trim()) // Remove extra spaces
     .filter((transport): transport is AuthenticatorTransportFuture =>
       validTransports.has(transport as AuthenticatorTransportFuture)

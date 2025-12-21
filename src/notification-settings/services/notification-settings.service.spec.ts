@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotificationSettingsService } from './notification-settings.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { NotificationSettingsService } from "./notification-settings.service";
 
-describe('NotificationSettingsService', () => {
+describe("NotificationSettingsService", () => {
   let service: NotificationSettingsService;
 
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describe('NotificationSettingsService', () => {
     service = module.get<NotificationSettingsService>(NotificationSettingsService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 });

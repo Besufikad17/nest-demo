@@ -1,13 +1,13 @@
-import { registerDecorator, ValidationOptions } from 'class-validator';
-import { Transform } from 'class-transformer';
-import { PHONE_NUMBER_COUNTRY_CODES } from '../utils/phone.utils';
+import { registerDecorator, ValidationOptions } from "class-validator";
+import { Transform } from "class-transformer";
+import { PHONE_NUMBER_COUNTRY_CODES } from "../utils/phone.utils";
 
 export function IsValidPhoneNumber(
 	validationOptions?: ValidationOptions,
 ): PropertyDecorator {
 	return function(target: object, propertyName: string | symbol): void {
 		registerDecorator({
-			name: 'IsValidPhoneNumber',
+			name: "IsValidPhoneNumber",
 			target: target.constructor,
 			propertyName: propertyName.toString(),
 			constraints: [],
@@ -28,7 +28,7 @@ export function IsValidPhoneNumber(
 
 					const phoneNumberWithoutCountryCode = value.replace(
 						validCountryCode,
-						'',
+						"",
 					);
 
 					const isValidPhoneNumber = /^\d{9}$/.test(
@@ -56,7 +56,7 @@ export function TransformPhoneNumber(): PropertyDecorator {
 			if (validCountryCode) {
 				const phoneNumberWithoutCountryCode = value.replace(
 					validCountryCode,
-					'',
+					"",
 				);
 
 				if (/^\d{9}$/.test(phoneNumberWithoutCountryCode)) {

@@ -1,4 +1,4 @@
-import { Roles } from "@prisma/client";
+import { Roles } from "generated/prisma/client";
 import { AddRoleDto, GetRoleDto } from "../dto/role.dto";
 
 export abstract class IRoleService {

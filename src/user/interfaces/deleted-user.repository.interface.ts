@@ -1,4 +1,4 @@
-import { DeletedUser, Prisma } from "@prisma/client";
+import { DeletedUser, Prisma } from "generated/prisma/client";
 
 export abstract class IDeletedUserRepository {
   abstract createDeletedUser(createDeletedUserArgs: Prisma.DeletedUserCreateArgs): Promise<DeletedUser>;
