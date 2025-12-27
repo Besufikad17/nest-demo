@@ -10,6 +10,7 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
+    environment: prod
     
     steps:
       - name: Deploy to EC2
@@ -19,10 +20,19 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd projects/backend/nest-demo
+            set -e
+            echo "Starting deployment..."
+            cd projects/backend/nest-demo || { echo "Failed to cd to projects/backend/nest-demo"; exit 1; }
+            echo "Current directory: $(pwd)"
+            echo "Fetching latest changes..."
             git fetch origin
+            echo "Resetting to origin/main..."
             git reset --hard origin/main
+            echo "Pulling latest main branch..."
             git pull origin main
+            echo "Stopping containers..."
             docker compose down -v
+            echo "Starting containers..."
             docker compose --env-file=.env up -d
+            echo "Deployment completed successfully!"
 
