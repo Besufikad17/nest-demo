@@ -13,23 +13,59 @@ jobs:
     environment: prod
     
     steps:
-      - name: Deploy to EC2
+      - name: Validate secrets
+        run: |
+          if [ -z "${{ secrets.EC2_HOST }}" ]; then
+            echo "❌ EC2_HOST secret is not set or is empty"
+            exit 1
+          fi
+          if [ -z "${{ secrets.EC2_USER }}" ]; then
+            echo "❌ EC2_USER secret is not set or is empty"
+            exit 1
+          fi
+          if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then
+            echo "❌ EC2_SSH_KEY secret is not set or is empty"
+            exit 1
+          fi
+          echo "✅ All required secrets are present"
+          echo "Host length: $(echo -n '${{ secrets.EC2_HOST }}' | wc -c) characters"
+          echo "User length: $(echo -n '${{ secrets.EC2_USER }}' | wc -c) characters"
+          echo "Key length: $(echo -n '${{ secrets.EC2_SSH_KEY }}' | wc -c) characters"
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/ec2_key
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Sync files to EC2
+        run: |
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude 'dist' \
+            --exclude 'postgres_data' \
+            --exclude '.env' \
+            -e "ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:projects/backend/nest-demo/
+      
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 30s
+          command_timeout: 10m
           script: |
             set -e
             echo "Starting deployment..."
             cd projects/backend/nest-demo || { echo "Failed to cd to projects/backend/nest-demo"; exit 1; }
             echo "Current directory: $(pwd)"
-            echo "Fetching latest changes..."
-            git fetch origin
-            echo "Resetting to origin/main..."
-            git reset --hard origin/main
-            echo "Pulling latest main branch..."
-            git pull origin main
             echo "Stopping containers..."
             docker compose down -v
             echo "Starting containers..."
