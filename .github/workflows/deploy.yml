@@ -67,8 +67,8 @@ jobs:
             cd projects/backend/nest-demo || { echo "Failed to cd to projects/backend/nest-demo"; exit 1; }
             echo "Current directory: $(pwd)"
             echo "Stopping containers..."
-            docker compose down -v
+            sudo docker compose down -v
             echo "Starting containers..."
-            docker compose --env-file=.env up -d
+            sudo docker compose --env-file=.env up -d
             echo "Deployment completed successfully!"
 
