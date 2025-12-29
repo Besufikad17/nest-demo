@@ -16,18 +16,18 @@ jobs:
       - name: Validate secrets
         run: |
           if [ -z "${{ secrets.EC2_HOST }}" ]; then
-            echo "❌ EC2_HOST secret is not set or is empty"
+            echo "EC2_HOST secret is not set or is empty"
             exit 1
           fi
           if [ -z "${{ secrets.EC2_USER }}" ]; then
-            echo "❌ EC2_USER secret is not set or is empty"
+            echo "EC2_USER secret is not set or is empty"
             exit 1
           fi
           if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then
-            echo "❌ EC2_SSH_KEY secret is not set or is empty"
+            echo "EC2_SSH_KEY secret is not set or is empty"
             exit 1
           fi
-          echo "✅ All required secrets are present"
+          echo "All required secrets are present"
           echo "Host length: $(echo -n '${{ secrets.EC2_HOST }}' | wc -c) characters"
           echo "User length: $(echo -n '${{ secrets.EC2_USER }}' | wc -c) characters"
           echo "Key length: $(echo -n '${{ secrets.EC2_SSH_KEY }}' | wc -c) characters"
