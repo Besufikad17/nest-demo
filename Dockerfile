@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install the application dependencies
-RUN npm install
+RUN yarn install
 
 # Copy the rest of the application files
 COPY . .
@@ -17,10 +17,10 @@ COPY . .
 RUN npx prisma generate
 
 # Build the NestJS application
-RUN npm run build
+RUN yarn run build
 
 # Copy generated prisma client to dist folder so compiled JS can find it
 RUN cp -r generated dist/ || true
 
 # Start server using the production build
-CMD ["sh", "-c", "npm run db:deploy && npm run dev"]
+CMD ["sh", "-c", "yarn run db:deploy && yarn run dev"]
