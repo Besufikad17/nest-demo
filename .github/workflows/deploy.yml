@@ -38,11 +38,19 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
+          chmod 700 ~/.ssh
+          # Write SSH key - handle multi-line properly
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
           chmod 600 ~/.ssh/ec2_key
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo SSH connection successful"
+          # Add host to known_hosts
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 644 ~/.ssh/known_hosts
+          # Verify key file was created correctly
+          if [ ! -s ~/.ssh/ec2_key ]; then
+            echo "Error: SSH key file is empty or not created"
+            exit 1
+          fi
+          echo "SSH key file created successfully ($(wc -l < ~/.ssh/ec2_key) lines)"
       
       - name: Sync files to EC2
         run: |
