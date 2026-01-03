@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Param, Patch, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import { JwtGuard, RoleGuard } from "src/auth/guards";
+import { JwtGuard, RoleGuard } from "src/common/guards";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { IUser } from "src/common/interfaces";

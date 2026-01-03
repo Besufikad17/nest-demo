@@ -3,7 +3,7 @@ import { GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";
 import { ApiTags } from "@nestjs/swagger";
-import { JwtGuard } from "src/auth/guards";
+import { JwtGuard } from "src/common/guards";
 import { IOtpService } from "../interfaces/otp.service.interface";
 
 @ApiTags("otp")

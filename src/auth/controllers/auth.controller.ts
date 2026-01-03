@@ -3,7 +3,7 @@ import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto, } from "../
 import { IAuthService } from "../interfaces";
 import { AuthGuard } from "@nestjs/passport";
 import { ApiTags } from "@nestjs/swagger";
-import { JwtGuard } from "../guards/JwtAuthGuard";
+import { JwtGuard } from "src/common/guards";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";
 

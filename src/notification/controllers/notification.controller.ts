@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { NOTIFICATION_STATUS, NOTIFICATION_TYPE } from "generated/prisma/client";
-import { JwtGuard } from "src/auth/guards";
+import { JwtGuard } from "src/common/guards";
 import { RegisterFcmTokenDto } from "../dto/notification.dto";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";

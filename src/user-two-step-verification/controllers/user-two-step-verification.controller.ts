@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Headers, HttpCode, HttpStatus, Ip, Param, Post, Put, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import { JwtGuard } from "src/auth/guards/JwtAuthGuard";
+import { JwtGuard } from "src/common/guards";
 import {
   AddPasskeyDto,
   CreateUserTwoStepVerificationDto,

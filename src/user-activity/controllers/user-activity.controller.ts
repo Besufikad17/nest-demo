@@ -1,11 +1,11 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Query, UseGuards } from "@nestjs/common";
-import { IFileUploadEvent, IUserActivityService } from "../interfaces";
-import { JwtGuard } from "src/auth/guards/JwtAuthGuard";
+import { IUserActivityService } from "../interfaces";
+import { JwtGuard } from "src/common/guards/JwtAuthGuard";
 import { FindUserActivityDto } from "../dto/user-activity.dto";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";
 import { ApiTags } from "@nestjs/swagger";
-import { RoleGuard } from "src/auth/guards";
+import { RoleGuard } from "src/common/guards";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 

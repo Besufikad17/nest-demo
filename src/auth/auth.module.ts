@@ -5,9 +5,7 @@ import * as Interfaces from "./interfaces";
 import { AuthRepository } from "./repositories";
 import { UserModule } from "src/user/user.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { GoogleStrategy } from "./strategies";
 import { JwtModule } from "@nestjs/jwt";
-import { JwtStrategy } from "./strategies/jwt.strategy";
 import { UserTwoStepVerificationModule } from "src/user-two-step-verification/user-two-step-verification.module";
 import { UserSsoModule } from "src/user-sso/user-sso.module";
 import { UserActivityModule } from "src/user-activity/user-activity.module";
@@ -17,6 +15,7 @@ import { UserRoleModule } from "src/user-role/user-role.module";
 import { NotificationSettingsModule } from "src/notification-settings/notification-settings.module";
 import { OtpModule } from "src/otp/otp.module";
 import { NotificationModule } from "src/notification/notification.module";
+import { CommonModule } from "src/common/common.module";
 
 @Module({
   providers: [
@@ -24,8 +23,6 @@ import { NotificationModule } from "src/notification/notification.module";
     { provide: Interfaces.IAuthRepository, useClass: AuthRepository },
     { provide: Interfaces.IRefreshTokenRepository, useClass: RefreshTokenRepository },
     RefreshTokenRepository,
-    GoogleStrategy,
-    JwtStrategy
   ],
   controllers: [AuthController],
   imports: [
@@ -39,6 +36,7 @@ import { NotificationModule } from "src/notification/notification.module";
     NotificationModule,
     NotificationSettingsModule,
     OtpModule,
+    CommonModule,
     JwtModule.registerAsync({
       useFactory: async (config: ConfigService) => ({
         global: true,

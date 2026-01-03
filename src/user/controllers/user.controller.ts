@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Headers, HttpCode, HttpException, HttpSt
 import { IUserService } from "../interfaces";
 import { ApiTags } from "@nestjs/swagger";
 import { User, USER_ACCOUNT_STATUS } from "generated/prisma/client"
-import { JwtGuard, RoleGuard } from "src/auth/guards";
+import { JwtGuard, RoleGuard } from "src/common/guards";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 import { GetUser } from "src/common/decorators/get-user.decorator";

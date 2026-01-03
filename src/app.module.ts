@@ -17,6 +17,7 @@ import { PrometheusModule } from "./prometheus/prometheus.module";
 import { LoggerModule } from "nestjs-pino";
 import { PrometheusMiddleware } from "./common/middlewares/prometheus.middleware";
 import { RequestIdMiddleware } from "./common/middlewares/requestId.middleware";
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -79,7 +80,8 @@ import { RequestIdMiddleware } from "./common/middlewares/requestId.middleware";
     OtpModule,
     OtpRequestModule,
     NotificationModule,
-    PrometheusModule
+    PrometheusModule,
+    CommonModule
   ],
 })
 
