@@ -18,6 +18,7 @@ import { INotificationSettingsService } from "src/notification-settings/interfac
 import { IRoleService } from "src/role/interfaces";
 import { IOtpService } from "src/otp/interfaces";
 import { INotificationService } from "src/notification/interfaces";
+import { NotificationType } from "generated/prisma/enums";
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -122,11 +123,12 @@ export class AuthService implements IAuthService {
             ipAddress: ip
           });
 
-          await this.notificationService.sendLoginNotification({
-            deviceInfo,
+          await this.notificationService.createNotification({
             email: email,
-            ip,
-            userId: user.id
+            userId: user.id,
+            type: NotificationType.EMAIL,
+            title: "Login Successful",
+            message: `You have successfully logged in to your account on device ${deviceInfo} and ip ${ip}`
           });
 
           return {

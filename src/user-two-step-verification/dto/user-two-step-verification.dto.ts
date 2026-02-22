@@ -1,6 +1,6 @@
-import { USER_TWO_FACTOR_METHOD_TYPE } from "generated/prisma/client";
+import { UserTwoFactorMethodType } from "generated/prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
+import { IsBoolean, IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
 import { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
 
 export class CreateUserTwoStepVerificationDto {
@@ -9,10 +9,10 @@ export class CreateUserTwoStepVerificationDto {
   @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   readonly userId?: string;
 
-  @ApiProperty({ enum: USER_TWO_FACTOR_METHOD_TYPE })
+  @ApiProperty({ enum: UserTwoFactorMethodType })
   @IsNotEmpty()
-  @IsEnum(USER_TWO_FACTOR_METHOD_TYPE)
-  readonly methodType: USER_TWO_FACTOR_METHOD_TYPE;
+  @IsEnum(UserTwoFactorMethodType)
+  readonly methodType: UserTwoFactorMethodType;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -44,9 +44,9 @@ export class FindUserTwoStepVerificationDto {
   @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
   readonly userId?: string;
 
-  @IsEnum(USER_TWO_FACTOR_METHOD_TYPE)
+  @IsEnum(UserTwoFactorMethodType)
   @ValidateIf((obj) => obj.methodType !== undefined && obj.methodType !== null && obj.methodType !== "")
-  readonly methodType?: USER_TWO_FACTOR_METHOD_TYPE;
+  readonly methodType?: UserTwoFactorMethodType;
 
   @IsString()
   @ValidateIf((obj) => obj.methodDetail !== undefined && obj.methodDetail !== null && obj.methodDetail !== "")

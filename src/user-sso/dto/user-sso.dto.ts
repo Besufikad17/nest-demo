@@ -1,4 +1,4 @@
-import { USER_SSO_PROVIDER } from "generated/prisma/client";
+import { UserSSOProvider } from "generated/prisma/client";
 import { IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
 
 export class CreateUserSSODto {
@@ -7,8 +7,8 @@ export class CreateUserSSODto {
   readonly userId: string;
 
   @IsNotEmpty()
-  @IsEnum(USER_SSO_PROVIDER)
-  readonly provider: USER_SSO_PROVIDER;
+  @IsEnum(UserSSOProvider)
+  readonly provider: UserSSOProvider;
 
   @IsNotEmpty()
   @IsString()
@@ -26,9 +26,9 @@ export class FindUserSSODto {
   readonly userId?: string;
 
   @IsNotEmpty()
-  @IsEnum(USER_SSO_PROVIDER)
+  @IsEnum(UserSSOProvider)
   @ValidateIf((obj) => obj.provider !== undefined && obj.provider !== null && obj.provider !== "")
-  readonly provider?: USER_SSO_PROVIDER;
+  readonly provider?: UserSSOProvider;
 
   @IsNotEmpty()
   @IsString()

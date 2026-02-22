@@ -1,69 +1,38 @@
-import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "class-validator";
-import { NOTIFICATION_TYPE } from "generated/prisma/client";
-import { MESSAGE_TYPE } from "../enums/notification.enum";
+import { NotificationType, NotificationStatus } from "generated/prisma/client";
 
-export class RegisterFcmTokenDto {
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  readonly token: string;
-}
-
-export class SendOTPDto {
+export class CreateNotificationDto {
   @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
+  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== '')
   readonly userId?: string;
 
-  @IsNotEmpty()
+  @IsEmail()
+  @ValidateIf((obj) => obj.email !== undefined && obj.email !== null && obj.email !== '')
+  readonly email?: string;
+
   @IsString()
-  readonly emailOrPhone: string;
+  @ValidateIf((obj) => obj.phoneNumber !== undefined && obj.phoneNumber !== null && obj.phoneNumber !== '')
+  readonly phoneNumber?: string;
 
   @IsNotEmpty()
-  @IsEnum(NOTIFICATION_TYPE)
-  readonly type: NOTIFICATION_TYPE;
-
-  @IsNotEmpty()
-  @IsString()
-  readonly subject: string;
+  @IsEnum(NotificationType)
+  readonly type: NotificationType;
 
   @IsNotEmpty()
   @IsString()
   readonly message: string;
 
   @IsNotEmpty()
-  @IsEnum(MESSAGE_TYPE)
-  readonly messageType: MESSAGE_TYPE;
-}
-
-export class SendLoginNotificationDto {
-  @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
-  readonly userId?: string;
-
-  @IsNotEmpty()
-  @IsEmail()
-  readonly email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  readonly deviceInfo: string;
-
-  @IsNotEmpty()
-  @IsString()
-  readonly ip: string;
-}
-
-export class SendPushNotificationDto {
-  @IsNotEmpty()
   @IsString()
   readonly title: string;
+}
 
-  @IsNotEmpty()
-  @IsString()
-  readonly body: string;
-
+export class UpdateNotificationDto {
   @IsNotEmpty()
   @IsUUID()
-  readonly userId: string;
+  readonly id: string;
+
+  @IsNotEmpty()
+  @IsEnum(NotificationStatus)
+  readonly status: NotificationStatus;
 }

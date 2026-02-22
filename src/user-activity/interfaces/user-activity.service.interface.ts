@@ -1,12 +1,12 @@
 import { UserActivityLog } from "generated/prisma/client";
 import { AddUserActivityDto, FileUploadEventDto, FindUserActivityDto } from "../dto/user-activity.dto";
-import { USER_ACTIONS } from "generated/prisma/client";
+import { UserActions } from "generated/prisma/client";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 
 export interface IFileUploadEvent {
   userId: string;
   profileId: string;
-  action: USER_ACTIONS;
+  action: UserActions;
   deviceInfo: string;
   ip: string;
   actionTimestamp: Date;

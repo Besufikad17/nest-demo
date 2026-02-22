@@ -1,17 +1,17 @@
-import { OTP_TYPE, OTP_IDENTIFIER, OTP_STATUS } from "generated/prisma/client"
+import { OTPType, OTPIdentifier, OTPStatus } from "generated/prisma/client"
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString, IsNotEmpty, IsEnum, IsUUID, IsDate, ValidateIf } from "class-validator";
 
 export class GenerateOtpDto {
-  @ApiProperty({ enum: OTP_TYPE })
-  @IsEnum(OTP_TYPE)
+  @ApiProperty({ enum: OTPType })
+  @IsEnum(OTPType)
   @IsNotEmpty()
-  readonly type: OTP_TYPE;
+  readonly type: OTPType;
 
-  @ApiProperty({ enum: OTP_IDENTIFIER })
-  @IsEnum(OTP_IDENTIFIER)
+  @ApiProperty({ enum: OTPIdentifier })
+  @IsEnum(OTPIdentifier)
   @IsNotEmpty()
-  readonly identifier: OTP_IDENTIFIER;
+  readonly identifier: OTPIdentifier;
 
   @ApiProperty()
   @IsString()
@@ -26,14 +26,14 @@ export class GenerateOtpDto {
 
 export class CreateOtpDto {
   @ApiProperty()
-  @IsEnum(OTP_TYPE)
+  @IsEnum(OTPType)
   @IsNotEmpty()
-  readonly type: OTP_TYPE;
+  readonly type: OTPType;
 
   @ApiProperty()
-  @IsEnum(OTP_IDENTIFIER)
+  @IsEnum(OTPIdentifier)
   @IsNotEmpty()
-  readonly identifier: OTP_IDENTIFIER;
+  readonly identifier: OTPIdentifier;
 
   @ApiProperty()
   @IsUUID()
@@ -62,15 +62,15 @@ export class FindOtpDto {
   readonly id?: string;
 
   @ApiProperty()
-  @IsEnum(OTP_TYPE)
+  @IsEnum(OTPType)
   @IsNotEmpty()
-  readonly type: OTP_TYPE;
+  readonly type: OTPType;
 
   @ApiProperty()
-  @IsEnum(OTP_IDENTIFIER)
+  @IsEnum(OTPIdentifier)
   @IsNotEmpty()
   @ValidateIf((obj) => obj.identifier !== undefined && obj.identifier !== null && obj.identifier !== "")
-  readonly identifier?: OTP_IDENTIFIER;
+  readonly identifier?: OTPIdentifier;
 
   @ApiProperty()
   @IsUUID()
@@ -84,9 +84,9 @@ export class FindOtpDto {
 
 export class UpdateOtpDto {
   @ApiProperty()
-  @IsEnum(OTP_STATUS)
+  @IsEnum(OTPStatus)
   @IsNotEmpty()
-  readonly status?: OTP_STATUS;
+  readonly status?: OTPStatus;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -108,8 +108,8 @@ export class VerifyOtpDto {
   @IsString()
   readonly otpCode: string;
 
-  @ApiProperty({ enum: OTP_TYPE })
-  @IsEnum(OTP_TYPE)
+  @ApiProperty({ enum: OTPType })
+  @IsEnum(OTPType)
   @IsNotEmpty()
-  readonly type: OTP_TYPE;
+  readonly type: OTPType;
 }

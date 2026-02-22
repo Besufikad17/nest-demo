@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Headers, HttpCode, HttpException, HttpStatus, Ip, Param, Patch, Query, UseGuards } from "@nestjs/common";
 import { IUserService } from "../interfaces";
 import { ApiTags } from "@nestjs/swagger";
-import { User, USER_ACCOUNT_STATUS } from "generated/prisma/client"
+import { UserAccountStatus } from "generated/prisma/client"
 import { JwtGuard, RoleGuard } from "src/common/guards";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { RoleEnums } from "src/user-role/enums/role.enum";
@@ -28,7 +28,7 @@ export class UserController {
     @Query("text") text?: string,
     @Query("skip") skip?: number,
     @Query("take") take?: number,
-    @Query("status") status?: USER_ACCOUNT_STATUS,
+    @Query("status") status?: UserAccountStatus,
     @Query("active") active?: boolean
   ) {
     return await this.userService.findUsers(findUsersDto, text, skip, take, status, active);

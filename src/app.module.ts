@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
 import { PrismaModule } from "./prisma/prisma.module";
-import * as Joi from "joi";
 import { UserModule } from "./user/user.module";
 import { RoleModule } from "./role/role.module";
 import { UserActivityModule } from "./user-activity/user-activity.module";
@@ -18,10 +17,35 @@ import { LoggerModule } from "nestjs-pino";
 import { PrometheusMiddleware } from "./common/middlewares/prometheus.middleware";
 import { RequestIdMiddleware } from "./common/middlewares/requestId.middleware";
 import { CommonModule } from './common/common.module';
+import { BullBoardModule } from "./bull-board/bull-board.module";
+import { FcmTokenModule } from "./fcm-token/fcm-token.module";
+import { FirebaseModule } from "./firebase/firebase.module";
+import { BullModule } from "@nestjs/bullmq";
+import * as Joi from "joi";
 
 @Module({
   imports: [
     AuthModule,
+    BullModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          host: config.get('REDIS_HOST') || 'redis',
+          port: config.get('REDIS_PORT') || 6379,
+          password: config.get('REDIS_PASSWORD')
+        },
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'fixed',
+            delay: 3000,
+          },
+          keepLogs: 1,
+          lifo: false,
+        }
+      }),
+      inject: [ConfigService],
+    }),
+    BullBoardModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -81,7 +105,9 @@ import { CommonModule } from './common/common.module';
     OtpRequestModule,
     NotificationModule,
     PrometheusModule,
-    CommonModule
+    CommonModule,
+    FcmTokenModule,
+    FirebaseModule
   ],
 })
 

@@ -1,4 +1,4 @@
-import { Prisma, USER_ACTIONS } from "generated/prisma/client";
+import { Prisma, UserActions } from "generated/prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, IsUUID, ValidateIf } from "class-validator";
 
@@ -13,8 +13,8 @@ export class AddUserActivityDto {
   readonly profileId?: string;
 
   @IsNotEmpty()
-  @IsEnum(USER_ACTIONS)
-  readonly action: USER_ACTIONS;
+  @IsEnum(UserActions)
+  readonly action: UserActions;
 
   @IsNotEmpty()
   @IsDate()
@@ -38,9 +38,9 @@ export class FindUserActivityDto {
   readonly profileId?: string;
 
   @ApiProperty()
-  @IsEnum(USER_ACTIONS)
+  @IsEnum(UserActions)
   @ValidateIf((obj) => obj.action !== undefined && obj.action !== null && obj.action !== "")
-  readonly action?: USER_ACTIONS;
+  readonly action?: UserActions;
 
   @ApiProperty()
   @IsDate()
@@ -73,8 +73,8 @@ export class FileUploadEventDto {
   readonly profileId: string;
 
   @IsNotEmpty()
-  @IsEnum(USER_ACTIONS)
-  readonly action: USER_ACTIONS;
+  @IsEnum(UserActions)
+  readonly action: UserActions;
 
   @IsNotEmpty()
   @IsString()

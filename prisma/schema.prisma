@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output = "../generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -18,7 +18,7 @@ model User {
   updatedAt                DateTime                  @updatedAt() @map("updated_at")
   lastLogin                DateTime?                 @map("last_login")
   isActive                 Boolean                   @default(false) @map("is_active")
-  accountStatus            USER_ACCOUNT_STATUS       @default(INACTIVE) @map("account_status")
+  accountStatus            UserAccountStatus         @default(INACTIVE) @map("account_status")
   twoStepEnabled           Boolean                   @default(false) @map("two_step_enabled")
   OTP                      OTP[]
   UserTwoStepVerifications UserTwoStepVerification[]
@@ -34,31 +34,31 @@ model User {
 }
 
 model UserTwoStepVerification {
-  id           String                      @id @default(uuid())
-  userId       String                      @map("user_id")
-  methodType   USER_TWO_FACTOR_METHOD_TYPE @map("method_type")
-  methodDetail String                      @map("method_detail")
+  id           String                  @id @default(uuid())
+  userId       String                  @map("user_id")
+  methodType   UserTwoFactorMethodType @map("method_type")
+  methodDetail String                  @map("method_detail")
   secret       String?
-  isPrimary    Boolean                     @map("is_primary")
-  isEnabled    Boolean                     @map("is_enabled")
-  addedAt      DateTime                    @default(now()) @map("added_at")
-  createdAt    DateTime                    @default(now()) @map("created_at")
-  updatedAt    DateTime                    @default(now()) @map("updated_at")
-  User         User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPrimary    Boolean                 @map("is_primary")
+  isEnabled    Boolean                 @map("is_enabled")
+  addedAt      DateTime                @default(now()) @map("added_at")
+  createdAt    DateTime                @default(now()) @map("created_at")
+  updatedAt    DateTime                @default(now()) @map("updated_at")
+  User         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_two_step_verification")
 }
 
 model UserSSO {
-  id             String            @id @default(uuid())
-  userId         String            @map("user_id")
-  provider       USER_SSO_PROVIDER
-  providerUserId String            @map("provider_user_id")
+  id             String          @id @default(uuid())
+  userId         String          @map("user_id")
+  provider       UserSSOProvider
+  providerUserId String          @map("provider_user_id")
   email          String
-  linkedAt       DateTime          @default(now()) @map("linked_at")
-  createdAt      DateTime          @default(now()) @map("created_at")
-  updatedAt      DateTime          @default(now()) @map("updated_at")
-  User           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedAt       DateTime        @default(now()) @map("linked_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @default(now()) @map("updated_at")
+  User           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_sso")
 }
@@ -88,18 +88,18 @@ model UserRole {
 }
 
 model OTP {
-  id         String         @id @default(uuid())
-  userId     String?        @map("user_id")
-  identifier OTP_IDENTIFIER
-  type       OTP_TYPE
-  status     OTP_STATUS     @default(PENDING)
+  id         String        @id @default(uuid())
+  userId     String?       @map("user_id")
+  identifier OTPIdentifier
+  type       OTPType
+  status     OTPStatus     @default(PENDING)
   value      String
-  otpCode    String         @unique @map("otp_code")
-  createdAt  DateTime       @default(now()) @map("created_at")
-  updatedAt  DateTime       @updatedAt() @map("updated_at")
-  expiresAt  DateTime       @map("expires_at")
-  attempts   Int            @default(5)
-  User       User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpCode    String        @unique @map("otp_code")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt() @map("updated_at")
+  expiresAt  DateTime      @map("expires_at")
+  attempts   Int           @default(5)
+  User       User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("otp")
 }
@@ -115,17 +115,17 @@ model OTPRequests {
 }
 
 model WebAuthnCredential {
-  id           String                   @id @default(uuid())
-  credentialId Bytes                    @map("credential_id")
-  publicKey    Bytes                    @map("public_key")
+  id           String                @id @default(uuid())
+  credentialId Bytes                 @map("credential_id")
+  publicKey    Bytes                 @map("public_key")
   counter      Int
-  userId       String?                  @map("user_id")
-  deviceType   USER_PASSKEY_DEVICE_TYPE @map("device_type")
+  userId       String?               @map("user_id")
+  deviceType   UserPasskeyDeviceType @map("device_type")
   backedUp     Boolean
   transports   String
-  createdAt    DateTime                 @default(now()) @map("created_at")
-  updatedAt    DateTime                 @default(now()) @map("updated_at")
-  User         User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @default(now()) @map("updated_at")
+  User         User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("web_auth_credential")
 }
@@ -152,27 +152,27 @@ model DeletedUser {
 }
 
 model UserActivityLog {
-  id              String       @id @default(uuid())
-  userId          String       @map("user_id")
-  action          USER_ACTIONS
-  actionTimestamp DateTime     @map("action_timestamp")
-  ipAddress       String?      @map("ip_address")
-  deviceInfo      String?      @map("device_info")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @default(now()) @map("updated_at")
-  User            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  action          UserActions
+  actionTimestamp DateTime    @map("action_timestamp")
+  ipAddress       String?     @map("ip_address")
+  deviceInfo      String?     @map("device_info")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @default(now()) @map("updated_at")
+  User            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_activity_log")
 }
 
 model NotificationSettings {
-  id               String            @id @default(uuid())
-  userId           String            @map("user_id")
-  notificationType NOTIFICATION_TYPE @map("notification_type")
-  isEnabled        Boolean           @default(true) @map("is_enabled")
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @default(now()) @map("updated_at")
-  User             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  notificationType NotificationType @map("notification_type")
+  isEnabled        Boolean          @default(true) @map("is_enabled")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @default(now()) @map("updated_at")
+  User             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_settings")
 }
@@ -189,97 +189,99 @@ model FCMToken {
 }
 
 model Notification {
-  id               String              @id @default(uuid())
-  userId           String?             @map("user_id")
-  notificationType NOTIFICATION_TYPE   @map("notification_type")
-  message          String
-  status           NOTIFICATION_STATUS @default(PENDING)
-  createdAt        DateTime            @default(now()) @map("created_at")
-  updatedAt        DateTime            @default(now()) @map("updated_at")
-  User             User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String             @id @default(uuid())
+  userId    String?            @map("user_id")
+  type      NotificationType   @map("notification_type")
+  title     String
+  message   String
+  status    NotificationStatus @default(PENDING)
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @default(now()) @map("updated_at")
+  User      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
 
-enum NOTIFICATION_STATUS {
+enum NotificationStatus {
   PENDING
   SENT
   READ
+  FAILED
 }
 
-enum NOTIFICATION_TYPE {
+enum NotificationType {
   EMAIL
   SMS
   PUSH
 }
 
-enum USER_PASSKEY_DEVICE_TYPE {
+enum UserPasskeyDeviceType {
   singleDevice
   multiDevice
 }
 
-enum USER_PROFILE_VERIFCATION_STATUS {
+enum UserProfileVerificationStatus {
   PENDING
   VERIFIED
   UNVERIFIED
   DECLINED
 }
 
-enum USER_PROFILE_VISIBILITY {
+enum UserProfileVisibility {
   PUBLIC
   PRIVATE
 }
 
-enum PERSONAL_PROFILE_VERIFICATION_DOCUMENT_TYPE {
+enum PersonalProfileVerificationDocumentType {
   GOVERNMENT_ID
   NATIONAL_ID
   PASSPORT
   DRIVER_LICENSE
 }
 
-enum USER_ACCOUNT_STATUS {
+enum UserAccountStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
   DELETED
 }
 
-enum USER_TWO_FACTOR_METHOD_TYPE {
+enum UserTwoFactorMethodType {
   AUTHENTICATOR
   EMAIL
   PASSKEYS
   SMS
 }
 
-enum USER_SSO_PROVIDER {
+enum UserSSOProvider {
   APPLE
   GOOGLE
 }
 
-enum OTP_IDENTIFIER {
+enum OTPIdentifier {
   EMAIL
   PHONE
 }
 
-enum OTP_TYPE {
+enum OTPType {
   ACCOUNT_VERIFICATION
   ACCOUNT_RECOVERY
   TWO_FACTOR_AUTHENTICATION
   PASSWORD_RESET
 }
 
-enum OTP_STATUS {
+enum OTPStatus {
   PENDING
   VERIFIED
   EXPIRED
 }
 
-enum PROFILE_STATUS {
+enum ProfileStatus {
   ACTIVE
   INACTIVE
 }
 
-enum USER_ACTIONS {
+enum UserActions {
   REGISTER_WITH_EMAIL
   REGISTER_WITH_GOOGLE_SSO
   REGISTER_WITH_APPLE_SSO

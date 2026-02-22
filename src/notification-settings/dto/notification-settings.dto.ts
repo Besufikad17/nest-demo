@@ -1,4 +1,4 @@
-import { NOTIFICATION_TYPE } from "generated/prisma/client";
+import { NotificationType } from "generated/prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import { IsBoolean, IsEnum, IsNotEmpty, IsString, ValidateIf } from "class-validator";
 
@@ -8,15 +8,15 @@ export class AddNotificationSettingDto {
   readonly userId: string;
 
   @IsNotEmpty()
-  @IsEnum(NOTIFICATION_TYPE)
-  readonly notifcationType: NOTIFICATION_TYPE;
+  @IsEnum(NotificationType)
+  readonly notifcationType: NotificationType;
 }
 
 export class UpdateNotificationSettingsDto {
   @ApiProperty()
-  @IsEnum(NOTIFICATION_TYPE)
+  @IsEnum(NotificationType)
   @ValidateIf((obj) => obj.notificationType !== undefined && obj.notificationType !== null && obj.notificationType !== "")
-  readonly notificationType?: NOTIFICATION_TYPE;
+  readonly notificationType?: NotificationType;
 
   @ApiProperty()
   @IsBoolean()

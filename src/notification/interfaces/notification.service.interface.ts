@@ -1,6 +1,6 @@
 import { Queue, Worker } from "bullmq";
-import { Notification, NOTIFICATION_STATUS, NOTIFICATION_TYPE } from "generated/prisma/client";
-import { SendLoginNotificationDto, SendOTPDto, SendPushNotificationDto } from "../dto/notification.dto";
+import { Notification, NotificationStatus, NotificationType } from "generated/prisma/client";
+import { CreateNotificationDto, UpdateNotificationDto } from "../dto/notification.dto";
 
 export interface INotificationResponse {
   message: string;
@@ -11,10 +11,13 @@ export interface IQueueProvider {
   worker: Worker;
 }
 
+export class SendNotificationJobData extends CreateNotificationDto {
+  id: string;
+}
+
 export abstract class INotificationService {
-  abstract sendPushNotification(sendPushNotificationDto: SendPushNotificationDto): Promise<INotificationResponse>;
-  abstract sendOTP(sendOTPDto: SendOTPDto): Promise<INotificationResponse>;
-  abstract sendLoginNotification(sendLoginNotificationDto: SendLoginNotificationDto): Promise<INotificationResponse>;
-  abstract getNotifications(userId: string, skip?: number, take?: number, status?: NOTIFICATION_STATUS, type?: NOTIFICATION_TYPE): Promise<Notification[]>;
+  abstract createNotification(createNotificationDto: CreateNotificationDto): Promise<INotificationResponse>;
+  abstract getNotifications(userId: string, skip?: number, take?: number, status?: NotificationStatus, type?: NotificationType): Promise<Notification[]>;
   abstract getNotification(id: string, userId: string): Promise<Notification | null>;
+  abstract updateNotification(updateNotificationDto: UpdateNotificationDto): Promise<INotificationResponse>;
 }

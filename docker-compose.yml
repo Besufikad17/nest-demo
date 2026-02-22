@@ -22,9 +22,9 @@ services:
       db:
         condition: service_healthy 
     volumes:
+      - .:/usr/src/app:Z 
       - /usr/src/app/node_modules
       - /usr/src/app/generated
-      - .:/usr/src/app:Z 
     networks:
       - backend
 

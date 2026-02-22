@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
 import { IOTPResponse, IOtpService } from "../interfaces/otp.service.interface";
-import { NOTIFICATION_TYPE, OTP } from "generated/prisma/client";
+import { NotificationType, OTP } from "generated/prisma/client";
 import { hash, compare } from "src/common/utils/hash.utils";
 import { ConfigService } from "@nestjs/config";
 import { addDays, addHours } from "src/common/utils/date.utils";
@@ -83,14 +83,14 @@ export class OtpService implements IOtpService {
 
       const notificationPayload = {
         userId: generateOTPDto.userId,
-        emailOrPhone: generateOTPDto.value,
-        type: generateOTPDto.identifier === "PHONE" ? NOTIFICATION_TYPE.SMS : NOTIFICATION_TYPE.EMAIL,
-        subject: "Account verification",
+        ...(generateOTPDto.identifier === 'EMAIL' ? { email: value } : {}),
+        ...(generateOTPDto.identifier === 'PHONE' ? { phoneNumber: value } : {}),
+        type: generateOTPDto.identifier === "PHONE" ? NotificationType.SMS : NotificationType.EMAIL,
+        title: "Account verification",
         message: `${value}`,
-        messageType: getMessageType(otp?.type)
       };
 
-      await this.notificationService.sendOTP({ ...notificationPayload });
+      await this.notificationService.createNotification({ ...notificationPayload });
 
       if (generateOTPDto.userId && flag === "create") {
         await this.userActivityService.addUserActivity({

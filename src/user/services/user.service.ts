@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { IDeletedUserRepository, IUserRepository, IUserResponse, IUserService } from "../interfaces";
-import { User, USER_ACCOUNT_STATUS } from "generated/prisma/client"
+import { User, UserAccountStatus } from "generated/prisma/client"
 import { CreateUserDto, FindUserDto, FindUsersDto, UpdateUserDto } from "../dto/user.dto";
 import { IUserActivityService } from "src/user-activity/interfaces";
 import { RoleEnums } from "src/user-role/enums/role.enum";
@@ -75,7 +75,7 @@ export class UserService implements IUserService {
     }
   }
 
-  async findUsers(findUsersDto: FindUsersDto, text?: string, skip?: number, take?: number, status?: USER_ACCOUNT_STATUS, active?: boolean): Promise<User[]> {
+  async findUsers(findUsersDto: FindUsersDto, text?: string, skip?: number, take?: number, status?: UserAccountStatus, active?: boolean): Promise<User[]> {
     try {
       return await this.userRepository.findUsers({
         where: {
