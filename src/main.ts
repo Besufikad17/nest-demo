@@ -31,6 +31,6 @@ async function bootstrap() {
   const bullBoardService = app.get(BullBoardService);
   bullBoardService.mountTo(app);
 
-  await app.listen(process.env.PORT || 3001, '0.0.0.0');
+  await app.listen(process.env.PORT || 4000, '0.0.0.0');
 }
 bootstrap();

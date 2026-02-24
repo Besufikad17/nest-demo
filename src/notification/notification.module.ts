@@ -10,6 +10,7 @@ import { UserRoleModule } from "src/user-role/user-role.module";
 import { BullModule } from "@nestjs/bullmq";
 import { FcmTokenModule } from "src/fcm-token/fcm-token.module";
 import { FirebaseModule } from "src/firebase/firebase.module";
+import { NotificationProcessor } from "./processors/notification.processor";
 import * as Interface from "./interfaces";
 
 @Module({
@@ -20,6 +21,7 @@ import * as Interface from "./interfaces";
     MailService,
     NotificationRepository,
     NotificationService,
+    NotificationProcessor
   ],
   controllers: [NotificationController],
   imports: [

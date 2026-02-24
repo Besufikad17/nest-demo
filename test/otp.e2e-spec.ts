@@ -12,6 +12,8 @@ describe('OtpController (e2e)', () => {
 		}).compile();
 
 		app = moduleFixture.createNestApplication();
+
+		app.setGlobalPrefix('/api/v1');
 		await app.init();
 	});
 
@@ -23,7 +25,7 @@ describe('OtpController (e2e)', () => {
 				identifier: 'EMAIL',
 				value: 'besumicheal@gmail.com',
 			})
-			.expect(202);
+			.expect(201);
 
 		expect(otpRequestReponse.body).toEqual(
 			expect.objectContaining({

@@ -65,15 +65,17 @@ import * as Joi from "joi";
         GOOGLE_CLIENT_SECRET: Joi.string().required(),
         GOOGLE_CALLBACK_URL: Joi.string(),
         JWT_SECRET: Joi.string().required(),
-        //MAIL_HOST: Joi.string().required(),
-        //MAIL_PORT: Joi.number().required(),
-        //MAIL_SECURE: Joi.bool().required(),
+        MAIL_HOST: Joi.string().required(),
+        MAIL_PORT: Joi.number().required(),
+        MAIL_SECURE: Joi.bool().required(),
         MAIL_USER: Joi.string().required(),
         MAIL_PASS: Joi.string().required(),
-        //MAIL_FROM: Joi.string().required(),
+        MAIL_FROM: Joi.string().required(),
         PORT: Joi.number().required(),
+        REDIS_PASSWORD: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
-        REDIS_HOST: Joi.string().required()
+        REDIS_HOST: Joi.string().required(),
+        SHADOW_DATABASE_URL: Joi.string().required()
       }),
     }),
     LoggerModule.forRootAsync({

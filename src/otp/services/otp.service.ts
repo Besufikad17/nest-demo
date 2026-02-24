@@ -83,8 +83,8 @@ export class OtpService implements IOtpService {
 
       const notificationPayload = {
         userId: generateOTPDto.userId,
-        ...(generateOTPDto.identifier === 'EMAIL' ? { email: value } : {}),
-        ...(generateOTPDto.identifier === 'PHONE' ? { phoneNumber: value } : {}),
+        ...(generateOTPDto.identifier === 'EMAIL' ? { email: generateOTPDto.value } : {}),
+        ...(generateOTPDto.identifier === 'PHONE' ? { phoneNumber: generateOTPDto.value } : {}),
         type: generateOTPDto.identifier === "PHONE" ? NotificationType.SMS : NotificationType.EMAIL,
         title: "Account verification",
         message: `${value}`,
