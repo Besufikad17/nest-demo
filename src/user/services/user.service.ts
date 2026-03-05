@@ -38,8 +38,11 @@ export class UserService implements IUserService {
     }
   }
 
-  async findUser(findUserDto: FindUserDto, role: RoleEnums, id: string): Promise<User | null> {
+  async findUser(findUserDto: FindUserDto, role: RoleEnums, id?: string): Promise<User | null> {
     try {
+      const isSelfLookup = !!id && !!findUserDto.id && id === findUserDto.id;
+      const allowSensitiveFields = role === RoleEnums.ADMIN || isSelfLookup || !id;
+
       return await this.userRepository.findUser({
         where: {
           OR: [
@@ -57,9 +60,9 @@ export class UserService implements IUserService {
           isActive: true,
           accountStatus: true,
           lastLogin: true,
-          twoStepEnabled: role === RoleEnums.ADMIN || id === findUserDto.id,
-          passwordHash: id === findUserDto.id,
-          UserTwoStepVerifications: role === RoleEnums.ADMIN || id === findUserDto.id
+          twoStepEnabled: allowSensitiveFields,
+          passwordHash: allowSensitiveFields,
+          UserTwoStepVerifications: allowSensitiveFields
         }
       });
     } catch (error) {
@@ -119,7 +122,7 @@ export class UserService implements IUserService {
 
   async updateUser(updateUserDto: UpdateUserDto, userId: string, deviceInfo?: string, ip?: string): Promise<IUserResponse> {
     try {
-      const updatedUser = await this.userRepository.updateUser({
+      await this.userRepository.updateUser({
         where: {
           id: userId
         },

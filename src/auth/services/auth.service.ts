@@ -161,14 +161,13 @@ export class AuthService implements IAuthService {
 
       const otpWithEmail = await this.otpService.getOTP({ value: userWithoutPassword.email, type: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
       const otpWithPhone = await this.otpService.getOTP({ value: userWithoutPassword.phoneNumber, type: "ACCOUNT_VERIFICATION", identifier: "PHONE" });
-      console.log(otpWithEmail, otpWithPhone);
-
+      
       if (
         (otpWithEmail && (otpWithEmail.status !== "VERIFIED" || otpWithEmail.updatedAt < addMinutes(new Date(), -3))) ||
         (otpWithPhone && (otpWithPhone.status !== "VERIFIED" || otpWithPhone.updatedAt < addMinutes(new Date(), -3))) ||
         (!otpWithEmail && !otpWithPhone)
       ) {
-        return new HttpException("Please verify your account first!!", HttpStatus.BAD_REQUEST);
+        throw new HttpException("Please verify your account first!!", HttpStatus.BAD_REQUEST);
       }
 
       let hashedPassword: string = await hash(password, this.configService.get<number>("BCRYPT_SALT") || 10);
