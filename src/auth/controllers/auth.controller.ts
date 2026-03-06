@@ -1,11 +1,14 @@
 import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Post, Req, UseGuards } from "@nestjs/common";
 import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto, } from "../dto";
-import { IAuthService } from "../interfaces";
+import { IAuthResponse, IAuthService } from "../interfaces";
 import { AuthGuard } from "@nestjs/passport";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "src/common/guards";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";
+import { ApiResponse as CustomApiResponse, EmptyBodyResponse } from "src/common/entities/api.entity";
+import { AuthResponse } from "../entities/auth.entity";
+import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -14,6 +17,7 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(AuthResponse)
   async login(
     @Body() loginDto: LoginDto,
     @Headers("device-info") deviceInfo: string,
@@ -24,6 +28,7 @@ export class AuthController {
 
   @Post("register")
   @HttpCode(HttpStatus.CREATED)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async register(
     @Body() registerDto: RegisterDto,
     @Headers("device-info") deviceInfo: string,
@@ -33,20 +38,22 @@ export class AuthController {
   }
 
   @Get("register/google")
-  @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard("google"))
+  @HttpCode(HttpStatus.OK)
   async googleAuthForRegister() { }
 
   @Get("register/google/callback")
-  @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard("google"))
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async googleAuthRedirectForRegister(@Req() req: any) {
     return await this.authService.registerUserByGoogleSSO(req.user);
   }
 
   @Post("password/reset")
-  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
     @GetUser() user: IUser,
@@ -58,6 +65,7 @@ export class AuthController {
 
   @Post("recover")
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async recoverAccount(
     @Body() recoverAccountDto: RecoverAccountDto,
     @Headers("device-info") deviceInfo: string,
@@ -66,8 +74,10 @@ export class AuthController {
     return await this.authService.recoverAccount(recoverAccountDto, deviceInfo, ip);
   }
 
-  @UseGuards(JwtGuard)
   @Post("token/refresh")
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(AuthResponse)
   refreshTokens(@Headers("authorization") auth: string, @GetUser() user: IUser) {
     return this.authService.refreshToken(user.id, user.email!, auth.split(" ")[1]);
   }

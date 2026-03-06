@@ -2,7 +2,6 @@ import { Module } from "@nestjs/common";
 import { AuthService } from "./services/auth.service";
 import { AuthController } from "./controllers/auth.controller";
 import * as Interfaces from "./interfaces";
-import { AuthRepository } from "./repositories";
 import { UserModule } from "src/user/user.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
@@ -20,7 +19,6 @@ import { CommonModule } from "src/common/common.module";
 @Module({
   providers: [
     { provide: Interfaces.IAuthService, useClass: AuthService },
-    { provide: Interfaces.IAuthRepository, useClass: AuthRepository },
     { provide: Interfaces.IRefreshTokenRepository, useClass: RefreshTokenRepository },
     RefreshTokenRepository,
   ],

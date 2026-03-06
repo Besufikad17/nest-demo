@@ -18,7 +18,9 @@ import { INotificationSettingsService } from "src/notification-settings/interfac
 import { IRoleService } from "src/role/interfaces";
 import { IOtpService } from "src/otp/interfaces";
 import { INotificationService } from "src/notification/interfaces";
-import { NotificationType } from "generated/prisma/enums";
+import { NotificationType, UserTwoFactorMethodType } from "generated/prisma/enums";
+import { IApiResponse } from "src/common/interfaces";
+import { AuthErrorCode, ErrorCode } from "src/common/enums";
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -73,7 +75,7 @@ export class AuthService implements IAuthService {
       });
 
       if (tokenExists) {
-        throw new HttpException("Invalid token!!", HttpStatus.BAD_REQUEST);
+        throw new HttpException({ message: "Invalid token!!", code: AuthErrorCode.INVALID_TOKEN }, HttpStatus.BAD_REQUEST);
       }
 
       await this.refreshTokenRepository.createRefreshToken({
@@ -88,86 +90,111 @@ export class AuthService implements IAuthService {
     return newRefreshToken;
   }
 
-  async login(loginDto: LoginDto, deviceInfo: string, ip: string): Promise<IAuthResponse> {
+  async login(loginDto: LoginDto, deviceInfo: string, ip: string): Promise<IApiResponse<IAuthResponse>> {
     try {
       const { email, phoneNumber, password } = loginDto;
 
       const user = await this.userService.findUser({ email: email, phoneNumber: phoneNumber }, RoleEnums.USER);
 
-      if (user) {
-        const passwordMatch: boolean = await compare(password, user.passwordHash!);
-        if (passwordMatch) {
-          const twoFactor = await this.userTwoStepService.finUserTwoStepVerification(user.id);
-
-          if (twoFactor) {
-            if (twoFactor.methodType === "EMAIL") {
-              const otp = await this.otpService.getOTP({
-                value: email,
-                type: "TWO_FACTOR_AUTHENTICATION",
-                identifier: "EMAIL"
-              });
-
-              if (!otp || otp.status !== "VERIFIED" && otp.updatedAt < addMinutes(new Date(), -3)) {
-                throw new HttpException("Please verify your account first", HttpStatus.BAD_REQUEST);
-              }
-            }
-          }
-
-          await this.userService.updateUser({ lastLogin: new Date() }, user.id);
-
-          await this.userActivityService.addUserActivity({
-            userId: user.id,
-            action: email ? "LOGIN_WITH_EMAIL" : "LOGIN_WITH_PHONE",
-            actionTimestamp: new Date(),
-            deviceInfo: deviceInfo,
-            ipAddress: ip
-          });
-
-          await this.notificationService.createNotification({
-            email: email,
-            userId: user.id,
-            type: NotificationType.EMAIL,
-            title: "Login Successful",
-            message: `You have successfully logged in to your account on device ${deviceInfo} and ip ${ip}`
-          });
-
-          return {
-            message: "User successfully logged in",
-            accessToken: await this.generateToken(user.id, user.email!),
-            refreshToken: await this.generateRefreshToken(user.id, email)
-          };
-        } else {
-          throw new HttpException("Invalid credentials!!", HttpStatus.BAD_REQUEST);
-        }
-      } else {
-        throw new HttpException("Invalid credentials!!", HttpStatus.BAD_REQUEST);
+      if (!user) {
+        throw new HttpException({ message: "User not found!!", code: ErrorCode.USER_NOT_FOUND }, HttpStatus.BAD_REQUEST);
       }
+
+      const passwordMatch: boolean = await compare(password, user.passwordHash!);
+      if (!passwordMatch) {
+        throw new HttpException({ message: "Invalid credentials!!", code: AuthErrorCode.INVALID_CREDENTIALS }, HttpStatus.BAD_REQUEST);
+      }
+
+      const twoFactor = await this.userTwoStepService.finUserTwoStepVerification(user.id);
+      if (twoFactor) {
+        if (twoFactor.methodType === "EMAIL") {
+          const otp = await this.otpService.getOTP({
+            value: email,
+            type: "TWO_FACTOR_AUTHENTICATION",
+            identifier: "EMAIL"
+          });
+
+          if (!otp || otp.status !== "VERIFIED" && otp.updatedAt < addMinutes(new Date(), -3)) {
+            throw new HttpException({ 
+              message: "Please verify your account first", 
+              code: AuthErrorCode.ACCOUNT_NOT_VERIFIED 
+            }, HttpStatus.BAD_REQUEST);
+          }
+        }
+      }
+
+      await this.userService.updateUser({ lastLogin: new Date() }, user.id);
+
+      await this.userActivityService.addUserActivity({
+        userId: user.id,
+        action: email ? "LOGIN_WITH_EMAIL" : "LOGIN_WITH_PHONE",
+        actionTimestamp: new Date(),
+        deviceInfo: deviceInfo,
+        ipAddress: ip
+      });
+
+      await this.notificationService.createNotification({
+        email: email,
+        userId: user.id,
+        type: NotificationType.EMAIL,
+        title: "Login Successful",
+        message: `You have successfully logged in to your account on device ${deviceInfo} and ip ${ip}`
+      });
+
+      return {
+        success: true,
+        message: "User successfully logged in",
+        data: {
+          accessToken: await this.generateToken(user.id, user.email!),
+          refreshToken: await this.generateRefreshToken(user.id, email) 
+        },
+        error: null
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        };
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async register(registerDto: RegisterDto, deviceInfo: string, ip: string): Promise<IAuthResponse> {
+  async register(registerDto: RegisterDto, deviceInfo: string, ip: string): Promise<IApiResponse<IAuthResponse>> {
     try {
       const { password, ...userWithoutPassword } = registerDto;
 
-      const otpWithEmail = await this.otpService.getOTP({ value: userWithoutPassword.email, type: "ACCOUNT_VERIFICATION", identifier: "EMAIL" });
-      const otpWithPhone = await this.otpService.getOTP({ value: userWithoutPassword.phoneNumber, type: "ACCOUNT_VERIFICATION", identifier: "PHONE" });
+      const otpWithEmail = await this.otpService.getOTP({ 
+        value: userWithoutPassword.email, 
+        type: "ACCOUNT_VERIFICATION", 
+        identifier: "EMAIL" 
+      });
+
+      const otpWithPhone = await this.otpService.getOTP({ 
+        value: userWithoutPassword.phoneNumber, 
+        type: "ACCOUNT_VERIFICATION", 
+        identifier: "PHONE" 
+      });
       
       if (
         (otpWithEmail && (otpWithEmail.status !== "VERIFIED" || otpWithEmail.updatedAt < addMinutes(new Date(), -3))) ||
         (otpWithPhone && (otpWithPhone.status !== "VERIFIED" || otpWithPhone.updatedAt < addMinutes(new Date(), -3))) ||
         (!otpWithEmail && !otpWithPhone)
       ) {
-        throw new HttpException("Please verify your account first!!", HttpStatus.BAD_REQUEST);
+        throw new HttpException({ 
+          message: "Please verify your account first", 
+          code: AuthErrorCode.ACCOUNT_NOT_VERIFIED 
+        }, HttpStatus.BAD_REQUEST);
       }
 
       let hashedPassword: string = await hash(password, this.configService.get<number>("BCRYPT_SALT") || 10);
@@ -210,31 +237,48 @@ export class AuthService implements IAuthService {
 
       return {
         message: "User registered successfully",
-        accessToken: await this.generateToken(newUser.id, userWithoutPassword.email),
-        refreshToken: await this.generateRefreshToken(newUser.id, userWithoutPassword.email)
+        success: true,
+        error: null,
       };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else if (error.code === "P2002") {
-        throw new HttpException("User already exists", HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: "User already exists!!",
+          data: null,
+          error: AuthErrorCode.USER_ALREADY_EXISTS,
+        };
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async registerUserByGoogleSSO(user: IGoogleUser): Promise<string> {
+  async registerUserByGoogleSSO(user: IGoogleUser): Promise<IApiResponse<any>> {
     try {
       const { email, googleId } = user;
 
       const userInDb = await this.userSSOService.findUserSSO({ provider: "GOOGLE", providerUserId: googleId, email: email });
       if (userInDb) {
-        return await this.generateToken(userInDb.userId, email);
+        return {
+          success: true,
+          message: "User info fetched successfully",
+          data: await this.generateToken(userInDb.userId, email),
+          error: null
+        };
       }
 
       const newUser = await this.userService.createUser({});
@@ -246,49 +290,71 @@ export class AuthService implements IAuthService {
         actionTimestamp: new Date(),
       });
 
-      return await this.generateToken(newUser.id, email);
+      return {
+        success: true,
+        message: "User info fetched successfully",
+        data: await this.generateToken(newUser.id, email),
+        error: null
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: string, ip: string): Promise<IAuthResponse> {
+  async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: string, ip: string): Promise<IApiResponse<any>> {
     try {
       const user = await this.userService.findUser({ id: userId }, RoleEnums.USER, userId);
       const twoFactorMethod = await this.userTwoStepService.finUserTwoStepVerification(userId);
 
-      if (twoFactorMethod?.methodType === "EMAIL" || twoFactorMethod?.methodType === "SMS") {
+      if (
+        twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL || 
+        twoFactorMethod?.methodType === UserTwoFactorMethodType.SMS
+      ) {
         const otp = await this.otpService.getOTP({
-          value: twoFactorMethod?.methodType === "EMAIL" ? user?.email! : user?.phoneNumber!,
+          value: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? user?.email! : user?.phoneNumber!,
           type: "PASSWORD_RESET",
-          identifier: twoFactorMethod?.methodType === "EMAIL" ? "EMAIL" : "PHONE"
+          identifier: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? "EMAIL" : "PHONE"
         });
 
         if (!otp || otp.status !== "VERIFIED" || otp.updatedAt < addMinutes(new Date(), -3)) {
-          throw new HttpException("Please verify your account first", HttpStatus.BAD_REQUEST);
+          throw new HttpException({ 
+            message: "Please verify your account first", 
+            code: AuthErrorCode.ACCOUNT_NOT_VERIFIED 
+          }, HttpStatus.BAD_REQUEST);
         }
       }
 
       if (resetPasswordDto.currentPassword === resetPasswordDto.newPassword) {
-        throw new HttpException("Please enter new password", HttpStatus.BAD_REQUEST);
+        throw new HttpException({ 
+          message: "Please enter new password", 
+          code: AuthErrorCode.NEW_PASSWORD_SAME_AS_OLD 
+        }, HttpStatus.BAD_REQUEST);
       }
 
       const currentPasswordMatch: boolean = await compare(resetPasswordDto.currentPassword, user?.passwordHash || "");
-
       if (!currentPasswordMatch) {
-        throw new HttpException("Current password doesn't match!!", HttpStatus.BAD_REQUEST);
+        throw new HttpException({ 
+          message: "Current password doesn't match!!", 
+          code: AuthErrorCode.INVALID_CREDENTIALS 
+        }, HttpStatus.BAD_REQUEST);
       }
 
       const newPassword = await hash(resetPasswordDto.newPassword, this.configService.get<number>("BCRYPT_SALT") || 10);
-
       await this.userService.updateUser({
         passwordHash: newPassword
       }, user?.id!);
@@ -301,21 +367,32 @@ export class AuthService implements IAuthService {
         ipAddress: ip
       });
 
-      return { message: "Password reset completed successfully" };
+      return { 
+        success: true,
+        message: "Password reset completed successfully",
+        error: null
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        };
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async recoverAccount(recoverAccountDto: RecoverAccountDto, deviceInfo: string, ip: string): Promise<IAuthResponse> {
+  async recoverAccount(recoverAccountDto: RecoverAccountDto, deviceInfo: string, ip: string): Promise<IApiResponse<any>> {
     try {
       const user = await this.userService.findUser({
         email: recoverAccountDto.value,
@@ -323,20 +400,20 @@ export class AuthService implements IAuthService {
       }, RoleEnums.USER);
 
       if (!user) {
-        throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
+        throw new HttpException({ message: "User not found!!", code: ErrorCode.USER_NOT_FOUND }, HttpStatus.BAD_REQUEST);
       }
 
       const twoFactorMethod = await this.userTwoStepService.finUserTwoStepVerification(user.id);
 
-      if (twoFactorMethod?.methodType === "EMAIL" || twoFactorMethod?.methodType === "SMS") {
+      if (twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL || twoFactorMethod?.methodType === UserTwoFactorMethodType.SMS) {
         const otp = await this.otpService.getOTP({
-          value: twoFactorMethod?.methodType === "EMAIL" ? user?.email! : user?.phoneNumber!,
+          value: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? user?.email! : user?.phoneNumber!,
           type: "ACCOUNT_RECOVERY",
-          identifier: twoFactorMethod?.methodType === "EMAIL" ? "EMAIL" : "PHONE"
+          identifier: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? "EMAIL" : "PHONE"
         });
 
         if (!otp || otp.status !== "VERIFIED" || otp.updatedAt < addMinutes(new Date(), -3)) {
-          throw new HttpException("Please verify your account first", HttpStatus.BAD_REQUEST);
+          throw new HttpException({ message: "Please verify your account first", code: AuthErrorCode.ACCOUNT_NOT_VERIFIED }, HttpStatus.BAD_REQUEST);
         }
       }
 
@@ -354,38 +431,59 @@ export class AuthService implements IAuthService {
         ipAddress: ip
       });
 
-      return { message: "Password reset completed successfully" };
-    } catch (error) {
-      console.log(error);
-      if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
-      } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
-    }
-  }
-
-  async refreshToken(userId: string, email: string, currentRefreshToken?: string): Promise<IAuthResponse> {
-    try {
-      return {
-        message: "Token refreshed successfully",
-        accessToken: await this.generateToken(userId, email),
-        refreshToken: await this.generateRefreshToken(
-          userId, email, currentRefreshToken, currentRefreshToken ?
-          new Date(decodeToken(currentRefreshToken).exp) : undefined)
+      return { 
+        success: true,
+        message: "Password reset completed successfully",
+        error: null
       };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        };
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
+      }
+    }
+  }
+
+  async refreshToken(userId: string, email: string, currentRefreshToken?: string): Promise<IApiResponse<IAuthResponse>> {
+    try {
+      return {
+        success: true,
+        message: "Token refreshed successfully",
+        data: {
+          accessToken: await this.generateToken(userId, email),
+          refreshToken: await this.generateRefreshToken(
+            userId, email, currentRefreshToken, currentRefreshToken ?
+            new Date(decodeToken(currentRefreshToken).exp) : undefined)
+        }
+      };
+    } catch (error) {
+      console.log(error);
+      if (error instanceof HttpException) {
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        };
+      } else {
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
@@ -406,14 +504,6 @@ export class AuthService implements IAuthService {
       });
     } catch (error) {
       console.log(error);
-      if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
-      } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
     }
   }
 }
