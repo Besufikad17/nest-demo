@@ -20,15 +20,17 @@ model User {
   isActive                 Boolean                   @default(false) @map("is_active")
   accountStatus            UserAccountStatus         @default(INACTIVE) @map("account_status")
   twoStepEnabled           Boolean                   @default(false) @map("two_step_enabled")
-  OTP                      OTP[]
-  UserTwoStepVerifications UserTwoStepVerification[]
-  UserRole                 UserRole[]
-  UserSSO                  UserSSO[]
-  WebAuthnCredential       WebAuthnCredential[]
-  UserActivityLogs         UserActivityLog[]
-  NotificationSettings     NotificationSettings[]
-  FCMToken                 FCMToken[]
-  Notification             Notification[]
+  otp                      OTP[]
+  userTwoStepVerifications UserTwoStepVerification[]
+  userRoles                UserRole[]
+  userSSOs                 UserSSO[]
+  webAuthnCredentials      WebAuthnCredential[]
+  userActivityLogs         UserActivityLog[]
+  notificationSettings     NotificationSettings[]
+  fcmTokens                FCMToken[]
+  notifications            Notification[]
+  deviceInfos              DeviceInfo[]
+  refreshTokens            RefreshTokens[]
 
   @@map("users")
 }
@@ -44,7 +46,7 @@ model UserTwoStepVerification {
   addedAt      DateTime                @default(now()) @map("added_at")
   createdAt    DateTime                @default(now()) @map("created_at")
   updatedAt    DateTime                @default(now()) @map("updated_at")
-  User         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_two_step_verification")
 }
@@ -58,7 +60,7 @@ model UserSSO {
   linkedAt       DateTime        @default(now()) @map("linked_at")
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @default(now()) @map("updated_at")
-  User           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_sso")
 }
@@ -69,7 +71,7 @@ model Roles {
   description String
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @default(now()) @map("updated_at")
-  UserRoles   UserRole[]
+  userRoles   UserRole[]
 
   @@map("roles")
 }
@@ -80,8 +82,8 @@ model UserRole {
   roleId    String   @map("role_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Role      Roles    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Roles    @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
   @@map("user_role")
@@ -99,7 +101,7 @@ model OTP {
   updatedAt  DateTime      @updatedAt() @map("updated_at")
   expiresAt  DateTime      @map("expires_at")
   attempts   Int           @default(5)
-  User       User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("otp")
 }
@@ -125,18 +127,40 @@ model WebAuthnCredential {
   transports   String
   createdAt    DateTime              @default(now()) @map("created_at")
   updatedAt    DateTime              @default(now()) @map("updated_at")
-  User         User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("web_auth_credential")
 }
 
+model DeviceInfo {
+  id           String     @id @default(uuid())
+  userId       String     @map("user_id")
+  type         DeviceType @map("type")
+  os           String
+  browser      String
+  ipAddress    String     @map("ip_address")
+  location     String?
+  lastActiveAt DateTime   @map("last_active_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @default(now()) @map("updated_at")
+  deletedAt    DateTime?  @map("deleted_at")
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_info")
+  refreshTokens RefreshTokens[]
+}
+
 model RefreshTokens {
-  id           String   @id @default(uuid())
-  userId       String   @map("user_id")
-  refreshToken String   @map("refresh_token")
-  expiresAt    DateTime @map("expires_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @default(now()) @map("updated_at")
+  id           String     @id @default(uuid())
+  userId       String     @map("user_id")
+  deviceId     String     @map("device_id")
+  refreshToken String     @map("refresh_token")
+  expiresAt    DateTime   @map("expires_at")
+  revokedAt    DateTime?  @map("revoked_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @default(now()) @map("updated_at")
+  device       DeviceInfo @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
 }
@@ -160,7 +184,7 @@ model UserActivityLog {
   deviceInfo      String?     @map("device_info")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @default(now()) @map("updated_at")
-  User            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_activity_log")
 }
@@ -172,7 +196,7 @@ model NotificationSettings {
   isEnabled        Boolean          @default(true) @map("is_enabled")
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @default(now()) @map("updated_at")
-  User             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_settings")
 }
@@ -183,7 +207,7 @@ model FCMToken {
   token     String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("fcm_tokens")
 }
@@ -197,7 +221,7 @@ model Notification {
   status    NotificationStatus @default(PENDING)
   createdAt DateTime           @default(now()) @map("created_at")
   updatedAt DateTime           @default(now()) @map("updated_at")
-  User      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
@@ -308,4 +332,11 @@ enum UserActions {
   DELETE_ACCOUNT
   UPDATE_NOTIFICATION_SETTINGS
   UPDATE_USER
+}
+
+enum DeviceType {
+  MOBILE
+  DESKTOP
+  TABLET
+  OTHER
 }

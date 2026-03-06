@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { IAuthResponse, IAuthService, IGoogleUser } from "../interfaces";
 import { ConfigService } from "@nestjs/config";
-import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto } from "../dto";
+import { LoginDto, RecoverAccountDto, RefreshTokenDto, RegisterDto, ResetPasswordDto } from "../dto";
 import { hash, compare } from "src/common/utils/hash.utils";
 import { JwtService } from "@nestjs/jwt";
 import { IUserService } from "src/user/interfaces";
@@ -18,9 +18,11 @@ import { INotificationSettingsService } from "src/notification-settings/interfac
 import { IRoleService } from "src/role/interfaces";
 import { IOtpService } from "src/otp/interfaces";
 import { INotificationService } from "src/notification/interfaces";
-import { NotificationType, UserTwoFactorMethodType } from "generated/prisma/enums";
+import { DeviceType, NotificationType, UserAccountStatus, UserTwoFactorMethodType } from "generated/prisma/enums";
 import { IApiResponse } from "src/common/interfaces";
 import { AuthErrorCode, ErrorCode } from "src/common/enums";
+import { IDeviceInfoService } from "src/device-info/interfaces";
+import { parseUserAgent } from "src/common/utils/strings.utils";
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -36,7 +38,8 @@ export class AuthService implements IAuthService {
     private notificationSettingsService: INotificationSettingsService,
     private userRoleService: IUserRoleService,
     private roleService: IRoleService,
-    private otpService: IOtpService
+    private otpService: IOtpService,
+    private deviceInfoService: IDeviceInfoService
   ) { }
 
   private async generateToken(userId: string, email: string): Promise<string> {
@@ -57,7 +60,7 @@ export class AuthService implements IAuthService {
     );
   }
 
-  private async generateRefreshToken(userId: string, email: string, currentRefreshToken?: string, currentRefreshTokenExpiryDate?: Date) {
+  private async generateRefreshToken(userId: string, deviceId: string, email: string, currentRefreshToken?: string, currentRefreshTokenExpiryDate?: Date) {
     const newRefreshToken = this.jwtService.sign<any>(
       { sub: userId, email: email },
       {
@@ -80,7 +83,8 @@ export class AuthService implements IAuthService {
 
       await this.refreshTokenRepository.createRefreshToken({
         data: {
-          userId: userId,
+          userId,
+          deviceId,
           refreshToken: currentRefreshToken,
           expiresAt: currentRefreshTokenExpiryDate
         }
@@ -123,6 +127,9 @@ export class AuthService implements IAuthService {
         }
       }
 
+      if(!user.lastLogin) {
+        await this.userService.updateUser({ isActive: true, accountStatus: UserAccountStatus.ACTIVE }, user.id);
+      }
       await this.userService.updateUser({ lastLogin: new Date() }, user.id);
 
       await this.userActivityService.addUserActivity({
@@ -141,12 +148,40 @@ export class AuthService implements IAuthService {
         message: `You have successfully logged in to your account on device ${deviceInfo} and ip ${ip}`
       });
 
+      let deviceId;
+      const parsedDeviceInfo = parseUserAgent(deviceInfo);
+      const deviceInfoInDb = await this.deviceInfoService.getDeviceInfo({
+        userId: user.id,
+        ...parsedDeviceInfo,
+        ipAddress: ip
+      });
+
+      if(deviceInfoInDb) {
+        deviceId = deviceInfoInDb.id;
+
+        await this.deviceInfoService.updateDeviceInfo({
+          id: deviceId,
+          lastActiveAt: new Date()
+        });
+      } else {
+        const newDeviceInfo = await this.deviceInfoService.createDeviceInfo({
+          userId: user.id,
+          ...parsedDeviceInfo,
+          ipAddress: ip,
+          lastActiveAt: new Date(),
+          type: parsedDeviceInfo.type === "desktop" ? DeviceType.DESKTOP : 
+            parsedDeviceInfo.type === "mobile" ? DeviceType.MOBILE :
+              parsedDeviceInfo.type === "tablet" ? DeviceType.TABLET : DeviceType.OTHER
+        });
+        deviceId = newDeviceInfo.id;
+      }
+
       return {
         success: true,
         message: "User successfully logged in",
         data: {
           accessToken: await this.generateToken(user.id, user.email!),
-          refreshToken: await this.generateRefreshToken(user.id, email) 
+          refreshToken: await this.generateRefreshToken(user.id, deviceId, email) 
         },
         error: null
       };
@@ -456,15 +491,46 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async refreshToken(userId: string, email: string, currentRefreshToken?: string): Promise<IApiResponse<IAuthResponse>> {
+  async refreshToken(refreshTokenDto: RefreshTokenDto, deviceInfo: string, ip: string): Promise<IApiResponse<IAuthResponse>> {
     try {
+      const { userId, email, currentRefreshToken } = refreshTokenDto;
+
+      let deviceId;
+      const parsedDeviceInfo = parseUserAgent(deviceInfo);
+      const deviceInfoInDb = await this.deviceInfoService.getDeviceInfo({
+        userId,
+        ...parsedDeviceInfo,
+        ipAddress: ip
+      });
+
+      if(deviceInfoInDb) {
+        deviceId = deviceInfoInDb.id;
+
+        await this.deviceInfoService.updateDeviceInfo({
+          id: deviceId,
+          lastActiveAt: new Date()
+        });
+      } else {
+        const newDeviceInfo = await this.deviceInfoService.createDeviceInfo({
+          userId,
+          ...parsedDeviceInfo,
+          ipAddress: ip,
+          lastActiveAt: new Date(),
+          type: parsedDeviceInfo.type === "desktop" ? DeviceType.DESKTOP : 
+            parsedDeviceInfo.type === "mobile" ? DeviceType.MOBILE :
+              parsedDeviceInfo.type === "tablet" ? DeviceType.TABLET : DeviceType.OTHER
+        });
+        deviceId = newDeviceInfo.id;
+      }
+
       return {
         success: true,
         message: "Token refreshed successfully",
         data: {
           accessToken: await this.generateToken(userId, email),
           refreshToken: await this.generateRefreshToken(
-            userId, email, currentRefreshToken, currentRefreshToken ?
+            userId, deviceId, email, currentRefreshToken,
+            currentRefreshToken ?
             new Date(decodeToken(currentRefreshToken).exp) : undefined)
         }
       };

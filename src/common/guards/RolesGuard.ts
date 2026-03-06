@@ -36,7 +36,7 @@ export class RoleGuard implements CanActivate {
         userId: userId
       },
       include: {
-        Role: true
+        role: true
       }
     });
 
@@ -44,7 +44,7 @@ export class RoleGuard implements CanActivate {
       throw new ForbiddenException("Access denied: user has no roles");
     }
 
-    const userRoleNames = userRoles.map((userRole) => userRole.Role.roleName);
+    const userRoleNames = userRoles.map((userRole) => userRole.role.roleName);
 
     if (!requiredRoles.some((role) => userRoleNames.includes(role.toString()))) {
       throw new ForbiddenException("Access denied: insufficient role");

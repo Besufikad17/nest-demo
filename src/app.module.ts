@@ -21,6 +21,7 @@ import { BullBoardModule } from "./bull-board/bull-board.module";
 import { FcmTokenModule } from "./fcm-token/fcm-token.module";
 import { FirebaseModule } from "./firebase/firebase.module";
 import { BullModule } from "@nestjs/bullmq";
+import { DeviceInfoModule } from './device-info/device-info.module';
 import * as Joi from "joi";
 
 @Module({
@@ -109,7 +110,8 @@ import * as Joi from "joi";
     PrometheusModule,
     CommonModule,
     FcmTokenModule,
-    FirebaseModule
+    FirebaseModule,
+    DeviceInfoModule
   ],
 })
 

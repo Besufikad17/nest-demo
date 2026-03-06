@@ -15,6 +15,7 @@ import { NotificationSettingsModule } from "src/notification-settings/notificati
 import { OtpModule } from "src/otp/otp.module";
 import { NotificationModule } from "src/notification/notification.module";
 import { CommonModule } from "src/common/common.module";
+import { DeviceInfoModule } from "src/device-info/device-info.module";
 
 @Module({
   providers: [
@@ -35,6 +36,7 @@ import { CommonModule } from "src/common/common.module";
     NotificationSettingsModule,
     OtpModule,
     CommonModule,
+    DeviceInfoModule,
     JwtModule.registerAsync({
       useFactory: async (config: ConfigService) => ({
         global: true,

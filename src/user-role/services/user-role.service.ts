@@ -32,7 +32,7 @@ export class UserRoleService implements IUserRoleService {
       return this.userRoleRepository.findUserRoles({
         where: { ...getUserRolesDto },
         include: {
-          Role: true
+          role: true
         }
       });
     } catch (error) {

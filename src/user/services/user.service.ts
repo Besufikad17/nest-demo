@@ -62,7 +62,7 @@ export class UserService implements IUserService {
           lastLogin: true,
           twoStepEnabled: allowSensitiveFields,
           passwordHash: allowSensitiveFields,
-          UserTwoStepVerifications: allowSensitiveFields
+          userTwoStepVerifications: allowSensitiveFields
         }
       });
     } catch (error) {
@@ -166,17 +166,17 @@ export class UserService implements IUserService {
           id: id
         },
         include: {
-          UserSSO: true,
-          UserActivityLogs: true,
-          UserTwoStepVerifications: true,
-          OTP: true,
-          UserRole: {
+          userSSOs: true,
+          userActivityLogs: true,
+          userTwoStepVerifications: true,
+          otp: true,
+          userRoles: {
             include: {
-              Role: true
+              role: true
             }
           },
-          WebAuthnCredential: true,
-          NotificationSettings: true
+          webAuthnCredentials: true,
+          notificationSettings: true
         }
       });
 

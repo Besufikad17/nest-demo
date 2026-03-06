@@ -78,6 +78,20 @@ export class RecoverAccountDto {
   readonly newPassword: string;
 }
 
+export class RefreshTokenDto {
+  @IsNotEmpty()
+  @IsUUID()
+  userId: string;
+  
+  @IsNotEmpty()
+  @IsString()
+  email: string;
+  
+  @IsNotEmpty()
+  @IsString()
+  currentRefreshToken: string;
+}
+
 export class CreateRefreshTokenDto {
   @IsNotEmpty()
   @IsString()

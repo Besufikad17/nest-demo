@@ -1,4 +1,4 @@
-import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto } from "../dto";
+import { LoginDto, RecoverAccountDto, RefreshTokenDto, RegisterDto, ResetPasswordDto } from "../dto";
 import { IApiResponse } from "src/common/interfaces";
 
 export interface IAuthResponse {
@@ -40,8 +40,8 @@ export abstract class IAuthService {
   ): Promise<IApiResponse<null>>;
 
   abstract refreshToken(
-    userId: string,
-    email: string,
-    currentRefreshToken?: string,
+    refreshTokenDto: RefreshTokenDto,
+    deviceInfo: string,
+    ip: string
   ): Promise<IApiResponse<IAuthResponse>>;
 }
