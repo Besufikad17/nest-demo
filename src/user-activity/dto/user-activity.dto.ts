@@ -21,14 +21,9 @@ export class AddUserActivityDto {
   readonly actionTimestamp: Date;
 
   @IsNotEmpty()
-  @IsString()
-  @ValidateIf((obj) => obj.ipAddress !== undefined && obj.ipAddress !== null && obj.ipAddress !== "")
-  readonly ipAddress?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @ValidateIf((obj) => obj.deviceInfo !== undefined && obj.deviceInfo !== null && obj.deviceInfo !== "")
-  readonly deviceInfo?: string;
+  @IsUUID()
+  @ValidateIf((obj) => obj.deviceId !== undefined && obj.deviceId !== null && obj.deviceId !== "")
+  readonly deviceId?: string;
 }
 
 export class FindUserActivityDto {
@@ -48,14 +43,9 @@ export class FindUserActivityDto {
   readonly actionTimestamp?: Date;
 
   @ApiProperty()
-  @IsString()
-  @ValidateIf((obj) => obj.ipAddress !== undefined && obj.ipAddress !== null && obj.ipAddress !== "")
-  readonly ipAddress?: string;
-
-  @ApiProperty()
-  @IsString()
-  @ValidateIf((obj) => obj.deviceInfo !== undefined && obj.deviceInfo !== null && obj.deviceInfo !== "")
-  readonly deviceInfo?: string;
+  @IsUUID()
+  @ValidateIf((obj) => obj.deviceId !== undefined && obj.deviceId !== null && obj.deviceId !== "")
+  readonly deviceId?: string;
 
   @ApiProperty()
   @IsObject()
@@ -77,12 +67,8 @@ export class FileUploadEventDto {
   readonly action: UserActions;
 
   @IsNotEmpty()
-  @IsString()
-  readonly deviceInfo: string;
-
-  @IsNotEmpty()
-  @IsString()
-  readonly ip: string;
+  @IsUUID()
+  readonly deviceId: string;
 
   @IsNotEmpty()
   @IsDate()

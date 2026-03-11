@@ -76,11 +76,7 @@ export class UserActivityService implements IUserActivityService {
   async onFileUploadEventListener(fileUploadEventDto: FileUploadEventDto): Promise<UserActivityLog> {
     try {
       return await this.addUserActivity({
-        userId: fileUploadEventDto.userId,
-        profileId: fileUploadEventDto.profileId,
-        action: fileUploadEventDto.action,
-        deviceInfo: fileUploadEventDto.deviceInfo,
-        ipAddress: fileUploadEventDto.ip,
+        ...fileUploadEventDto,
         actionTimestamp: new Date()
       });
     } catch (error) {

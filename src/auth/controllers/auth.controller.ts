@@ -3,14 +3,14 @@ import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto, } from "../
 import { IAuthService } from "../interfaces";
 import { AuthGuard } from "@nestjs/passport";
 import { ApiTags } from "@nestjs/swagger";
-import { JwtGuard } from "src/common/guards";
+import { DeviceInfoGuard, JwtGuard } from "src/common/guards";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";
 import { EmptyBodyResponse } from "src/common/entities/api.entity";
 import { AuthResponse } from "../entities/auth.entity";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 import { GetClientIp, GetDeviceInfo } from "src/common/decorators";
-import { HeadersDto } from "src/common/dto/headers.dto";
+import { IDeviceInfo } from "src/common/interfaces";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -18,23 +18,26 @@ export class AuthController {
   constructor(private authService: IAuthService) { }
 
   @Post("login")
+  @UseGuards(DeviceInfoGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(AuthResponse)
   async login(
     @Body() loginDto: LoginDto,
     @GetClientIp() ip: string,
-    @GetDeviceInfo() { deviceInfo }: HeadersDto,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
   ) {
+    console.log("Device Info:", deviceInfo);
     return await this.authService.login(loginDto, deviceInfo, ip);
   }
 
   @Post("register")
+  @UseGuards(DeviceInfoGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponseWithData(EmptyBodyResponse)
   async register(
     @Body() registerDto: RegisterDto,
     @GetClientIp() ip: string,
-    @GetDeviceInfo() { deviceInfo }: HeadersDto,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
   ) {
     return await this.authService.register(registerDto, deviceInfo, ip);
   }
@@ -53,13 +56,13 @@ export class AuthController {
   }
 
   @Post("password/reset")
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, DeviceInfoGuard)
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOkResponseWithData(EmptyBodyResponse)
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
     @GetClientIp() ip: string,
-    @GetDeviceInfo() { deviceInfo }: HeadersDto,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
     @GetUser() user: IUser
   ) {
     return await this.authService.resetPassword(resetPasswordDto, user.id, deviceInfo, ip);
@@ -71,23 +74,23 @@ export class AuthController {
   async recoverAccount(
     @Body() recoverAccountDto: RecoverAccountDto,
     @GetClientIp() ip: string,
-    @GetDeviceInfo() { deviceInfo }: HeadersDto,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
   ) {
     return await this.authService.recoverAccount(recoverAccountDto, deviceInfo, ip);
   }
 
   @Post("token/refresh")
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, DeviceInfoGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(AuthResponse)
   refreshTokens(
-    @Headers("authorization") auth: string, 
+    @Headers("authorization") auth: string,
     @GetClientIp() ip: string,
-    @GetDeviceInfo() { deviceInfo }: HeadersDto,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
     @GetUser() user: IUser
   ) {
-    return this.authService.refreshToken({ 
-      userId: user.id, email: user.email!, currentRefreshToken: auth.split(" ")[1] 
+    return this.authService.refreshToken({
+      userId: user.id, email: user.email!, currentRefreshToken: auth.split(" ")[1]
     }, deviceInfo, ip);
   }
 }

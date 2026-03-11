@@ -11,6 +11,7 @@ import { OTPIdentifier, OTPType } from 'generated/prisma/enums';
 // Helper for generating unique emails to avoid collision
 const uniqueEmail = () => `test-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`;
 const uniquePhone = () => `+555${Date.now().toString().slice(-9)}`;
+const deviceInfoHeader = 'Mozilla/5.0 (Test Device 1.0)';
 
 describe('Auth Module (e2e)', () => {
   let app: INestApplication;
@@ -41,11 +42,11 @@ describe('Auth Module (e2e)', () => {
       }),
     );
     await app.init();
-    
+
     prisma = app.get(PrismaService);
-    
+
     // Silence console logs during tests to keep output clean
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
   });
 
   afterAll(async () => {
@@ -75,7 +76,7 @@ describe('Auth Module (e2e)', () => {
     const email = uniqueEmail();
     const phone = uniquePhone();
     const passwordHash = await hash(password, 10);
-    
+
     const userRole = await prisma.roles.findFirst({ where: { roleName: 'user' } });
     if (!userRole) throw new Error('Role "user" not found - seed db?');
 
@@ -88,10 +89,10 @@ describe('Auth Module (e2e)', () => {
         passwordHash,
         isActive: true,
         accountStatus: 'ACTIVE',
-        UserRole: {
+        userRoles: {
           create: { roleId: userRole.id }
         },
-        UserTwoStepVerifications: {
+        userTwoStepVerifications: {
           create: {
             methodType: 'EMAIL',
             methodDetail: 'OTP via Email',
@@ -109,38 +110,39 @@ describe('Auth Module (e2e)', () => {
 
   describe('POST /auth/register', () => {
     it('should register successfully with valid data and verified OTP', async () => {
-        const email = uniqueEmail();
-        const phone = uniquePhone();
-        
-        // Prerequisites: Valid verified OTPs for both email and phone
-        let rand = Math.floor(Math.random() * 1);
-        if(rand === 0) {
-            await createVerifiedOtp(email, 'ACCOUNT_VERIFICATION', 'EMAIL');
-        } else {
-            await createVerifiedOtp(phone, 'ACCOUNT_VERIFICATION', 'PHONE');
-        }
+      const email = uniqueEmail();
+      const phone = uniquePhone();
 
-        const response = await request(app.getHttpServer())
-            .post('/api/v1/auth/register')
-            .send({
-            email,
-            phoneNumber: phone,
-            firstName: 'John',
-            lastName: 'Doe',
-            password: 'StrongPassword123!',
-            })
-            .expect(201);
-        
-        expect(response.body).toHaveProperty('success', true);
-        expect(response.body).toHaveProperty('message', 'User registered successfully');
-        // Register no longer returns tokens, user has to login
-        // expect(response.body.data).toHaveProperty('accessToken');
-        // expect(response.body.data).toHaveProperty('refreshToken');
+      // Prerequisites: Valid verified OTPs for both email and phone
+      let rand = Math.floor(Math.random() * 1);
+      if (rand === 0) {
+        await createVerifiedOtp(email, 'ACCOUNT_VERIFICATION', 'EMAIL');
+      } else {
+        await createVerifiedOtp(phone, 'ACCOUNT_VERIFICATION', 'PHONE');
+      }
 
-        // Verify DB
-        const user = await prisma.user.findUnique({ where: { email } });
-        expect(user).toBeDefined();
-        expect(user?.firstName).toBe('John');
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .set('Device-Info', deviceInfoHeader)
+        .send({
+          email,
+          phoneNumber: phone,
+          firstName: 'John',
+          lastName: 'Doe',
+          password: 'StrongPassword123!',
+        })
+        .expect(201);
+
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('message', 'User registered successfully');
+      // Register no longer returns tokens, user has to login
+      // expect(response.body.data).toHaveProperty('accessToken');
+      // expect(response.body.data).toHaveProperty('refreshToken');
+
+      // Verify DB
+      const user = await prisma.user.findUnique({ where: { email } });
+      expect(user).toBeDefined();
+      expect(user?.firstName).toBe('John');
     });
 
     it('should fail if email is not verified', async () => {
@@ -149,6 +151,7 @@ describe('Auth Module (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/register')
+        .set('Device-Info', deviceInfoHeader)
         .send({
           email,
           phoneNumber: phone,
@@ -169,12 +172,13 @@ describe('Auth Module (e2e)', () => {
       // Our helper enables 2FA by default.
       // So login will trigger OTP check.
       const { email, password } = await createVerifiedUser();
-      
+
       // Bypass 2FA check by pre-verifying OTP for TWO_FACTOR_AUTHENTICATION
       await createVerifiedOtp(email, 'TWO_FACTOR_AUTHENTICATION', 'EMAIL');
 
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
         .send({
           email,
           password
@@ -191,9 +195,10 @@ describe('Auth Module (e2e)', () => {
       const { email, password } = await createVerifiedUser();
       // We do NOT create OTP here. Login should fail or succeed?
       // AuthService logic: if (twoFactor) { ... if (!otp || ...) throw ... }
-      
+
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
         .send({
           email,
           password
@@ -209,12 +214,13 @@ describe('Auth Module (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
         .send({
           email,
           password: 'WrongPassword123!'
         })
         .expect(200); // Controller returns 200 even on error if service catches it
-      
+
       expect(response.body).toHaveProperty('success', false);
       expect(response.body.error).toHaveProperty('message', 'Invalid credentials!!');
     });
@@ -223,25 +229,27 @@ describe('Auth Module (e2e)', () => {
   describe('POST /auth/password/reset', () => {
     it('should reset password successfully', async () => {
       const { user, password, email } = await createVerifiedUser();
-      
+
       // We need a valid token to access this route
       // To get token, we must login. To login, verify 2FA.
       await createVerifiedOtp(email, 'TWO_FACTOR_AUTHENTICATION', 'EMAIL');
-      
+
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
         .send({ email, password });
-      
+
       const token = loginRes.body.data.accessToken;
 
       const newPassword = 'NewStrongPassword123!';
-      
+
       // The resetPassword logic also checks 2FA OTP "PASSWORD_RESET" if enabled.
       await createVerifiedOtp(email, 'PASSWORD_RESET', 'EMAIL');
 
       await request(app.getHttpServer())
         .post('/api/v1/auth/password/reset')
         .set('Authorization', `Bearer ${token}`)
+        .set('Device-Info', deviceInfoHeader)
         .send({
           currentPassword: password,
           newPassword: newPassword
@@ -253,9 +261,10 @@ describe('Auth Module (e2e)', () => {
 
       // Verify login with new password (and new 2FA OTP)
       await createVerifiedOtp(email, 'TWO_FACTOR_AUTHENTICATION', 'EMAIL');
-      
+
       const loginResNew = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
         .send({
           email,
           password: newPassword
@@ -276,6 +285,7 @@ describe('Auth Module (e2e)', () => {
 
       await request(app.getHttpServer())
         .post('/api/v1/auth/recover')
+        .set('Device-Info', deviceInfoHeader)
         .send({
           value: email,
           newPassword: newPassword
@@ -287,40 +297,43 @@ describe('Auth Module (e2e)', () => {
 
       // Verify login with new password
       await createVerifiedOtp(email, 'TWO_FACTOR_AUTHENTICATION', 'EMAIL');
-      
+
       const loginResRecover = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
         .send({
-           email,
-           password: newPassword
+          email,
+          password: newPassword
         })
         .expect(200);
 
       expect(loginResRecover.body).toHaveProperty('success', true);
     });
   });
-  
+
   // Need to fix logic if Refresh Token Logic works properly
   // For now assuming Refresh Token (which uses same secret) can be used as Bearer token for JwtGuard
-  
+
   describe('POST /auth/token/refresh', () => {
-     it('should refresh token successfully using Refresh Token in Authorization Header', async () => {
+    it('should refresh token successfully using Refresh Token in Authorization Header', async () => {
       const { email, password } = await createVerifiedUser();
       await createVerifiedOtp(email, 'TWO_FACTOR_AUTHENTICATION', 'EMAIL');
 
       const loginRes = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
         .send({ email, password });
-      
+
       const refreshToken = loginRes.body.data.refreshToken;
-      
+
       const response = await request(app.getHttpServer())
         .post('/api/v1/auth/token/refresh')
         .set('Authorization', `Bearer ${refreshToken}`)
+        .set('Device-Info', deviceInfoHeader)
         .expect(200);
-        
-       expect(response.body).toHaveProperty('success', true);
-       expect(response.body.data).toHaveProperty('accessToken');
+
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body.data).toHaveProperty('accessToken');
     });
   });
 });

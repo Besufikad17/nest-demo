@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, HttpCode, HttpException, HttpStatus, Ip, Param, Patch, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Query, UseGuards } from "@nestjs/common";
 import { IUserService } from "../interfaces";
 import { ApiTags } from "@nestjs/swagger";
 import { UserAccountStatus } from "generated/prisma/client"
@@ -6,10 +6,11 @@ import { JwtGuard, RoleGuard } from "src/common/guards";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 import { GetUser } from "src/common/decorators/get-user.decorator";
-import { IUser } from "src/common/interfaces";
+import { IDeviceInfo, IUser } from "src/common/interfaces";
 import { FindUsersDto, UpdateUserDto } from "../dto/user.dto";
 import { addMinutes } from "src/common/utils/date.utils";
 import { IOtpService } from "src/otp/interfaces";
+import { GetClientIp, GetDeviceInfo } from "src/common/decorators";
 
 @ApiTags("user")
 @Controller("user")
@@ -67,9 +68,9 @@ export class UserController {
   @HttpCode(HttpStatus.ACCEPTED)
   async updateUser(
     @Body() updateUserDto: UpdateUserDto,
-    @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
+    @GetUser() user: IUser
   ) {
     const otp = await this.otpService.getOTP({ userId: user.id, type: "TWO_FACTOR_AUTHENTICATION" });
 
@@ -85,9 +86,9 @@ export class UserController {
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.ACCEPTED)
   async deleteAccount(
-    @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
+    @GetUser() user: IUser
   ) {
     return await this.userService.deleteUser(user.id!, deviceInfo, ip);
   }

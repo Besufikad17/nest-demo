@@ -9,21 +9,25 @@ import { IUserActivityService } from "src/user-activity/interfaces";
 import { IOtpRequestService } from "src/otp-request/interfaces";
 import { IOtpRepository } from "../interfaces";
 import { INotificationService } from "src/notification/interfaces";
-import { getMessageType } from "../utils/otp.util";
+import { IDeviceInfoService } from "src/device-info/interfaces";
+import { IDeviceInfo } from "src/common/interfaces";
+import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 
 @Injectable()
 export class OtpService implements IOtpService {
   constructor(
+    private configService: ConfigService,
+    private deviceInfoService: IDeviceInfoService,
     private notificationService: INotificationService,
     private otpRepository: IOtpRepository,
     private otpRequestService: IOtpRequestService,
     private userActivityService: IUserActivityService,
-    private configService: ConfigService,
   ) { }
 
-  async createOTP(generateOTPDto: GenerateOtpDto, deviceInfo?: string, ip?: string, flag: string = "create"): Promise<IOTPResponse> {
+  async createOTP(generateOTPDto: GenerateOtpDto, deviceInfo?: IDeviceInfo, ip?: string, flag: string = "create"): Promise<IOTPResponse> {
     try {
-      let otpRequest = await this.otpRequestService.getOTPRequest({ where: { value: generateOTPDto.value } });
+      const { value, type, identifier, userId } = generateOTPDto;
+      let otpRequest = await this.otpRequestService.getOTPRequest({ where: { value } });;
 
       if (otpRequest) {
         if (addDays(otpRequest.updatedAt, 1) > new Date()) {
@@ -36,26 +40,27 @@ export class OtpService implements IOtpService {
               id: otpRequest.id
             },
             data: {
-              value: generateOTPDto.value, count: 0
+              value,
+              count: 0
             }
           });
         }
       } else {
-        otpRequest = await this.otpRequestService.createOTPRequest({ data: { value: generateOTPDto.value } });
+        otpRequest = await this.otpRequestService.createOTPRequest({ data: { value } });
       }
 
       const otp = await this.getOTP({
-        value: generateOTPDto.value,
-        type: generateOTPDto.type,
-        identifier: generateOTPDto.identifier
+        value,
+        type,
+        identifier
       });
 
       if (otp) {
         await this.otpRepository.deleteOTP({ where: { id: otp.id } });
       }
 
-      let value: string = `${Math.floor(100000 + Math.random() * 900000)}`;
-      let otpCode: string = await hash(value, this.configService.get<number>("BCRYPT_SALT") || 10);
+      let generatedValue: string = `${Math.floor(100000 + Math.random() * 900000)}`;
+      let otpCode: string = await hash(generatedValue, this.configService.get<number>("BCRYPT_SALT") || 10);
       var expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
 
@@ -67,38 +72,42 @@ export class OtpService implements IOtpService {
         }
       });
 
+      const { id, count, updatedAt } = otpRequest;
       await this.otpRequestService.updateOTPRequest({
         where: {
-          id: otpRequest.id
+          id
         },
         data: {
-          value: generateOTPDto.value,
-          count: otpRequest.count + 1
+          value,
+          count: {
+            increment: 1
+          }
         }
       });
 
-      if (generateOTPDto.identifier === "PHONE") {
-        console.log(value);
+      if (identifier === "PHONE") {
+        console.log(generatedValue);
       }
 
       const notificationPayload = {
-        userId: generateOTPDto.userId,
-        ...(generateOTPDto.identifier === 'EMAIL' ? { email: generateOTPDto.value } : {}),
-        ...(generateOTPDto.identifier === 'PHONE' ? { phoneNumber: generateOTPDto.value } : {}),
-        type: generateOTPDto.identifier === "PHONE" ? NotificationType.SMS : NotificationType.EMAIL,
+        userId,
+        ...(identifier === 'EMAIL' ? { email: value } : {}),
+        ...(identifier === 'PHONE' ? { phoneNumber: value } : {}),
+        type: identifier === "PHONE" ? NotificationType.SMS : NotificationType.EMAIL,
         title: "Account verification",
-        message: `${value}`,
+        message: `${generatedValue}`,
       };
 
       await this.notificationService.createNotification({ ...notificationPayload });
 
       if (generateOTPDto.userId && flag === "create") {
+        const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+
         await this.userActivityService.addUserActivity({
           userId: generateOTPDto.userId,
           action: "REQUEST_OTP",
           actionTimestamp: new Date(),
-          deviceInfo: deviceInfo,
-          ipAddress: ip
+          deviceId
         });
       }
 
@@ -118,19 +127,10 @@ export class OtpService implements IOtpService {
 
   async getOTP(findOTPDto: FindOtpDto): Promise<OTP | null> {
     try {
+      const { value, type, userId } = findOTPDto;
       return await this.otpRepository.getOTP({
         where: {
-          AND: [
-            {
-              value: findOTPDto.value
-            },
-            {
-              userId: findOTPDto.userId
-            },
-            {
-              type: findOTPDto.type
-            }
-          ]
+          AND: [{ value }, { userId }, { type }]
         },
         orderBy: {
           createdAt: "desc"
@@ -149,7 +149,7 @@ export class OtpService implements IOtpService {
     }
   }
 
-  async resendOTP(generateOTPDto: GenerateOtpDto, deviceInfo: string, ip: string): Promise<IOTPResponse> {
+  async resendOTP(generateOTPDto: GenerateOtpDto, deviceInfo: IDeviceInfo, ip: string): Promise<IOTPResponse> {
     try {
       const otp = await this.getOTP(generateOTPDto);
 
@@ -157,13 +157,14 @@ export class OtpService implements IOtpService {
         await this.otpRepository.deleteOTP({ where: { id: otp.id } });
       }
 
-      if (generateOTPDto.userId) {
+      const { userId } = generateOTPDto;
+      if (userId) {
+        const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
         await this.userActivityService.addUserActivity({
-          userId: generateOTPDto.userId,
+          userId,
           action: "REQUEST_RESEND_OTP",
           actionTimestamp: new Date(),
-          deviceInfo: deviceInfo,
-          ipAddress: ip
+          deviceId
         });
       }
 
@@ -181,13 +182,14 @@ export class OtpService implements IOtpService {
     }
   }
 
-  async verifyOTP(verifyOtpDto: VerifyOtpDto, deviceInfo: string, ip: string): Promise<IOTPResponse> {
+  async verifyOTP(verifyOtpDto: VerifyOtpDto, deviceInfo: IDeviceInfo, ip: string): Promise<IOTPResponse> {
     try {
+      const { value, type, otpCode, userId } = verifyOtpDto;
       const otp = await this.otpRepository.getOTP({
         where: {
-          value: verifyOtpDto.value,
-          type: verifyOtpDto.type,
-          userId: verifyOtpDto.userId
+          value,
+          type,
+          userId
         }
       });
 
@@ -195,39 +197,38 @@ export class OtpService implements IOtpService {
         throw new HttpException("Invalid code!!", HttpStatus.BAD_REQUEST);
       }
 
-      if (otp.attempts > 0) {
-        if (otp.expiresAt > new Date()) {
-          let otpMatch: boolean = await compare(verifyOtpDto.otpCode, otp.otpCode);
-
-          if (otpMatch) {
-            if (otp.status === "PENDING") {
-              await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { status: "VERIFIED" } });
-
-              if (verifyOtpDto.userId) {
-                await this.userActivityService.addUserActivity({
-                  userId: verifyOtpDto.userId,
-                  action: "VALIDATE_OTP",
-                  actionTimestamp: new Date(),
-                  deviceInfo: deviceInfo,
-                  ipAddress: ip
-                });
-              }
-
-              return { message: "Verification completed" };
-            } else {
-              throw new HttpException(`OTP has ${otp.status.toLowerCase()}!!`, HttpStatus.BAD_REQUEST);
-            }
-          } else {
-            await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { attempts: otp.attempts - 1 } });
-            throw new HttpException("Invalid code!!", HttpStatus.BAD_REQUEST);
-          }
-        } else {
-          await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { status: "EXPIRED" } });
-          throw new HttpException("OTP expired!!", HttpStatus.BAD_REQUEST);
-        }
-      } else {
+      if (otp.attempts <= 0) {
         throw new HttpException("You have reached maximum trial!!", HttpStatus.BAD_REQUEST);
       }
+
+      if (otp.expiresAt <= new Date()) {
+        await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { status: "EXPIRED" } });
+        throw new HttpException("OTP expired!!", HttpStatus.BAD_REQUEST);
+      }
+
+      let otpMatch: boolean = await compare(otpCode, otp.otpCode);
+      if (!otpMatch) {
+        await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { attempts: otp.attempts - 1 } });
+        throw new HttpException("Invalid code!!", HttpStatus.BAD_REQUEST);
+      }
+
+      if (otp.status !== "PENDING") {
+        throw new HttpException(`OTP has ${otp.status.toLowerCase()}!!`, HttpStatus.BAD_REQUEST);
+      }
+
+      await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { status: "VERIFIED" } });
+
+      if (userId) {
+        const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+        await this.userActivityService.addUserActivity({
+          userId: verifyOtpDto.userId,
+          action: "VALIDATE_OTP",
+          actionTimestamp: new Date(),
+          deviceId
+        });
+      }
+
+      return { message: "Verification completed" };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {

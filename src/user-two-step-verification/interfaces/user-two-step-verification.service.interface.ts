@@ -8,6 +8,7 @@ import {
   VerifyPasskeyDto,
   VerifyUserTwoStepVerificationDto
 } from "../dto/user-two-step-verification.dto";
+import { IDeviceInfo } from "src/common/interfaces";
 
 export interface I2FAResponse {
   message: string;
@@ -19,7 +20,7 @@ export abstract class IUserTwoStepVerificationService {
   abstract createUserTwoStepVerification(
     createUserTwoStepVerificationDto: CreateUserTwoStepVerificationDto,
     email: string,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<I2FAResponse>;
 
@@ -32,24 +33,24 @@ export abstract class IUserTwoStepVerificationService {
   abstract updateUserTwoStepVerification(
     updateUserTwoStepVerificationDto: UpdateUserTwoStepVerifcationDto,
     userId: string,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<UserTwoStepVerification>;
 
   abstract verifyUserTwoStepVerification(
     verifyUserTwoStepVerification: VerifyUserTwoStepVerificationDto,
     userId: string,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<I2FAResponse>;
 
-  abstract deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: string, ip: string): Promise<any>;
+  abstract deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<any>;
 
-  abstract requestAddPasskey(userId: string, deviceInfo: string, ip: string): Promise<PublicKeyCredentialCreationOptionsJSON>;
+  abstract requestAddPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<PublicKeyCredentialCreationOptionsJSON>;
 
-  abstract addPasskey(addPasskeyDto: AddPasskeyDto, userId: string, deviceInfo: string, ip: string): Promise<I2FAResponse>;
+  abstract addPasskey(addPasskeyDto: AddPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<I2FAResponse>;
 
-  abstract requestVerifyPasskey(userId: string, deviceInfo: string, ip: string): Promise<PublicKeyCredentialRequestOptionsJSON>;
+  abstract requestVerifyPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<PublicKeyCredentialRequestOptionsJSON>;
 
-  abstract verifyPasskey(verifyPasskeyDto: VerifyPasskeyDto, userId: string, deviceInfo: string, ip: string): Promise<I2FAResponse>;
+  abstract verifyPasskey(verifyPasskeyDto: VerifyPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<I2FAResponse>;
 }

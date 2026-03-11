@@ -7,6 +7,7 @@ import { PrismaModule } from "src/prisma/prisma.module";
 import { UserModule } from "src/user/user.module";
 import { WebAuthnCredentialModule } from "src/web-authn-credential/web-authn-credential.module";
 import { UserActivityModule } from "src/user-activity/user-activity.module";
+import { DeviceInfoModule } from "src/device-info/device-info.module";
 
 @Module({
   controllers: [UserTwoStepVerificationController],
@@ -17,6 +18,6 @@ import { UserActivityModule } from "src/user-activity/user-activity.module";
     UserTwoStepVerificationService
   ],
   exports: [Interfaces.IUserTwoStepVerificationRepository, Interfaces.IUserTwoStepVerificationService],
-  imports: [PrismaModule, UserModule, WebAuthnCredentialModule, UserActivityModule]
+  imports: [DeviceInfoModule, PrismaModule, UserModule, WebAuthnCredentialModule, UserActivityModule]
 })
 export class UserTwoStepVerificationModule { }

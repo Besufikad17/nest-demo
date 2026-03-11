@@ -1,5 +1,5 @@
 import { LoginDto, RecoverAccountDto, RefreshTokenDto, RegisterDto, ResetPasswordDto } from "../dto";
-import { IApiResponse } from "src/common/interfaces";
+import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 
 export interface IAuthResponse {
   accessToken: string;
@@ -14,13 +14,13 @@ export interface IGoogleUser {
 export abstract class IAuthService {
   abstract login(
     loginDto: LoginDto,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<IApiResponse<IAuthResponse>>;
 
   abstract register(
     registerDto: RegisterDto,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<IApiResponse<IAuthResponse>>;
 
@@ -29,19 +29,19 @@ export abstract class IAuthService {
   abstract resetPassword(
     resetPasswordDto: ResetPasswordDto,
     userId: string,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<IApiResponse<null>>;
 
   abstract recoverAccount(
     recoverAccountDto: RecoverAccountDto,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<IApiResponse<null>>;
 
   abstract refreshToken(
     refreshTokenDto: RefreshTokenDto,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<IApiResponse<IAuthResponse>>;
 }

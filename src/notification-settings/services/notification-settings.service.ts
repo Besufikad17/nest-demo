@@ -1,12 +1,16 @@
-import { Injectable, HttpException, HttpStatus, HttpCode } from "@nestjs/common";
+import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { INotificationSettingsRepository, INotificationSettingsService } from "../interfaces";
 import { IUserActivityService } from "src/user-activity/interfaces";
 import { NotificationSettings } from "generated/prisma/client";
 import { AddNotificationSettingDto, UpdateNotificationSettingsDto } from "../dto/notification-settings.dto";
+import { IDeviceInfo } from "src/common/interfaces";
+import { IDeviceInfoService } from "src/device-info/interfaces";
+import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 
 @Injectable()
 export class NotificationSettingsService implements INotificationSettingsService {
   constructor(
+    private deviceInfoService: IDeviceInfoService,
     private notficationSettingsRepository: INotificationSettingsRepository,
     private userActivityService: IUserActivityService
   ) { }
@@ -52,7 +56,7 @@ export class NotificationSettingsService implements INotificationSettingsService
     }
   }
 
-  async updateNotificationSetting(updateNotificationSettingsDto: UpdateNotificationSettingsDto, settingsId: string, userId: string, deviceInfo: string, ip: string): Promise<NotificationSettings> {
+  async updateNotificationSetting(updateNotificationSettingsDto: UpdateNotificationSettingsDto, settingsId: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<NotificationSettings> {
     try {
       const notificationSetting = await this.notficationSettingsRepository.findNotificationSetting({
         where: {
@@ -72,12 +76,12 @@ export class NotificationSettingsService implements INotificationSettingsService
         }
       });
 
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "UPDATE_NOTIFICATION_SETTINGS",
-        deviceInfo: deviceInfo,
-        ipAddress: ip,
-        actionTimestamp: new Date()
+        actionTimestamp: new Date(),
+        deviceId
       });
 
       return updatedSetting;

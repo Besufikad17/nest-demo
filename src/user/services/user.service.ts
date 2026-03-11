@@ -6,11 +6,15 @@ import { IUserActivityService } from "src/user-activity/interfaces";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 import { IOtpService } from "src/otp/interfaces";
 import { addMinutes } from "src/common/utils/date.utils";
+import { IDeviceInfoService } from "src/device-info/interfaces";
+import { IDeviceInfo } from "src/common/interfaces";
+import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 
 @Injectable()
 export class UserService implements IUserService {
   constructor(
     private deletedUserRepository: IDeletedUserRepository,
+    private deviceInfoService: IDeviceInfoService,
     private otpService: IOtpService,
     private userActivityService: IUserActivityService,
     private userRepository: IUserRepository,
@@ -120,7 +124,7 @@ export class UserService implements IUserService {
     }
   }
 
-  async updateUser(updateUserDto: UpdateUserDto, userId: string, deviceInfo?: string, ip?: string): Promise<IUserResponse> {
+  async updateUser(updateUserDto: UpdateUserDto, userId: string, deviceInfo?: IDeviceInfo, ip?: string): Promise<IUserResponse> {
     try {
       await this.userRepository.updateUser({
         where: {
@@ -129,12 +133,16 @@ export class UserService implements IUserService {
         data: updateUserDto,
       });
 
+      let deviceId = null;
+      if (deviceInfo) {
+        deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      }
+
       await this.userActivityService.addUserActivity({
         userId: userId,
-        deviceInfo: deviceInfo,
-        ipAddress: ip,
         action: "UPDATE_USER",
-        actionTimestamp: new Date()
+        actionTimestamp: new Date(),
+        deviceId
       });
 
       return {
@@ -153,7 +161,7 @@ export class UserService implements IUserService {
     }
   }
 
-  async deleteUser(id: string, deviceInfo: string, ip: string): Promise<IUserResponse> {
+  async deleteUser(id: string, deviceInfo: IDeviceInfo, ip: string): Promise<IUserResponse> {
     try {
       const otp = await this.otpService.getOTP({ userId: id, type: "TWO_FACTOR_AUTHENTICATION" });
 
@@ -189,12 +197,12 @@ export class UserService implements IUserService {
         }
       });
 
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, id, ip);
       await this.userActivityService.addUserActivity({
         userId: id,
         action: "DELETE_ACCOUNT",
-        deviceInfo: deviceInfo,
-        ipAddress: ip,
-        actionTimestamp: new Date()
+        actionTimestamp: new Date(),
+        deviceId
       });
 
       await this.userRepository.deleteUser({

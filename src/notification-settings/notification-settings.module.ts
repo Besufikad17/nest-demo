@@ -4,6 +4,7 @@ import { NotificationSettingsController } from "./controllers/notification-setti
 import * as Interface from "./interfaces";
 import { UserActivityModule } from "src/user-activity/user-activity.module";
 import { NotificationSettingsRepository } from "./repositories/notification-settings.repository";
+import { DeviceInfoModule } from "src/device-info/device-info.module";
 
 @Module({
   providers: [
@@ -12,7 +13,7 @@ import { NotificationSettingsRepository } from "./repositories/notification-sett
     NotificationSettingsService
   ],
   controllers: [NotificationSettingsController],
-  imports: [UserActivityModule],
+  imports: [DeviceInfoModule, UserActivityModule],
   exports: [Interface.INotificationSettingsRepository, Interface.INotificationSettingsService]
 })
 export class NotificationSettingsModule { }

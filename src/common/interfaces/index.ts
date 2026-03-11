@@ -1,3 +1,4 @@
+export * from "./device-info.interface";
 export * from "./jwt.interface";
 export * from "./user.interface";
 

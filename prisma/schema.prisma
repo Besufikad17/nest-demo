@@ -133,21 +133,23 @@ model WebAuthnCredential {
 }
 
 model DeviceInfo {
-  id           String     @id @default(uuid())
-  userId       String     @map("user_id")
-  type         DeviceType @map("type")
-  os           String
-  browser      String
-  ipAddress    String     @map("ip_address")
-  location     String?
-  lastActiveAt DateTime   @map("last_active_at")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @default(now()) @map("updated_at")
-  deletedAt    DateTime?  @map("deleted_at")
-  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String     @id @default(uuid())
+  userId           String     @map("user_id")
+  name             String     @map("name")
+  type             DeviceType @map("type")
+  os               String
+  browser          String
+  ipAddress        String     @map("ip_address")
+  location         String?
+  lastActiveAt     DateTime   @map("last_active_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @default(now()) @map("updated_at")
+  deletedAt        DateTime?  @map("deleted_at")
+  user             User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens    RefreshTokens[]
+  userActivityLogs UserActivityLog[]
 
   @@map("device_info")
-  refreshTokens RefreshTokens[]
 }
 
 model RefreshTokens {
@@ -180,11 +182,11 @@ model UserActivityLog {
   userId          String      @map("user_id")
   action          UserActions
   actionTimestamp DateTime    @map("action_timestamp")
-  ipAddress       String?     @map("ip_address")
-  deviceInfo      String?     @map("device_info")
+  deviceId        String?     @map("device_id")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @default(now()) @map("updated_at")
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceInfo      DeviceInfo? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
 
   @@map("user_activity_log")
 }

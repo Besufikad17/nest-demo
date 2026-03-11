@@ -6,6 +6,7 @@ import { UserRepository } from "./repositories/user.repository";
 import { DeletedUserRepository } from "./repositories/deleted-user.repository";
 import { UserActivityModule } from "src/user-activity/user-activity.module";
 import { OtpModule } from "src/otp/otp.module";
+import { DeviceInfoModule } from "src/device-info/device-info.module";
 
 @Global()
 @Module({
@@ -25,6 +26,7 @@ import { OtpModule } from "src/otp/otp.module";
     }
   ],
   imports: [
+    DeviceInfoModule,
     OtpModule,
     UserActivityModule,
   ],

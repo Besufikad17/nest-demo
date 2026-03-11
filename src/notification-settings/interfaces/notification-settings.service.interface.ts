@@ -1,5 +1,6 @@
 import { NotificationSettings } from "generated/prisma/client";
 import { AddNotificationSettingDto, UpdateNotificationSettingsDto } from "../dto/notification-settings.dto";
+import { IDeviceInfo } from "src/common/interfaces";
 
 export abstract class INotificationSettingsService {
   abstract addNotificationSetting(addNotificationSettingDto: AddNotificationSettingDto): Promise<NotificationSettings>;
@@ -8,7 +9,7 @@ export abstract class INotificationSettingsService {
     updateNotificationSettingsDto: UpdateNotificationSettingsDto,
     settingsId: string,
     userId: string,
-    deviceInfo: string,
+    deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<NotificationSettings>;
 }

@@ -4,42 +4,46 @@ import { DeviceType } from "generated/prisma/enums";
 export class GetDeviceInfoDto {
     @IsNotEmpty()
     @IsUUID()
-    userId: string;
+    readonly userId: string;
 
     @IsNotEmpty()
     @IsString()
-    os: string;
+    readonly os: string;
 
     @IsNotEmpty()
     @IsString()
-    browser: string;
+    readonly browser: string;
 
     @IsNotEmpty()
     @IsString()
-    ipAddress: string;
+    readonly ipAddress: string;
 }
 
 export class CreateDeviceInfoDto extends GetDeviceInfoDto {
     @IsNotEmpty()
+    @IsString()
+    readonly name: string;
+
+    @IsNotEmpty()
     @IsEnum(DeviceType, {
         message: `Device type must be one of: ${Object.values(DeviceType).join(', ')}`
     })
-    type: DeviceType;
+    readonly type: DeviceType;
 
     @IsNotEmpty()
     @IsDate()
-    lastActiveAt: Date;
+    readonly lastActiveAt: Date;
 
     @IsString()
-    location?: string;
+    readonly location?: string;
 }
 
 export class UpdateDeviceInfoDto {
     @IsNotEmpty()
     @IsUUID()
-    id: string;
+    readonly id: string;
 
     @IsNotEmpty()
     @IsDate()
-    lastActiveAt: Date;
+    readonly lastActiveAt: Date;
 }

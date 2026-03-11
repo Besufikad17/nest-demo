@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, HttpCode, HttpStatus, Ip, Param, Post, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "src/common/guards";
 import {
@@ -10,8 +10,9 @@ import {
   VerifyUserTwoStepVerificationDto
 } from "../dto/user-two-step-verification.dto";
 import { GetUser } from "src/common/decorators/get-user.decorator";
-import { IUser } from "src/common/interfaces";
+import { IDeviceInfo, IUser } from "src/common/interfaces";
 import { IUserTwoStepVerificationService } from "../interfaces";
+import { GetClientIp, GetDeviceInfo } from "src/common/decorators";
 
 @ApiTags("user-two-step-verification")
 @Controller("auth/2fa")
@@ -24,8 +25,8 @@ export class UserTwoStepVerificationController {
   async add2FaMethod(
     @Body() createUserTwoStepVerificationDto: CreateUserTwoStepVerificationDto,
     @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
   ) {
     const { userId, ...withoutUserId } = createUserTwoStepVerificationDto;
     return await this.userTwoStepVerificationService.createUserTwoStepVerification({
@@ -54,8 +55,8 @@ export class UserTwoStepVerificationController {
     @Body() updateUsetTwoStepVerificationDto: UpdateUserTwoStepVerifcationDto,
     @Param("id") methodId: string,
     @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo
   ) {
     const { id, ...withoutId } = updateUsetTwoStepVerificationDto;
     return await this.userTwoStepVerificationService.updateUserTwoStepVerification({
@@ -70,8 +71,8 @@ export class UserTwoStepVerificationController {
   async verify2FaCode(
     @Body() verifyUserTwoStepVerificationDto: VerifyUserTwoStepVerificationDto,
     @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo
   ) {
     return await this.userTwoStepVerificationService.verifyUserTwoStepVerification(
       verifyUserTwoStepVerificationDto, user.id, deviceInfo, ip);
@@ -83,8 +84,8 @@ export class UserTwoStepVerificationController {
   async delete2FaMethod(
     @Param("id") id: string,
     @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo
   ) {
     return await this.userTwoStepVerificationService.deleteUserTwoStepVerification(id, user.id, deviceInfo, ip);
   }
@@ -94,8 +95,8 @@ export class UserTwoStepVerificationController {
   @UseGuards(JwtGuard)
   async requestAddPasskey(
     @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo
   ) {
     return this.userTwoStepVerificationService.requestAddPasskey(user.id, deviceInfo, ip);
   }
@@ -106,8 +107,8 @@ export class UserTwoStepVerificationController {
   async addPasskey(
     @Body() adddPasskeyDto: AddPasskeyDto,
     @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo
   ) {
     return this.userTwoStepVerificationService.addPasskey(adddPasskeyDto, user.id, deviceInfo, ip);
   }
@@ -115,7 +116,11 @@ export class UserTwoStepVerificationController {
   @Post("passkey/verify/request")
   @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
-  async requestVerifyPasskey(@GetUser() user: IUser, @Headers("device-info") deviceInfo: string, @Ip() ip: string) {
+  async requestVerifyPasskey(
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
+    @GetUser() user: IUser
+  ) {
     return this.userTwoStepVerificationService.requestVerifyPasskey(user.id, deviceInfo, ip);
   }
 
@@ -125,8 +130,8 @@ export class UserTwoStepVerificationController {
   async verifyPasskey(
     @Body() verifyPasskeyDto: VerifyPasskeyDto,
     @GetUser() user: IUser,
-    @Headers("device-info") deviceInfo: string,
-    @Ip() ip: string
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
   ) {
     return this.userTwoStepVerificationService.verifyPasskey(verifyPasskeyDto, user.id, deviceInfo, ip);
   }

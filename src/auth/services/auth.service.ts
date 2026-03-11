@@ -19,10 +19,11 @@ import { IRoleService } from "src/role/interfaces";
 import { IOtpService } from "src/otp/interfaces";
 import { INotificationService } from "src/notification/interfaces";
 import { DeviceType, NotificationType, UserAccountStatus, UserTwoFactorMethodType } from "generated/prisma/enums";
-import { IApiResponse } from "src/common/interfaces";
+import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { AuthErrorCode, ErrorCode } from "src/common/enums";
 import { IDeviceInfoService } from "src/device-info/interfaces";
 import { parseUserAgent } from "src/common/utils/strings.utils";
+import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -94,7 +95,7 @@ export class AuthService implements IAuthService {
     return newRefreshToken;
   }
 
-  async login(loginDto: LoginDto, deviceInfo: string, ip: string): Promise<IApiResponse<IAuthResponse>> {
+  async login(loginDto: LoginDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<IAuthResponse>> {
     try {
       const { email, phoneNumber, password } = loginDto;
 
@@ -119,25 +120,25 @@ export class AuthService implements IAuthService {
           });
 
           if (!otp || otp.status !== "VERIFIED" && otp.updatedAt < addMinutes(new Date(), -3)) {
-            throw new HttpException({ 
-              message: "Please verify your account first", 
-              code: AuthErrorCode.ACCOUNT_NOT_VERIFIED 
+            throw new HttpException({
+              message: "Please verify your account first",
+              code: AuthErrorCode.ACCOUNT_NOT_VERIFIED
             }, HttpStatus.BAD_REQUEST);
           }
         }
       }
 
-      if(!user.lastLogin) {
+      if (!user.lastLogin) {
         await this.userService.updateUser({ isActive: true, accountStatus: UserAccountStatus.ACTIVE }, user.id);
       }
       await this.userService.updateUser({ lastLogin: new Date() }, user.id);
 
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
       await this.userActivityService.addUserActivity({
         userId: user.id,
         action: email ? "LOGIN_WITH_EMAIL" : "LOGIN_WITH_PHONE",
         actionTimestamp: new Date(),
-        deviceInfo: deviceInfo,
-        ipAddress: ip
+        deviceId: deviceId
       });
 
       await this.notificationService.createNotification({
@@ -148,40 +149,12 @@ export class AuthService implements IAuthService {
         message: `You have successfully logged in to your account on device ${deviceInfo} and ip ${ip}`
       });
 
-      let deviceId;
-      const parsedDeviceInfo = parseUserAgent(deviceInfo);
-      const deviceInfoInDb = await this.deviceInfoService.getDeviceInfo({
-        userId: user.id,
-        ...parsedDeviceInfo,
-        ipAddress: ip
-      });
-
-      if(deviceInfoInDb) {
-        deviceId = deviceInfoInDb.id;
-
-        await this.deviceInfoService.updateDeviceInfo({
-          id: deviceId,
-          lastActiveAt: new Date()
-        });
-      } else {
-        const newDeviceInfo = await this.deviceInfoService.createDeviceInfo({
-          userId: user.id,
-          ...parsedDeviceInfo,
-          ipAddress: ip,
-          lastActiveAt: new Date(),
-          type: parsedDeviceInfo.type === "desktop" ? DeviceType.DESKTOP : 
-            parsedDeviceInfo.type === "mobile" ? DeviceType.MOBILE :
-              parsedDeviceInfo.type === "tablet" ? DeviceType.TABLET : DeviceType.OTHER
-        });
-        deviceId = newDeviceInfo.id;
-      }
-
       return {
         success: true,
         message: "User successfully logged in",
         data: {
           accessToken: await this.generateToken(user.id, user.email!),
-          refreshToken: await this.generateRefreshToken(user.id, deviceId, email) 
+          refreshToken: await this.generateRefreshToken(user.id, deviceId, email)
         },
         error: null
       };
@@ -205,35 +178,35 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async register(registerDto: RegisterDto, deviceInfo: string, ip: string): Promise<IApiResponse<IAuthResponse>> {
+  async register(registerDto: RegisterDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<IAuthResponse>> {
     try {
       const { password, ...userWithoutPassword } = registerDto;
 
-      const otpWithEmail = await this.otpService.getOTP({ 
-        value: userWithoutPassword.email, 
-        type: "ACCOUNT_VERIFICATION", 
-        identifier: "EMAIL" 
+      const otpWithEmail = await this.otpService.getOTP({
+        value: userWithoutPassword.email,
+        type: "ACCOUNT_VERIFICATION",
+        identifier: "EMAIL"
       });
 
-      const otpWithPhone = await this.otpService.getOTP({ 
-        value: userWithoutPassword.phoneNumber, 
-        type: "ACCOUNT_VERIFICATION", 
-        identifier: "PHONE" 
+      const otpWithPhone = await this.otpService.getOTP({
+        value: userWithoutPassword.phoneNumber,
+        type: "ACCOUNT_VERIFICATION",
+        identifier: "PHONE"
       });
-      
+
       if (
         (otpWithEmail && (otpWithEmail.status !== "VERIFIED" || otpWithEmail.updatedAt < addMinutes(new Date(), -3))) ||
         (otpWithPhone && (otpWithPhone.status !== "VERIFIED" || otpWithPhone.updatedAt < addMinutes(new Date(), -3))) ||
         (!otpWithEmail && !otpWithPhone)
       ) {
-        throw new HttpException({ 
-          message: "Please verify your account first", 
-          code: AuthErrorCode.ACCOUNT_NOT_VERIFIED 
+        throw new HttpException({
+          message: "Please verify your account first",
+          code: AuthErrorCode.ACCOUNT_NOT_VERIFIED
         }, HttpStatus.BAD_REQUEST);
       }
 
       let hashedPassword: string = await hash(password, this.configService.get<number>("BCRYPT_SALT") || 10);
-      const newUser = await this.userService.createUser({
+      const { id } = await this.userService.createUser({
         passwordHash: hashedPassword,
         ...userWithoutPassword
       });
@@ -241,17 +214,17 @@ export class AuthService implements IAuthService {
       const userRole = await this.roleService.getRole({ roleName: "user" });
 
       await this.userRoleService.addUserRole({
-        userId: newUser.id,
+        userId: id,
         roleId: userRole?.id!
       });
 
       await this.notificationSettingsService.addNotificationSetting({
-        userId: newUser.id,
+        userId: id,
         notifcationType: "EMAIL"
       });
 
       await this.userTwoStepService.createUserTwoStepVerification({
-        userId: newUser.id,
+        userId: id,
         methodType: "EMAIL",
         methodDetail: "OTP code is sent via email",
         isEnabled: true,
@@ -260,14 +233,14 @@ export class AuthService implements IAuthService {
 
       await this.userService.updateUser({
         twoStepEnabled: true
-      }, newUser.id);
+      }, id);
 
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, id, ip);
       await this.userActivityService.addUserActivity({
-        userId: newUser.id,
+        userId: id,
         action: "REGISTER_WITH_EMAIL",
         actionTimestamp: new Date(),
-        deviceInfo: deviceInfo,
-        ipAddress: ip
+        deviceId
       });
 
       return {
@@ -351,13 +324,13 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: string, ip: string): Promise<IApiResponse<any>> {
+  async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
     try {
       const user = await this.userService.findUser({ id: userId }, RoleEnums.USER, userId);
       const twoFactorMethod = await this.userTwoStepService.finUserTwoStepVerification(userId);
 
       if (
-        twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL || 
+        twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ||
         twoFactorMethod?.methodType === UserTwoFactorMethodType.SMS
       ) {
         const otp = await this.otpService.getOTP({
@@ -367,25 +340,25 @@ export class AuthService implements IAuthService {
         });
 
         if (!otp || otp.status !== "VERIFIED" || otp.updatedAt < addMinutes(new Date(), -3)) {
-          throw new HttpException({ 
-            message: "Please verify your account first", 
-            code: AuthErrorCode.ACCOUNT_NOT_VERIFIED 
+          throw new HttpException({
+            message: "Please verify your account first",
+            code: AuthErrorCode.ACCOUNT_NOT_VERIFIED
           }, HttpStatus.BAD_REQUEST);
         }
       }
 
       if (resetPasswordDto.currentPassword === resetPasswordDto.newPassword) {
-        throw new HttpException({ 
-          message: "Please enter new password", 
-          code: AuthErrorCode.NEW_PASSWORD_SAME_AS_OLD 
+        throw new HttpException({
+          message: "Please enter new password",
+          code: AuthErrorCode.NEW_PASSWORD_SAME_AS_OLD
         }, HttpStatus.BAD_REQUEST);
       }
 
       const currentPasswordMatch: boolean = await compare(resetPasswordDto.currentPassword, user?.passwordHash || "");
       if (!currentPasswordMatch) {
-        throw new HttpException({ 
-          message: "Current password doesn't match!!", 
-          code: AuthErrorCode.INVALID_CREDENTIALS 
+        throw new HttpException({
+          message: "Current password doesn't match!!",
+          code: AuthErrorCode.INVALID_CREDENTIALS
         }, HttpStatus.BAD_REQUEST);
       }
 
@@ -394,15 +367,15 @@ export class AuthService implements IAuthService {
         passwordHash: newPassword
       }, user?.id!);
 
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
       await this.userActivityService.addUserActivity({
         userId: user?.id!,
         action: "PASSWORD_RESET",
         actionTimestamp: new Date(),
-        deviceInfo: deviceInfo,
-        ipAddress: ip
+        deviceId
       });
 
-      return { 
+      return {
         success: true,
         message: "Password reset completed successfully",
         error: null
@@ -427,7 +400,7 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async recoverAccount(recoverAccountDto: RecoverAccountDto, deviceInfo: string, ip: string): Promise<IApiResponse<any>> {
+  async recoverAccount(recoverAccountDto: RecoverAccountDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
     try {
       const user = await this.userService.findUser({
         email: recoverAccountDto.value,
@@ -458,15 +431,15 @@ export class AuthService implements IAuthService {
         passwordHash: newPassword
       }, user?.id!);
 
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
       await this.userActivityService.addUserActivity({
         userId: user.id,
         action: "ACCOUNT_RECOVERY",
         actionTimestamp: new Date(),
-        deviceInfo: deviceInfo,
-        ipAddress: ip
+        deviceId
       });
 
-      return { 
+      return {
         success: true,
         message: "Password reset completed successfully",
         error: null
@@ -491,38 +464,11 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async refreshToken(refreshTokenDto: RefreshTokenDto, deviceInfo: string, ip: string): Promise<IApiResponse<IAuthResponse>> {
+  async refreshToken(refreshTokenDto: RefreshTokenDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<IAuthResponse>> {
     try {
       const { userId, email, currentRefreshToken } = refreshTokenDto;
 
-      let deviceId;
-      const parsedDeviceInfo = parseUserAgent(deviceInfo);
-      const deviceInfoInDb = await this.deviceInfoService.getDeviceInfo({
-        userId,
-        ...parsedDeviceInfo,
-        ipAddress: ip
-      });
-
-      if(deviceInfoInDb) {
-        deviceId = deviceInfoInDb.id;
-
-        await this.deviceInfoService.updateDeviceInfo({
-          id: deviceId,
-          lastActiveAt: new Date()
-        });
-      } else {
-        const newDeviceInfo = await this.deviceInfoService.createDeviceInfo({
-          userId,
-          ...parsedDeviceInfo,
-          ipAddress: ip,
-          lastActiveAt: new Date(),
-          type: parsedDeviceInfo.type === "desktop" ? DeviceType.DESKTOP : 
-            parsedDeviceInfo.type === "mobile" ? DeviceType.MOBILE :
-              parsedDeviceInfo.type === "tablet" ? DeviceType.TABLET : DeviceType.OTHER
-        });
-        deviceId = newDeviceInfo.id;
-      }
-
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       return {
         success: true,
         message: "Token refreshed successfully",
@@ -531,7 +477,7 @@ export class AuthService implements IAuthService {
           refreshToken: await this.generateRefreshToken(
             userId, deviceId, email, currentRefreshToken,
             currentRefreshToken ?
-            new Date(decodeToken(currentRefreshToken).exp) : undefined)
+              new Date(decodeToken(currentRefreshToken).exp) : undefined)
         }
       };
     } catch (error) {
