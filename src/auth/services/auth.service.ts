@@ -18,11 +18,10 @@ import { INotificationSettingsService } from "src/notification-settings/interfac
 import { IRoleService } from "src/role/interfaces";
 import { IOtpService } from "src/otp/interfaces";
 import { INotificationService } from "src/notification/interfaces";
-import { DeviceType, NotificationType, UserAccountStatus, UserTwoFactorMethodType } from "generated/prisma/enums";
+import { NotificationType, UserAccountStatus, UserTwoFactorMethodType } from "generated/prisma/enums";
 import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { AuthErrorCode, ErrorCode } from "src/common/enums";
 import { IDeviceInfoService } from "src/device-info/interfaces";
-import { parseUserAgent } from "src/common/utils/strings.utils";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 
 @Injectable()

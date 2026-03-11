@@ -26,7 +26,6 @@ export class AuthController {
     @GetClientIp() ip: string,
     @GetDeviceInfo() deviceInfo: IDeviceInfo,
   ) {
-    console.log("Device Info:", deviceInfo);
     return await this.authService.login(loginDto, deviceInfo, ip);
   }
 

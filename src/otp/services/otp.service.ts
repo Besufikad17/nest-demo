@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
-import { IOTPResponse, IOtpService } from "../interfaces/otp.service.interface";
+import { IOtpService } from "../interfaces/otp.service.interface";
 import { NotificationType, OTP } from "generated/prisma/client";
 import { hash, compare } from "src/common/utils/hash.utils";
 import { ConfigService } from "@nestjs/config";
@@ -10,8 +10,9 @@ import { IOtpRequestService } from "src/otp-request/interfaces";
 import { IOtpRepository } from "../interfaces";
 import { INotificationService } from "src/notification/interfaces";
 import { IDeviceInfoService } from "src/device-info/interfaces";
-import { IDeviceInfo } from "src/common/interfaces";
+import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
+import { ErrorCode } from "src/common/enums";
 
 @Injectable()
 export class OtpService implements IOtpService {
@@ -24,7 +25,7 @@ export class OtpService implements IOtpService {
     private userActivityService: IUserActivityService,
   ) { }
 
-  async createOTP(generateOTPDto: GenerateOtpDto, deviceInfo?: IDeviceInfo, ip?: string, flag: string = "create"): Promise<IOTPResponse> {
+  async createOTP(generateOTPDto: GenerateOtpDto, deviceInfo?: IDeviceInfo, ip?: string, flag: string = "create"): Promise<IApiResponse<null>> {
     try {
       const { value, type, identifier, userId } = generateOTPDto;
       let otpRequest = await this.otpRequestService.getOTPRequest({ where: { value } });;
@@ -72,7 +73,7 @@ export class OtpService implements IOtpService {
         }
       });
 
-      const { id, count, updatedAt } = otpRequest;
+      const { id } = otpRequest;
       await this.otpRequestService.updateOTPRequest({
         where: {
           id
@@ -111,16 +112,26 @@ export class OtpService implements IOtpService {
         });
       }
 
-      return { message: "Verification code sent" };
+      return {
+        success: true,
+        message: "Verification code sent"
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
@@ -149,7 +160,7 @@ export class OtpService implements IOtpService {
     }
   }
 
-  async resendOTP(generateOTPDto: GenerateOtpDto, deviceInfo: IDeviceInfo, ip: string): Promise<IOTPResponse> {
+  async resendOTP(generateOTPDto: GenerateOtpDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
       const otp = await this.getOTP(generateOTPDto);
 
@@ -172,17 +183,24 @@ export class OtpService implements IOtpService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async verifyOTP(verifyOtpDto: VerifyOtpDto, deviceInfo: IDeviceInfo, ip: string): Promise<IOTPResponse> {
+  async verifyOTP(verifyOtpDto: VerifyOtpDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
       const { value, type, otpCode, userId } = verifyOtpDto;
       const otp = await this.otpRepository.getOTP({
@@ -228,16 +246,26 @@ export class OtpService implements IOtpService {
         });
       }
 
-      return { message: "Verification completed" };
+      return {
+        success: true,
+        message: "Verification completed"
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }

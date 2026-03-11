@@ -62,7 +62,10 @@ describe('OtpController (e2e)', () => {
 				identifier: 'EMAIL',
 				value: email,
 			})
-			.expect(201);
+			.expect(201)
+			.expect((res) => {
+				expect(res.body.success).toBe(true);
+			});
 
 		const latestOtp = await prisma.oTP.findFirst({
 			where: { value: email, type: otpType },
@@ -88,6 +91,7 @@ describe('OtpController (e2e)', () => {
 
 		expect(otpRequestReponse.body).toEqual(
 			expect.objectContaining({
+				success: true,
 				message: 'Verification code sent',
 			}),
 		);
@@ -116,7 +120,10 @@ describe('OtpController (e2e)', () => {
 				type: 'ACCOUNT_VERIFICATION',
 				otpCode: '000000',
 			})
-			.expect(400);
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.success).toBe(false);
+			});
 
 		const validateResponse = await request(app.getHttpServer())
 			.post('/api/v1/auth/otp/validate')
@@ -128,7 +135,7 @@ describe('OtpController (e2e)', () => {
 			.expect(200);
 
 		expect(validateResponse.body).toEqual(
-			expect.objectContaining({ message: 'Verification completed' }),
+			expect.objectContaining({ success: true, message: 'Verification completed' }),
 		);
 	});
 
@@ -144,7 +151,10 @@ describe('OtpController (e2e)', () => {
 				type: 'ACCOUNT_VERIFICATION',
 				otpCode: code,
 			})
-			.expect(200);
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.success).toBe(true);
+			});
 
 		await request(app.getHttpServer())
 			.post('/api/v1/auth/otp/validate')
@@ -153,7 +163,10 @@ describe('OtpController (e2e)', () => {
 				type: 'ACCOUNT_VERIFICATION',
 				otpCode: code,
 			})
-			.expect(400);
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.success).toBe(false);
+			});
 	});
 
 	it('/auth/otp/resend (POST) rotates OTP code', async () => {
@@ -169,7 +182,10 @@ describe('OtpController (e2e)', () => {
 				identifier: 'EMAIL',
 				value: email,
 			})
-			.expect(201);
+			.expect(201)
+			.expect((res) => {
+				expect(res.body.success).toBe(true);
+			});
 
 		const latestOtpAfterResend = await prisma.oTP.findFirst({
 			where: { value: email, type: 'ACCOUNT_VERIFICATION' },
@@ -188,7 +204,10 @@ describe('OtpController (e2e)', () => {
 				type: 'ACCOUNT_VERIFICATION',
 				otpCode: firstCode,
 			})
-			.expect(400);
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.success).toBe(false);
+			});
 
 		await request(app.getHttpServer())
 			.post('/api/v1/auth/otp/validate')
@@ -197,7 +216,10 @@ describe('OtpController (e2e)', () => {
 				type: 'ACCOUNT_VERIFICATION',
 				otpCode: secondCode,
 			})
-			.expect(200);
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.success).toBe(true);
+			});
 	});
 
 	it('/auth/otp/validate (POST) rejects expired OTP', async () => {
@@ -223,7 +245,10 @@ describe('OtpController (e2e)', () => {
 				type: 'ACCOUNT_VERIFICATION',
 				otpCode: code,
 			})
-			.expect(400);
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.success).toBe(false);
+			});
 	});
 
 	it('/auth/otp/validate (POST) rejects when attempts exhausted', async () => {
@@ -249,7 +274,10 @@ describe('OtpController (e2e)', () => {
 				type: 'ACCOUNT_VERIFICATION',
 				otpCode: code,
 			})
-			.expect(400);
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.success).toBe(false);
+			});
 	});
 
 	it('/auth/otp/request (POST) enforces request limit per value', async () => {
@@ -263,7 +291,10 @@ describe('OtpController (e2e)', () => {
 					identifier: 'EMAIL',
 					value: email,
 				})
-				.expect(201);
+				.expect(201)
+				.expect((res) => {
+					expect(res.body.success).toBe(true);
+				});
 		}
 
 		await request(app.getHttpServer())
@@ -273,6 +304,9 @@ describe('OtpController (e2e)', () => {
 				identifier: 'EMAIL',
 				value: email,
 			})
-			.expect(400);
+			.expect(201)
+			.expect((res) => {
+				expect(res.body.success).toBe(false);
+			});
 	});
 });
