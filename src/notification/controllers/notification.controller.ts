@@ -5,6 +5,8 @@ import { JwtGuard } from "src/common/guards";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";
 import { INotificationService } from "../interfaces";
+import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
+import { NotificationResponse } from "../entities/notification.entities";
 
 @ApiTags("notification")
 @Controller("notification")
@@ -16,6 +18,7 @@ export class NotificationController {
   @Get("all")
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(NotificationResponse, true)
   async getNotifications(
     @GetUser() user: IUser,
     @Query("skip") skip?: number,
@@ -29,10 +32,11 @@ export class NotificationController {
   @Get(":id")
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(NotificationResponse)
   async getNotification(@Param("id") id: string, @GetUser() user: IUser) {
     const notification = await this.notificationService.getNotification(id, user.id);
 
-    if (!notification) {
+    if (!notification || !notification.data) {
       throw new HttpException("Notification not found!!", HttpStatus.BAD_REQUEST);
     }
 
