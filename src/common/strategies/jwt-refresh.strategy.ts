@@ -20,7 +20,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh"
   }
 
   async validate(payload: any) {
-    const authUser = await this.userService.findUser({ id: payload.sub }, RoleEnums.USER);
+    const { data: authUser } = await this.userService.findUser({ id: payload.sub }, RoleEnums.USER, false);
     if (!authUser) {
       throw new UnauthorizedException();
     }

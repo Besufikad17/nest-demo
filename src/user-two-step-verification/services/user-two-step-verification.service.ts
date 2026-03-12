@@ -146,7 +146,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
   async getPrimary2Fa(getPrimary2FaDto: GetPrimary2FaDto): Promise<UserTwoStepVerification | null> {
     try {
-      const user = await this.userService.findUser({ email: getPrimary2FaDto.value, phoneNumber: getPrimary2FaDto.value }, RoleEnums.USER);
+      const { data: user } = await this.userService.findUser({ email: getPrimary2FaDto.value, phoneNumber: getPrimary2FaDto.value }, RoleEnums.USER, false);
 
       if (!user) {
         throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
@@ -331,7 +331,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
   async requestAddPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<PublicKeyCredentialCreationOptionsJSON> {
     try {
-      const user = await this.userService.findUser({ id: userId }, RoleEnums.USER);
+      const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
 
       console.log(userId);
 
@@ -381,7 +381,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
   async addPasskey(addPasskeyDto: AddPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<I2FAResponse> {
     try {
-      const user = await this.userService.findUser({ id: userId }, RoleEnums.USER);
+      const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
 
       if (!user) throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
 
@@ -474,7 +474,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
   async verifyPasskey(verifyPasskeyDto: VerifyPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<I2FAResponse> {
     try {
-      const user = await this.userService.findUser({ id: userId }, RoleEnums.USER);
+      const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
       if (!user) throw new Error("User not found");
 
       const currentOptions: PublicKeyCredentialRequestOptionsJSON = await this.requestVerifyPasskey(user.id, deviceInfo, ip);

@@ -98,7 +98,7 @@ export class AuthService implements IAuthService {
     try {
       const { email, phoneNumber, password } = loginDto;
 
-      const user = await this.userService.findUser({ email: email, phoneNumber: phoneNumber }, RoleEnums.USER);
+      const { data: user } = await this.userService.findUser({ email: email, phoneNumber: phoneNumber }, RoleEnums.USER, true);
 
       if (!user) {
         throw new HttpException({ message: "User not found!!", code: ErrorCode.USER_NOT_FOUND }, HttpStatus.BAD_REQUEST);
@@ -325,7 +325,7 @@ export class AuthService implements IAuthService {
 
   async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
     try {
-      const user = await this.userService.findUser({ id: userId }, RoleEnums.USER, userId);
+      const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, true, userId);
       const twoFactorMethod = await this.userTwoStepService.finUserTwoStepVerification(userId);
 
       if (
@@ -401,10 +401,10 @@ export class AuthService implements IAuthService {
 
   async recoverAccount(recoverAccountDto: RecoverAccountDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
     try {
-      const user = await this.userService.findUser({
+      const { data: user } = await this.userService.findUser({
         email: recoverAccountDto.value,
         phoneNumber: recoverAccountDto.newPassword
-      }, RoleEnums.USER);
+      }, RoleEnums.USER, false);
 
       if (!user) {
         throw new HttpException({ message: "User not found!!", code: ErrorCode.USER_NOT_FOUND }, HttpStatus.BAD_REQUEST);

@@ -9,7 +9,7 @@ export class CreateUserDto {
   readonly firstName?: string;
 
   @IsString()
-  @ValidateIf((obj) => obj.firstName !== undefined && obj.firstName !== null && obj.firstName !== "")
+  @ValidateIf((obj) => obj.lastName !== undefined && obj.lastName !== null && obj.lastName !== "")
   readonly lastName?: string;
 
   @IsEmail()
@@ -45,7 +45,7 @@ export class UpdateUserDto {
   readonly firstName?: string;
 
   @IsString()
-  @ValidateIf((obj) => obj.firstName !== undefined && obj.firstName !== null && obj.firstName !== "")
+  @ValidateIf((obj) => obj.lastName !== undefined && obj.lastName !== null && obj.lastName !== "")
   readonly lastName?: string;
 
   @ApiProperty()

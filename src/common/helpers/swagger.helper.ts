@@ -2,7 +2,10 @@ import { applyDecorators, Type } from "@nestjs/common";
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { ApiResponse } from "../entities/api.entity";
 
-export const ApiOkResponseWithData = <TModel extends Type<any>>(model: TModel) => {
+export const ApiOkResponseWithData = <TModel extends Type<any>>(
+  model: TModel,
+  isArray = false,
+) => {
   return applyDecorators(
     ApiExtraModels(ApiResponse, model),
     ApiOkResponse({
@@ -11,9 +14,14 @@ export const ApiOkResponseWithData = <TModel extends Type<any>>(model: TModel) =
           { $ref: getSchemaPath(ApiResponse) },
           {
             properties: {
-              data: {
-                $ref: getSchemaPath(model),
-              },
+              data: isArray
+                ? {
+                  type: "array",
+                  items: { $ref: getSchemaPath(model) },
+                }
+                : {
+                  $ref: getSchemaPath(model),
+                },
             },
           },
         ],
