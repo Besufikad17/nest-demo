@@ -8,6 +8,8 @@ import { ApiTags } from "@nestjs/swagger";
 import { RoleGuard } from "src/common/guards";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { RoleEnums } from "src/user-role/enums/role.enum";
+import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
+import { UserActivityLogResponse } from "../entities/user-activity.entity";
 
 @ApiTags("user-activity")
 @Controller("user/activity")
@@ -15,9 +17,10 @@ export class UserActivityController {
   constructor(private userActivityService: IUserActivityService) { }
 
   @Get("all")
-  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(RoleEnums.USER)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(UserActivityLogResponse, true)
   async getActivityLogs(
     @Body() findUserActivityDto: FindUserActivityDto,
     @GetUser() user: IUser,
@@ -31,6 +34,7 @@ export class UserActivityController {
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(RoleEnums.ADMIN)
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(UserActivityLogResponse, true)
   async getUsersActivities(
     @Body() findUserActivityDto: FindUserActivityDto,
     @Query("user") userId?: string,
@@ -44,6 +48,7 @@ export class UserActivityController {
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(UserActivityLogResponse, false)
   async getActivityLog(
     @Param("id") id: string,
     @GetUser() user: IUser,
@@ -55,6 +60,7 @@ export class UserActivityController {
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(RoleEnums.ADMIN)
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(UserActivityLogResponse, false)
   async getUsersActivityAdmin(
     @Param("id") id: string
   ) {

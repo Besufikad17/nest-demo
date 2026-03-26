@@ -3,6 +3,7 @@ import { IUserActivityRepository, IUserActivityService } from "../interfaces";
 import { UserActivityLog } from "generated/prisma/client"
 import { AddUserActivityDto, FileUploadEventDto, FindUserActivityDto } from "../dto/user-activity.dto";
 import { RoleEnums } from "src/user-role/enums/role.enum";
+import { IApiResponse } from "src/common/interfaces";
 
 @Injectable()
 export class UserActivityService implements IUserActivityService {
@@ -24,14 +25,20 @@ export class UserActivityService implements IUserActivityService {
     }
   }
 
-  async findUserActivity(id: string, role: RoleEnums, userId?: string): Promise<UserActivityLog | null> {
+  async findUserActivity(id: string, role: RoleEnums, userId?: string): Promise<IApiResponse<UserActivityLog | null>> {
     try {
-      return await this.userActivityRepository.findUserActivity({
+      const data = await this.userActivityRepository.findUserActivity({
         where: {
           id: id,
           userId: role === RoleEnums.USER ? userId : undefined,
         },
       });
+
+      return {
+        success: true,
+        message: 'User activity log fetched.',
+        data,
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
@@ -45,11 +52,11 @@ export class UserActivityService implements IUserActivityService {
     }
   }
 
-  async findUserActivities(findUserActivityDto: FindUserActivityDto, userId?: string, skip?: number, take?: number): Promise<UserActivityLog[]> {
+  async findUserActivities(findUserActivityDto: FindUserActivityDto, userId?: string, skip?: number, take?: number): Promise<IApiResponse<UserActivityLog[]>> {
     try {
       const { sortOptions, ...findUserActivityWithoutSortOptions } = findUserActivityDto;
 
-      return await this.userActivityRepository.findUserActivities({
+      const data = await this.userActivityRepository.findUserActivities({
         where: {
           userId: userId,
           ...findUserActivityWithoutSortOptions
@@ -60,6 +67,12 @@ export class UserActivityService implements IUserActivityService {
         skip: skip,
         take: take
       });
+
+      return {
+        success: true,
+        message: 'User activity logs fetched.',
+        data,
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
