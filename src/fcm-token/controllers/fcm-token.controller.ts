@@ -5,6 +5,8 @@ import { CreateFcmTokenDto } from "../dto/fcm-token.dto";
 import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IUser } from "src/common/interfaces";
 import { IFCMTokenService } from "../interfaces";
+import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
+import { EmptyBodyResponse } from "src/common/entities/api.entity";
 
 @ApiTags("fcm-token")
 @Controller("fcm-token")
@@ -16,6 +18,7 @@ export class FCMTokenController {
   @Post("fcm-token/register")
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
+  @ApiOkResponseWithData(EmptyBodyResponse, false)
   async registerToken(@Body() createFcmTokenDto: CreateFcmTokenDto, @GetUser() user: IUser) {
     return await this.fcmTokenService.createFCMToken({
       ...createFcmTokenDto,

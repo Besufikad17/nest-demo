@@ -2,12 +2,13 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { IFCMTokenRepository, IFCMTokenResponse, IFCMTokenService } from '../interfaces';
 import { CreateFcmTokenDto } from '../dto/fcm-token.dto';
 import { FCMToken } from 'generated/prisma/client';
+import { IApiResponse } from 'src/common/interfaces';
 
 @Injectable()
 export class FcmTokenService implements IFCMTokenService {
   constructor(private fcmTokenRepository: IFCMTokenRepository) { }
 
-  async createFCMToken(createFcmTokenDto: CreateFcmTokenDto): Promise<IFCMTokenResponse> {
+  async createFCMToken(createFcmTokenDto: CreateFcmTokenDto): Promise<IApiResponse<IFCMTokenResponse>> {
     try {
       const { userId } = createFcmTokenDto;
 
@@ -28,6 +29,7 @@ export class FcmTokenService implements IFCMTokenService {
       });
 
       return {
+        success: true,
         message: "Fcm token registered"
       };
     } catch (error) {
