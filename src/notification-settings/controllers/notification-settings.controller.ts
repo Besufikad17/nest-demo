@@ -8,6 +8,9 @@ import { RoleEnums } from "src/user-role/enums/role.enum";
 import { UpdateNotificationSettingsDto } from "../dto/notification-settings.dto";
 import { INotificationSettingsService } from "../interfaces/notification-settings.service.interface";
 import { GetClientIp, GetDeviceInfo } from "src/common/decorators";
+import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
+import { NotificationSettingResponse } from "../entities/notification-settings.entities";
+import { EmptyBodyResponse } from "src/common/entities/api.entity";
 
 @ApiTags("notification-settings")
 @Controller("user/notification")
@@ -18,6 +21,7 @@ export class NotificationSettingsController {
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(NotificationSettingResponse, true)
   async getNotificationSetting(
     @GetUser() user: IUser
   ) {
@@ -28,6 +32,7 @@ export class NotificationSettingsController {
   @UseGuards(JwtGuard, DeviceInfoGuard, RoleGuard)
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async updateNotificationSettings(
     @Body() updateNotificationSettingsDto: UpdateNotificationSettingsDto,
     @Param("id") settingsId: string,

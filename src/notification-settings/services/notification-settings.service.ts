@@ -3,9 +3,10 @@ import { INotificationSettingsRepository, INotificationSettingsService } from ".
 import { IUserActivityService } from "src/user-activity/interfaces";
 import { NotificationSettings } from "generated/prisma/client";
 import { AddNotificationSettingDto, UpdateNotificationSettingsDto } from "../dto/notification-settings.dto";
-import { IDeviceInfo } from "src/common/interfaces";
+import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { IDeviceInfoService } from "src/device-info/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
+import { ErrorCode } from "src/common/enums";
 
 @Injectable()
 export class NotificationSettingsService implements INotificationSettingsService {
@@ -36,27 +37,40 @@ export class NotificationSettingsService implements INotificationSettingsService
     }
   }
 
-  async getNotificationSetting(userId: string): Promise<NotificationSettings[]> {
+  async getNotificationSetting(userId: string): Promise<IApiResponse<NotificationSettings[]>> {
     try {
-      return await this.notficationSettingsRepository.findNotifcationSettings({
+      const data = await this.notficationSettingsRepository.findNotifcationSettings({
         where: {
           userId: userId
         }
       });
+
+      return {
+        success: false,
+        message: 'Notification settings fetched.',
+        data
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async updateNotificationSetting(updateNotificationSettingsDto: UpdateNotificationSettingsDto, settingsId: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<NotificationSettings> {
+  async updateNotificationSetting(updateNotificationSettingsDto: UpdateNotificationSettingsDto, settingsId: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
       const notificationSetting = await this.notficationSettingsRepository.findNotificationSetting({
         where: {
@@ -67,7 +81,7 @@ export class NotificationSettingsService implements INotificationSettingsService
 
       if (!notificationSetting) throw new HttpException("Notification settings not found!!", HttpStatus.BAD_REQUEST);
 
-      const updatedSetting = await this.notficationSettingsRepository.updateNotificationSetting({
+      await this.notficationSettingsRepository.updateNotificationSetting({
         where: {
           id: notificationSetting.id
         },
@@ -84,7 +98,10 @@ export class NotificationSettingsService implements INotificationSettingsService
         deviceId
       });
 
-      return updatedSetting;
+      return {
+        success: true,
+        message: 'Notification setting updated'
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
