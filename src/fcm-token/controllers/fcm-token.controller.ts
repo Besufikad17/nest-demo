@@ -18,7 +18,7 @@ export class FCMTokenController {
   @Post("fcm-token/register")
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOkResponseWithData(EmptyBodyResponse, false)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async registerToken(@Body() createFcmTokenDto: CreateFcmTokenDto, @GetUser() user: IUser) {
     return await this.fcmTokenService.createFCMToken({
       ...createFcmTokenDto,

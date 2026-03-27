@@ -4,11 +4,6 @@ import { IsBoolean, IsEnum, IsNotEmpty, IsString, IsUUID, ValidateIf } from "cla
 import { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
 
 export class CreateUserTwoStepVerificationDto {
-  @ApiProperty()
-  @IsUUID()
-  @ValidateIf((obj) => obj.userId !== undefined && obj.userId !== null && obj.userId !== "")
-  readonly userId?: string;
-
   @ApiProperty({ enum: UserTwoFactorMethodType })
   @IsNotEmpty()
   @IsEnum(UserTwoFactorMethodType)

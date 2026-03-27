@@ -223,12 +223,11 @@ export class AuthService implements IAuthService {
       });
 
       await this.userTwoStepService.createUserTwoStepVerification({
-        userId: id,
         methodType: "EMAIL",
         methodDetail: "OTP code is sent via email",
         isEnabled: true,
         isPrimary: true
-      }, "", deviceInfo, ip);
+      }, id, "", deviceInfo, ip);
 
       await this.userService.updateUser({
         twoStepEnabled: true

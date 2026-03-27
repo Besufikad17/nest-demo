@@ -3,6 +3,7 @@ import { IFCMTokenRepository, IFCMTokenResponse, IFCMTokenService } from '../int
 import { CreateFcmTokenDto } from '../dto/fcm-token.dto';
 import { FCMToken } from 'generated/prisma/client';
 import { IApiResponse } from 'src/common/interfaces';
+import { ErrorCode } from 'src/common/enums';
 
 @Injectable()
 export class FcmTokenService implements IFCMTokenService {
@@ -34,10 +35,21 @@ export class FcmTokenService implements IFCMTokenService {
       };
     } catch (error) {
       console.log(error);
-      throw new HttpException(
-        error.meta || 'Error occurred check the log in the server',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      if (error instanceof HttpException) {
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
+      } else {
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
+      }
     }
   }
 

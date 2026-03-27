@@ -13,6 +13,9 @@ import { GetUser } from "src/common/decorators/get-user.decorator";
 import { IDeviceInfo, IUser } from "src/common/interfaces";
 import { IUserTwoStepVerificationService } from "../interfaces";
 import { GetClientIp, GetDeviceInfo } from "src/common/decorators";
+import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
+import { Create2FAResponse, PublicKeyCredentialCreationOptionsJSONResponse, PublicKeyCredentialRequestOptionsJSONResponse, UserTwoStepVerificationResponse, Verify2FAResponse } from "../entities/user-two-step-verification.entity";
+import { EmptyBodyResponse } from "src/common/entities/api.entity";
 
 @ApiTags("user-two-step-verification")
 @Controller("auth/2fa")
@@ -20,37 +23,37 @@ export class UserTwoStepVerificationController {
   constructor(private userTwoStepVerificationService: IUserTwoStepVerificationService) { }
 
   @Post("add")
-  @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOkResponseWithData(Create2FAResponse)
   async add2FaMethod(
     @Body() createUserTwoStepVerificationDto: CreateUserTwoStepVerificationDto,
     @GetUser() user: IUser,
     @GetClientIp() ip: string,
     @GetDeviceInfo() deviceInfo: IDeviceInfo,
   ) {
-    const { userId, ...withoutUserId } = createUserTwoStepVerificationDto;
-    return await this.userTwoStepVerificationService.createUserTwoStepVerification({
-      userId: user.id,
-      ...withoutUserId
-    }, user.email!, deviceInfo, ip);
+    return await this.userTwoStepVerificationService.createUserTwoStepVerification(createUserTwoStepVerificationDto, user.id, user.email!, deviceInfo, ip);
   }
 
   @Get("all")
-  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(UserTwoStepVerificationResponse, true)
   async get2FaMethods(@GetUser() user: IUser) {
     return await this.userTwoStepVerificationService.finUserTwoStepVerifications(user.id);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(UserTwoStepVerificationResponse)
   async get2FaMethod(@Body() getPrimary2faDto: GetPrimary2FaDto) {
     return await this.userTwoStepVerificationService.getPrimary2Fa(getPrimary2faDto);
   }
 
   @Put("update/:id")
-  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async update2FaUpdate(
     @Body() updateUsetTwoStepVerificationDto: UpdateUserTwoStepVerifcationDto,
     @Param("id") methodId: string,
@@ -66,8 +69,9 @@ export class UserTwoStepVerificationController {
   }
 
   @Post("verify")
-  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(Verify2FAResponse)
   async verify2FaCode(
     @Body() verifyUserTwoStepVerificationDto: VerifyUserTwoStepVerificationDto,
     @GetUser() user: IUser,
@@ -91,8 +95,9 @@ export class UserTwoStepVerificationController {
   }
 
   @Post("passkey/add/request")
-  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(PublicKeyCredentialCreationOptionsJSONResponse)
   async requestAddPasskey(
     @GetUser() user: IUser,
     @GetClientIp() ip: string,
@@ -102,8 +107,9 @@ export class UserTwoStepVerificationController {
   }
 
   @Post("passkey/add")
-  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(EmptyBodyResponse)
   async addPasskey(
     @Body() adddPasskeyDto: AddPasskeyDto,
     @GetUser() user: IUser,
@@ -114,8 +120,9 @@ export class UserTwoStepVerificationController {
   }
 
   @Post("passkey/verify/request")
-  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(PublicKeyCredentialRequestOptionsJSONResponse)
   async requestVerifyPasskey(
     @GetClientIp() ip: string,
     @GetDeviceInfo() deviceInfo: IDeviceInfo,
@@ -125,8 +132,9 @@ export class UserTwoStepVerificationController {
   }
 
   @Post("passkey/verify")
-  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOkResponseWithData(Verify2FAResponse)
   async verifyPasskey(
     @Body() verifyPasskeyDto: VerifyPasskeyDto,
     @GetUser() user: IUser,

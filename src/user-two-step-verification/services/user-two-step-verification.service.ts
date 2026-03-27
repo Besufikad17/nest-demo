@@ -1,7 +1,7 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { I2FAResponse, IUserTwoStepVerificationService } from "../interfaces/user-two-step-verification.service.interface";
+import { HttpException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import { ICreate2FAResponse, IUserTwoStepVerificationService, IVerify2FAResponse } from "../interfaces/user-two-step-verification.service.interface";
 import { UserTwoStepVerificationRepository } from "../repositories/user-two-step-verification.repository";
-import { UserTwoStepVerification } from "generated/prisma/client"
+import { UserTwoFactorMethodType, UserTwoStepVerification } from "generated/prisma/client"
 import {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
@@ -25,9 +25,10 @@ import { IWebAuthnCredentialService } from "src/web-authn-credential/interfaces/
 import { parseTransportsToFutureArray } from "src/web-authn-credential/utils/strings";
 import { IUserActivityService } from "src/user-activity/interfaces";
 import { RoleEnums } from "src/user-role/enums/role.enum";
-import { IDeviceInfo } from "src/common/interfaces";
+import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 import { IDeviceInfoService } from "src/device-info/interfaces";
+import { ErrorCode } from "src/common/enums";
 
 @Injectable()
 export class UserTwoStepVerificationService implements IUserTwoStepVerificationService {
@@ -41,12 +42,13 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
   async createUserTwoStepVerification(
     createUserTwoStepVerificationDto: CreateUserTwoStepVerificationDto,
+    userId: string,
     email: string,
     deviceInfo: IDeviceInfo,
     ip: string
-  ): Promise<I2FAResponse> {
+  ): Promise<IApiResponse<ICreate2FAResponse>> {
     try {
-      const { isPrimary, methodType, userId } = createUserTwoStepVerificationDto;
+      const { isPrimary, methodType } = createUserTwoStepVerificationDto;
 
       if (isPrimary) {
         const primary2FaMethod = await this.userTwoStepVerificationRepository.findUserTwoStepVerification({
@@ -67,10 +69,11 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         }
       }
 
-      if (methodType === "AUTHENTICATOR") {
+      let qrCode = null;
+      if (methodType === UserTwoFactorMethodType.AUTHENTICATOR) {
         const secret = authenticator.generateSecret();
         const otpAuthUrl = authenticator.keyuri(email, "nest-demo", secret);
-        const qrCode = await toDataURL(otpAuthUrl);
+        qrCode = await toDataURL(otpAuthUrl);
         await this.userTwoStepVerificationRepository.createUserTwoStepVerification({
           data: {
             secret: secret,
@@ -87,7 +90,6 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           deviceId
         });
 
-        return { message: "Two step verification successfuly added", qrCode: qrCode };
       } else {
         await this.userTwoStepVerificationRepository.createUserTwoStepVerification({
           data: {
@@ -95,17 +97,31 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
             ...createUserTwoStepVerificationDto
           }
         });
-        return { message: "Two step verification successfuly added" };
       }
+
+      return {
+        success: true,
+        message: 'Two step verification successfuly added.',
+        data: {
+          qrCode
+        }
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
@@ -128,46 +144,72 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     }
   }
 
-  async finUserTwoStepVerifications(userId: string): Promise<UserTwoStepVerification[]> {
+  async finUserTwoStepVerifications(userId: string): Promise<IApiResponse<UserTwoStepVerification[]>> {
     try {
-      return await this.userTwoStepVerificationRepository.findUserTwoStepVerifications({ where: { userId: userId } });
+      const data = await this.userTwoStepVerificationRepository.findUserTwoStepVerifications({ where: { userId: userId } });
+
+      return {
+        success: false,
+        message: 'Two step verifications fetched.',
+        data,
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async getPrimary2Fa(getPrimary2FaDto: GetPrimary2FaDto): Promise<UserTwoStepVerification | null> {
+  async getPrimary2Fa(getPrimary2FaDto: GetPrimary2FaDto): Promise<IApiResponse<UserTwoStepVerification | null>> {
     try {
       const { data: user } = await this.userService.findUser({ email: getPrimary2FaDto.value, phoneNumber: getPrimary2FaDto.value }, RoleEnums.USER, false);
 
       if (!user) {
-        throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
+        throw new NotFoundException('User not found');
       }
 
-      return await this.userTwoStepVerificationRepository.findUserTwoStepVerification({
+      const data = await this.userTwoStepVerificationRepository.findUserTwoStepVerification({
         where: {
           userId: user.id,
           isPrimary: true,
           isEnabled: true
         }
       });
+
+      return {
+        success: true,
+        message: 'Primary 2FA fetched',
+        data
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
@@ -177,7 +219,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     userId: string,
     deviceInfo: IDeviceInfo,
     ip: string
-  ): Promise<UserTwoStepVerification> {
+  ): Promise<IApiResponse<UserTwoStepVerification>> {
     try {
       const { id, isPrimary } = updateUserTwoStepVerificationDto;
 
@@ -219,21 +261,33 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         deviceId
       });
 
-      return await this.userTwoStepVerificationRepository.updateUserTwoStepVerification({
+      await this.userTwoStepVerificationRepository.updateUserTwoStepVerification({
         where: {
           id: user2Fa.id
         },
         data: updateUserTwoStepVerificationDto
       });
+
+      return {
+        success: true,
+        message: 'Two step verification updated.'
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
@@ -243,7 +297,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     userId: string,
     deviceInfo: IDeviceInfo,
     ip: string
-  ): Promise<I2FAResponse> {
+  ): Promise<IApiResponse<IVerify2FAResponse>> {
     try {
       const { twoFaCode } = verifyUserTwoStepVerificationDto;
 
@@ -280,21 +334,34 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         deviceId
       });
 
-      return { message: "2FA code successfully verified", valid: true };
+      return {
+        success: true,
+        message: "2FA code successfully verified",
+        data: {
+          valid: true
+        }
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<any> {
+  async deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
     try {
       const twoFaMethod = await this.userTwoStepVerificationRepository.findUserTwoStepVerification({
         where: {
@@ -315,21 +382,33 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         deviceId
       });
 
-      return await this.userTwoStepVerificationRepository.deleteUserTwoStepVerification({ where: { id: id } });
+      await this.userTwoStepVerificationRepository.deleteUserTwoStepVerification({ where: { id: id } });
+
+      return {
+        success: true,
+        message: 'Two step verification removed.'
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async requestAddPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<PublicKeyCredentialCreationOptionsJSON> {
+  async requestAddPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<PublicKeyCredentialCreationOptionsJSON>> {
     try {
       const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
 
@@ -341,7 +420,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
       const passkeys = await this.webAuthnCredentialService.findWebAuthCredentials(user.id);
 
-      const options = await generateRegistrationOptions({
+      const data = await generateRegistrationOptions({
         rpName: "nest-demo",
         rpID: "nest-demo.com",
         userID: Buffer.from(user.id),
@@ -365,27 +444,38 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         deviceId
       });
 
-      return options;
+      return {
+        success: true,
+        message: 'Passkey added.',
+        data,
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async addPasskey(addPasskeyDto: AddPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<I2FAResponse> {
+  async addPasskey(addPasskeyDto: AddPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
       const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
 
       if (!user) throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
 
-      const currentOptions: PublicKeyCredentialCreationOptionsJSON = await this.requestAddPasskey(user.id, deviceInfo, ip);
+      const { data: currentOptions }: IApiResponse<PublicKeyCredentialCreationOptionsJSON> = await this.requestAddPasskey(user.id, deviceInfo, ip);
 
       const { verified, registrationInfo } = await verifyRegistrationResponse({
         response: addPasskeyDto.response,
@@ -428,23 +518,33 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         deviceId
       });
 
-      return { message: "Passkey authenticated successfully" };
+      return {
+        success: true,
+        message: "Passkey authenticated successfully"
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async requestVerifyPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<PublicKeyCredentialRequestOptionsJSON> {
+  async requestVerifyPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<PublicKeyCredentialRequestOptionsJSON>> {
     try {
-      const options = await generateAuthenticationOptions({
+      const data = await generateAuthenticationOptions({
         allowCredentials: [],
         userVerification: "preferred",
         rpID: "nest-demo.com"
@@ -458,26 +558,37 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         deviceId
       });
 
-      return options;
+      return {
+        success: true,
+        message: 'Passkey added.',
+        data,
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
 
-  async verifyPasskey(verifyPasskeyDto: VerifyPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<I2FAResponse> {
+  async verifyPasskey(verifyPasskeyDto: VerifyPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<IVerify2FAResponse>> {
     try {
       const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
       if (!user) throw new Error("User not found");
 
-      const currentOptions: PublicKeyCredentialRequestOptionsJSON = await this.requestVerifyPasskey(user.id, deviceInfo, ip);
+      const { data: currentOptions }: IApiResponse<PublicKeyCredentialRequestOptionsJSON> = await this.requestVerifyPasskey(user.id, deviceInfo, ip);
 
       const passkey = await this.webAuthnCredentialService.findWebAuthnCredential({
         userId: user.id,
@@ -513,16 +624,29 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         deviceId
       });
 
-      return { message: "Passkey verfied successfully!!" };
+      return {
+        success: true,
+        message: "Passkey verfied successfully!!",
+        data: {
+          valid: true
+        }
+      };
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }

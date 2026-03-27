@@ -48,7 +48,7 @@ export class UserActivityController {
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponseWithData(UserActivityLogResponse, false)
+  @ApiOkResponseWithData(UserActivityLogResponse)
   async getActivityLog(
     @Param("id") id: string,
     @GetUser() user: IUser,
@@ -60,7 +60,7 @@ export class UserActivityController {
   @UseGuards(JwtGuard, RoleGuard)
   @Roles(RoleEnums.ADMIN)
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponseWithData(UserActivityLogResponse, false)
+  @ApiOkResponseWithData(UserActivityLogResponse)
   async getUsersActivityAdmin(
     @Param("id") id: string
   ) {

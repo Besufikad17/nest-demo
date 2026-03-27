@@ -4,6 +4,7 @@ import { UserActivityLog } from "generated/prisma/client"
 import { AddUserActivityDto, FileUploadEventDto, FindUserActivityDto } from "../dto/user-activity.dto";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 import { IApiResponse } from "src/common/interfaces";
+import { ErrorCode } from "src/common/enums";
 
 @Injectable()
 export class UserActivityService implements IUserActivityService {
@@ -42,12 +43,19 @@ export class UserActivityService implements IUserActivityService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
@@ -76,12 +84,19 @@ export class UserActivityService implements IUserActivityService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }

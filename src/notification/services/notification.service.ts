@@ -7,7 +7,7 @@ import { IUserRoleService } from "src/user-role/interfaces";
 import { Queue } from "bullmq";
 import { InjectQueue } from "@nestjs/bullmq";
 import { IApiResponse } from "src/common/interfaces";
-
+import { ErrorCode } from "src/common/enums";
 
 @Injectable()
 export class NotificationService implements INotificationService {
@@ -93,12 +93,19 @@ export class NotificationService implements INotificationService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
@@ -144,12 +151,19 @@ export class NotificationService implements INotificationService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        throw new HttpException(error, HttpStatus.BAD_REQUEST);
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        }
       } else {
-        throw new HttpException(
-          error.meta || "Error occurred check the log in the server",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
       }
     }
   }
