@@ -7,7 +7,7 @@ import { IDeviceInfo, IUser } from "src/common/interfaces";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 import { UpdateNotificationSettingsDto } from "../dto/notification-settings.dto";
 import { INotificationSettingsService } from "../interfaces/notification-settings.service.interface";
-import { GetClientIp, GetDeviceInfo } from "src/common/decorators";
+import { GetClientIp, GetDeviceInfo, RateLimitPolicy } from "src/common/decorators";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 import { NotificationSettingResponse } from "../entities/notification-settings.entities";
 import { EmptyBodyResponse } from "src/common/entities/api.entity";
@@ -22,6 +22,14 @@ export class NotificationSettingsController {
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOkResponseWithData(NotificationSettingResponse, true)
+  @RateLimitPolicy({
+    id: "notification_settings_all",
+    group: "read",
+    limits: [
+      { scope: "ip", limit: 120, windowSec: 60 },
+      { scope: "user", limit: 120, windowSec: 60 },
+    ],
+  })
   async getNotificationSetting(
     @GetUser() user: IUser
   ) {
@@ -33,6 +41,14 @@ export class NotificationSettingsController {
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "notification_settings_update",
+    group: "sensitive",
+    limits: [
+      { scope: "ip", limit: 30, windowSec: 60 },
+      { scope: "user", limit: 30, windowSec: 60 },
+    ],
+  })
   async updateNotificationSettings(
     @Body() updateNotificationSettingsDto: UpdateNotificationSettingsDto,
     @Param("id") settingsId: string,

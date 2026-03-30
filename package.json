@@ -48,6 +48,7 @@
     "class-validator": "^0.14.3",
     "express-basic-auth": "^1.2.1",
     "firebase-admin": "^13.6.0",
+    "ioredis": "^5.10.1",
     "joi": "^18.0.2",
     "jwt-decode": "^4.0.0",
     "k6": "^0.0.0",
@@ -104,6 +105,10 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1",
+      "^generated/(.*)$": "<rootDir>/../generated/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

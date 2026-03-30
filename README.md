@@ -69,6 +69,9 @@ To use this project, follow these steps:
     PORT=
     REDIS_PORT=
     REDIS_HOST=
+    REDIS_PASSWORD=
+    RATE_LIMIT_MODE=monitor
+    RATE_LIMIT_ENABLED_GROUPS=public,sensitive,read
     ```
 
 4. Migrate the database schema:
@@ -89,3 +92,20 @@ To use this project, follow these steps:
 7. Access the API documentation at `http://127.0.0.1:PORT/api/docs`.
 
 **⚠️ Note**: Make sure to run the seed script since roles need to be added first before registration.
+
+## Rate Limiting Rollout
+
+The project supports staged rollout for rate limits:
+
+- `RATE_LIMIT_MODE=monitor` keeps metrics/logging active without blocking requests.
+- `RATE_LIMIT_MODE=enforce` actively blocks requests that exceed limits.
+- `RATE_LIMIT_ENABLED_GROUPS` controls which policy groups are active:
+    - `public` → public auth/otp endpoints
+    - `sensitive` → authenticated sensitive endpoints
+    - `read` → list/read APIs
+
+Example staged rollout:
+
+1. Start with `RATE_LIMIT_MODE=monitor` and all groups enabled.
+2. Switch to enforce for `public` first: `RATE_LIMIT_MODE=enforce`, `RATE_LIMIT_ENABLED_GROUPS=public`.
+3. Expand to `public,sensitive`, then `public,sensitive,read`.

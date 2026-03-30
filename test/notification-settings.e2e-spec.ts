@@ -1,3 +1,6 @@
+process.env.RATE_LIMIT_MODE = 'monitor';
+process.env.RATE_LIMIT_ENABLED_GROUPS = 'public,sensitive,read';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -11,7 +14,7 @@ import { INotificationService } from 'src/notification/interfaces';
 import { NotificationProcessor } from 'src/notification/processors/notification.processor';
 
 const uniqueEmail = (prefix = 'notif-settings') => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`;
-const uniquePhone = () => `+555${Date.now().toString().slice(-9)}`;
+const uniquePhone = () => `+555${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
 const deviceInfoHeader = 'Mozilla/5.0 (Test Device 1.0)';
 
 describe('Notification Settings Module (e2e)', () => {

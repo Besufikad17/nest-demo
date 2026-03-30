@@ -1,3 +1,6 @@
+process.env.RATE_LIMIT_MODE = 'monitor';
+process.env.RATE_LIMIT_ENABLED_GROUPS = 'public,sensitive,read';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';

@@ -5,7 +5,7 @@ import { IDeviceInfo, IUser } from "src/common/interfaces";
 import { ApiTags } from "@nestjs/swagger";
 import { JwtGuard } from "src/common/guards";
 import { IOtpService } from "../interfaces/otp.service.interface";
-import { GetClientIp, GetDeviceInfo } from "src/common/decorators";
+import { GetClientIp, GetDeviceInfo, RateLimitPolicy } from "src/common/decorators";
 import { EmptyBodyResponse } from "src/common/entities/api.entity";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 
@@ -17,6 +17,15 @@ export class OtpController {
   @Post("request")
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "otp_request",
+    group: "public",
+    identityFields: ["value", "userId"],
+    limits: [
+      { scope: "ip", limit: 3, windowSec: 600 },
+      { scope: "identity", limit: 3, windowSec: 600 },
+    ],
+  })
   async sendOTP(@Body() generateOTPDto: GenerateOtpDto) {
     return await this.optService.createOTP(generateOTPDto);
   }
@@ -25,6 +34,14 @@ export class OtpController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "otp_user_request",
+    group: "sensitive",
+    limits: [
+      { scope: "ip", limit: 20, windowSec: 60 },
+      { scope: "user", limit: 20, windowSec: 60 },
+    ],
+  })
   async sendUserOTP(
     @Body() generateOTPDto: GenerateOtpDto,
     @GetClientIp() ip: string,
@@ -37,6 +54,15 @@ export class OtpController {
   @Post("resend")
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "otp_resend",
+    group: "public",
+    identityFields: ["value", "userId"],
+    limits: [
+      { scope: "ip", limit: 3, windowSec: 600 },
+      { scope: "identity", limit: 3, windowSec: 600 },
+    ],
+  })
   async resendOTP(@Body() generateOTPDto: GenerateOtpDto) {
     return await this.optService.resendOTP(generateOTPDto);
   }
@@ -45,6 +71,14 @@ export class OtpController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "otp_user_resend",
+    group: "sensitive",
+    limits: [
+      { scope: "ip", limit: 20, windowSec: 60 },
+      { scope: "user", limit: 20, windowSec: 60 },
+    ],
+  })
   async resendUserOTP(
     @Body() generateOTPDto: GenerateOtpDto,
     @GetClientIp() ip: string,
@@ -57,6 +91,23 @@ export class OtpController {
   @Post("validate")
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "otp_validate",
+    group: "public",
+    identityFields: ["value", "userId"],
+    limits: [
+      { scope: "ip", limit: 10, windowSec: 600 },
+      { scope: "identity", limit: 10, windowSec: 600 },
+    ],
+    penalty: {
+      failureWindowSec: 600,
+      steps: [
+        { failures: 10, blockSec: 600 },
+        { failures: 20, blockSec: 3600 },
+        { failures: 30, blockSec: 86400 },
+      ],
+    },
+  })
   async validateOTP(@Body() verifyOTPDto: VerifyOtpDto) {
     return await this.optService.verifyOTP(verifyOTPDto);
   }
@@ -65,6 +116,21 @@ export class OtpController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "otp_user_validate",
+    group: "sensitive",
+    limits: [
+      { scope: "ip", limit: 20, windowSec: 60 },
+      { scope: "user", limit: 20, windowSec: 60 },
+    ],
+    penalty: {
+      failureWindowSec: 600,
+      steps: [
+        { failures: 10, blockSec: 600 },
+        { failures: 20, blockSec: 3600 },
+      ],
+    },
+  })
   async validateUserOTP(
     @Body() verifyOTPDto: VerifyOtpDto,
     @GetClientIp() ip: string,

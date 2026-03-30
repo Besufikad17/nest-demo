@@ -7,6 +7,7 @@ import { IUser } from "src/common/interfaces";
 import { IFCMTokenService } from "../interfaces";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 import { EmptyBodyResponse } from "src/common/entities/api.entity";
+import { RateLimitPolicy } from "src/common/decorators";
 
 @ApiTags("fcm-token")
 @Controller("fcm-token")
@@ -19,6 +20,14 @@ export class FCMTokenController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOkResponseWithData(EmptyBodyResponse)
+  @RateLimitPolicy({
+    id: "fcm_token_register",
+    group: "sensitive",
+    limits: [
+      { scope: "ip", limit: 30, windowSec: 60 },
+      { scope: "user", limit: 30, windowSec: 60 },
+    ],
+  })
   async registerToken(@Body() createFcmTokenDto: CreateFcmTokenDto, @GetUser() user: IUser) {
     return await this.fcmTokenService.createFCMToken({
       ...createFcmTokenDto,

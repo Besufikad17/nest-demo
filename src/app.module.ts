@@ -76,6 +76,8 @@ import * as Joi from "joi";
         REDIS_PASSWORD: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
         REDIS_HOST: Joi.string().required(),
+        RATE_LIMIT_MODE: Joi.string().valid("monitor", "enforce").optional(),
+        RATE_LIMIT_ENABLED_GROUPS: Joi.string().optional(),
         SHADOW_DATABASE_URL: Joi.string().required()
       }),
     }),

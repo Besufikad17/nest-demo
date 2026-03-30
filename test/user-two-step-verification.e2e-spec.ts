@@ -1,3 +1,6 @@
+process.env.RATE_LIMIT_MODE = 'monitor';
+process.env.RATE_LIMIT_ENABLED_GROUPS = 'public,sensitive,read';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -10,7 +13,7 @@ import { NotificationProcessor } from 'src/notification/processors/notification.
 import { OTPIdentifier, OTPType } from 'generated/prisma/enums';
 
 const uniqueEmail = () => `2fa-test-user-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`;
-const uniquePhone = () => `+555${Date.now().toString().slice(-9)}`;
+const uniquePhone = () => `+555${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
 const deviceInfoHeader = 'Mozilla/5.0 (Test Device 1.0)';
 
 describe('User Two Step Verification Module (e2e)', () => {

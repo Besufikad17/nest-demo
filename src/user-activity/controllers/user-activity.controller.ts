@@ -10,6 +10,7 @@ import { Roles } from "src/common/decorators/roles.decorator";
 import { RoleEnums } from "src/user-role/enums/role.enum";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 import { UserActivityLogResponse } from "../entities/user-activity.entity";
+import { PaginationLimit, RateLimitPolicy } from "src/common/decorators";
 
 @ApiTags("user-activity")
 @Controller("user/activity")
@@ -21,6 +22,15 @@ export class UserActivityController {
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(UserActivityLogResponse, true)
+  @PaginationLimit({ defaultTake: 20, maxTake: 100, maxSkip: 10000 })
+  @RateLimitPolicy({
+    id: "user_activity_all",
+    group: "read",
+    limits: [
+      { scope: "ip", limit: 120, windowSec: 60 },
+      { scope: "user", limit: 120, windowSec: 60 },
+    ],
+  })
   async getActivityLogs(
     @Body() findUserActivityDto: FindUserActivityDto,
     @GetUser() user: IUser,
@@ -35,6 +45,15 @@ export class UserActivityController {
   @Roles(RoleEnums.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(UserActivityLogResponse, true)
+  @PaginationLimit({ defaultTake: 20, maxTake: 100, maxSkip: 10000 })
+  @RateLimitPolicy({
+    id: "user_activity_admin_all",
+    group: "read",
+    limits: [
+      { scope: "ip", limit: 120, windowSec: 60 },
+      { scope: "user", limit: 120, windowSec: 60 },
+    ],
+  })
   async getUsersActivities(
     @Body() findUserActivityDto: FindUserActivityDto,
     @Query("user") userId?: string,
@@ -49,6 +68,14 @@ export class UserActivityController {
   @Roles(RoleEnums.USER)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(UserActivityLogResponse)
+  @RateLimitPolicy({
+    id: "user_activity_get",
+    group: "read",
+    limits: [
+      { scope: "ip", limit: 120, windowSec: 60 },
+      { scope: "user", limit: 120, windowSec: 60 },
+    ],
+  })
   async getActivityLog(
     @Param("id") id: string,
     @GetUser() user: IUser,
@@ -61,6 +88,14 @@ export class UserActivityController {
   @Roles(RoleEnums.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(UserActivityLogResponse)
+  @RateLimitPolicy({
+    id: "user_activity_admin_get",
+    group: "read",
+    limits: [
+      { scope: "ip", limit: 120, windowSec: 60 },
+      { scope: "user", limit: 120, windowSec: 60 },
+    ],
+  })
   async getUsersActivityAdmin(
     @Param("id") id: string
   ) {

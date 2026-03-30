@@ -1,3 +1,6 @@
+process.env.RATE_LIMIT_MODE = 'monitor';
+process.env.RATE_LIMIT_ENABLED_GROUPS = 'public,sensitive,read';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -13,7 +16,7 @@ import { BullBoardService } from 'src/bull-board/bull-board.service';
 
 // Helper for unique test data
 const uniqueEmail = () => `test-user-notif-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`;
-const uniquePhone = () => `+555${Date.now().toString().slice(-9)}`;
+const uniquePhone = () => `+555${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
 
 describe('Notification Module (e2e)', () => {
   let app: INestApplication;

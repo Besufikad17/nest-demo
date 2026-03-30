@@ -7,6 +7,7 @@ import { IUser } from "src/common/interfaces";
 import { INotificationService } from "../interfaces";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 import { NotificationResponse } from "../entities/notification.entities";
+import { PaginationLimit, RateLimitPolicy } from "src/common/decorators";
 
 @ApiTags("notification")
 @Controller("notification")
@@ -19,6 +20,15 @@ export class NotificationController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(NotificationResponse, true)
+  @PaginationLimit({ defaultTake: 20, maxTake: 100, maxSkip: 10000 })
+  @RateLimitPolicy({
+    id: "notification_all",
+    group: "read",
+    limits: [
+      { scope: "ip", limit: 120, windowSec: 60 },
+      { scope: "user", limit: 120, windowSec: 60 },
+    ],
+  })
   async getNotifications(
     @GetUser() user: IUser,
     @Query("skip") skip?: number,
@@ -33,6 +43,14 @@ export class NotificationController {
   @UseGuards(JwtGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(NotificationResponse)
+  @RateLimitPolicy({
+    id: "notification_get",
+    group: "read",
+    limits: [
+      { scope: "ip", limit: 120, windowSec: 60 },
+      { scope: "user", limit: 120, windowSec: 60 },
+    ],
+  })
   async getNotification(@Param("id") id: string, @GetUser() user: IUser) {
     const notification = await this.notificationService.getNotification(id, user.id);
 
