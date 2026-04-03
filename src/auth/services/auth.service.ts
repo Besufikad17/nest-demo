@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { IAuthResponse, IAuthService, IGoogleUser } from "../interfaces";
 import { ConfigService } from "@nestjs/config";
@@ -23,9 +23,10 @@ import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { AuthErrorCode, ErrorCode } from "src/common/enums";
 import { IDeviceInfoService } from "src/device-info/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
-
 @Injectable()
 export class AuthService implements IAuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private userActivityService: IUserActivityService,
     private userService: IUserService,
@@ -510,7 +511,7 @@ export class AuthService implements IAuthService {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_6AM)
+  @Cron(CronExpression.EVERY_12_HOURS)
   async clearExpiredRefreshTokens() {
     try {
       const expiredTokens = await this.refreshTokenRepository.findRefreshTokens({
@@ -520,6 +521,8 @@ export class AuthService implements IAuthService {
           }
         }
       });
+
+      this.logger.debug(`Found ${expiredTokens.length} expired refresh tokens`);
 
       expiredTokens.map(async (expiredToken) => {
         await this.refreshTokenRepository.deleteRefreshToken({ where: { id: expiredToken.id } });

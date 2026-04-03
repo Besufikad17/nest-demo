@@ -23,6 +23,7 @@ import { FirebaseModule } from "./firebase/firebase.module";
 import { BullModule } from "@nestjs/bullmq";
 import { DeviceInfoModule } from './device-info/device-info.module';
 import * as Joi from "joi";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import * as Joi from "joi";
       },
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     NotificationSettingsModule,
     PrismaModule,
     RoleModule,
