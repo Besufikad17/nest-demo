@@ -75,7 +75,9 @@ export class AuthController {
     group: "public",
     limits: [{ scope: "ip", limit: 20, windowSec: 60 }],
   })
-  async googleAuthForRegister() { }
+  async googleAuthForRegister() {
+
+  }
 
   @Get("register/google/callback")
   @UseGuards(AuthGuard("google"))

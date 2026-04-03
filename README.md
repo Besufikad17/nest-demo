@@ -58,7 +58,7 @@ To use this project, follow these steps:
     FIREBASE_UNIVERSE_DOMAIN=
     GOOGLE_CLIENT_ID=
     GOOGLE_CLIENT_SECRET=
-    GOOGLE_CALLBACK_URL=
+    GOOGLE_CALLBACK_URL=http://localhost:4000/api/v1/auth/register/google/callback
     JWT_SECRET=
     MAIL_HOST=
     MAIL_PORT=

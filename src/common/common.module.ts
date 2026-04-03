@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtRefreshStrategy, JwtStrategy } from './strategies';
+import { GoogleStrategy, JwtRefreshStrategy, JwtStrategy } from './strategies';
 import { JwtGuard, RateLimitGuard } from './guards';
 import { UserModule } from 'src/user/user.module';
 import { UserRoleModule } from 'src/user-role/user-role.module';
@@ -15,6 +15,7 @@ import { PaginationInterceptor } from './interceptors/pagination.interceptor';
   providers: [
     JwtStrategy,
     JwtRefreshStrategy,
+    GoogleStrategy,
     JwtGuard,
     RateLimitStore,
     RateLimitService,

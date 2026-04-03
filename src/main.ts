@@ -11,9 +11,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle("Nest Demo API Documentation")
-    .setDescription("The user and employee account management service API.")
+    .setDescription("The user account management service API.")
     .setVersion("0.1")
-    .addTag("User and Employee Account Management")
+    .addTag("User Account Management")
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
