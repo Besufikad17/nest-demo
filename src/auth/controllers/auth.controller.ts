@@ -67,19 +67,17 @@ export class AuthController {
     return await this.authService.register(registerDto, deviceInfo, ip);
   }
 
-  @Get("register/google")
+  @Get("google")
   @UseGuards(AuthGuard("google"))
   @HttpCode(HttpStatus.OK)
   @RateLimitPolicy({
-    id: "auth_google_register",
+    id: "auth_google",
     group: "public",
     limits: [{ scope: "ip", limit: 20, windowSec: 60 }],
   })
-  async googleAuthForRegister() {
+  async googleAuth() {}
 
-  }
-
-  @Get("register/google/callback")
+  @Get("google/callback")
   @UseGuards(AuthGuard("google"))
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(EmptyBodyResponse)
@@ -88,8 +86,8 @@ export class AuthController {
     group: "public",
     limits: [{ scope: "ip", limit: 20, windowSec: 60 }],
   })
-  async googleAuthRedirectForRegister(@Req() req: any) {
-    return await this.authService.registerUserByGoogleSSO(req.user);
+  async googleAuthCallback(@Req() req: any) {
+    return await this.authService.authUserByGoogleSSO(req.user);
   }
 
   @Post("password/reset")

@@ -273,12 +273,20 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async registerUserByGoogleSSO(user: IGoogleUser): Promise<IApiResponse<any>> {
+  async authUserByGoogleSSO(user: IGoogleUser): Promise<IApiResponse<any>> {
     try {
       const { email, googleId } = user;
 
       const userInDb = await this.userSSOService.findUserSSO({ provider: "GOOGLE", providerUserId: googleId, email: email });
       if (userInDb) {
+        await this.userActivityService.addUserActivity({
+          userId: userInDb.userId,
+          action: "LOGIN_WITH_GOOGLE_SSO",
+          actionTimestamp: new Date(),
+        });
+
+        await this.userService.updateUser({ isActive: true, accountStatus: UserAccountStatus.ACTIVE }, userInDb.userId);
+
         return {
           success: true,
           message: "User info fetched successfully",
@@ -287,7 +295,7 @@ export class AuthService implements IAuthService {
         };
       }
 
-      const newUser = await this.userService.createUser({});
+      const newUser = await this.userService.createUser({ email });
       await this.userSSOService.createUserSSO({ userId: newUser.id, provider: "GOOGLE", providerUserId: googleId, email: email });
 
       await this.userActivityService.addUserActivity({
