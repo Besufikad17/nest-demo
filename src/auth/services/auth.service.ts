@@ -275,7 +275,7 @@ export class AuthService implements IAuthService {
 
   async authUserByGoogleSSO(user: IGoogleUser): Promise<IApiResponse<any>> {
     try {
-      const { email, googleId } = user;
+      const { email, googleId, firstName, lastName } = user;
 
       const userInDb = await this.userSSOService.findUserSSO({ provider: "GOOGLE", providerUserId: googleId, email: email });
       if (userInDb) {
@@ -295,7 +295,11 @@ export class AuthService implements IAuthService {
         };
       }
 
-      const newUser = await this.userService.createUser({ email });
+      const newUser = await this.userService.createUser({ 
+        email,
+        firstName,
+        lastName
+      });
       await this.userSSOService.createUserSSO({ userId: newUser.id, provider: "GOOGLE", providerUserId: googleId, email: email });
 
       await this.userActivityService.addUserActivity({
