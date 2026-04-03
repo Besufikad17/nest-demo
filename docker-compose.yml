@@ -67,9 +67,26 @@ services:
     container_name: redisinsight
     restart: unless-stopped
     ports:
-      - "8001:8001"
+      - "${REDIS_INSIGHT_PORT}:8001"
     depends_on:
       - redis
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT}:3000"
+  
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,Z
+      - prometheus-data:/prometheus
+    restart: unless-stopped
 
 networks:
   backend:
@@ -78,3 +95,4 @@ networks:
 volumes:
   db_data: 
   redis_data:
+  prometheus-data:

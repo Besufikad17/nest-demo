@@ -1,0 +1,571 @@
+{
+  "uid": "nest-demo-observability",
+  "title": "Nest Demo Observability",
+  "tags": ["nest", "prometheus", "api", "observability"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "style": "dark",
+  "fiscalYearStartMonth": 0,
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "options": [],
+        "refresh": 1,
+        "regex": "",
+        "sort": 1
+      },
+      {
+        "name": "job",
+        "type": "query",
+        "datasource": "$datasource",
+        "query": "label_values(http_requests_total, job)",
+        "current": {
+          "selected": false,
+          "text": "app",
+          "value": "app"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*"
+      },
+      {
+        "name": "route",
+        "type": "query",
+        "datasource": "$datasource",
+        "query": "label_values(http_requests_total{job=~\"$job\"}, route)",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": ".*"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*"
+      },
+      {
+        "name": "policy",
+        "type": "query",
+        "datasource": "$datasource",
+        "query": "label_values(ratelimit_hit_total, policy)",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": ".*"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Request Rate",
+      "id": 1,
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_requests_total{job=~\"$job\"}[5m]))",
+          "legendFormat": "req/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate %",
+      "id": 2,
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(rate(http_requests_total{job=~\"$job\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total{job=~\"$job\"}[5m])), 1e-9)",
+          "legendFormat": "error %",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active Requests",
+      "id": 3,
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "http_requests_active",
+          "legendFormat": "active",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Uptime",
+      "id": 4,
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - process_start_time_seconds",
+          "legendFormat": "uptime",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests per Second",
+      "id": 5,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 18,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (method) (rate(http_requests_total{job=~\"$job\"}[5m]))",
+          "legendFormat": "{{method}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Error Rate by Route",
+      "id": 6,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (route) (rate(http_requests_total{job=~\"$job\",status=~\"4..|5..\",route=~\"$route\"}[5m]))",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Latency p95 / p99",
+      "id": 7,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"$job\"}[5m])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Slowest Routes p95",
+      "id": 8,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket{job=~\"$job\",route=~\"$route\"}[5m]))))",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Process CPU and Memory",
+      "id": 9,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 14,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "memory" },
+            "properties": [{ "id": "unit", "value": "bytes" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "cpu" },
+            "properties": [{ "id": "unit", "value": "percentunit" }]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(process_cpu_seconds_total{job=~\"$job\"}[5m])",
+          "legendFormat": "cpu"
+        },
+        {
+          "refId": "B",
+          "expr": "process_resident_memory_bytes{job=~\"$job\"}",
+          "legendFormat": "memory"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Routes by Traffic",
+      "id": 10,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(15, sum by (route, method) (rate(http_requests_total{job=~\"$job\",route=~\"$route\"}[5m])))",
+          "legendFormat": "{{method}} {{route}}",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Rate Limit Breaches",
+      "id": 11,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 3,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (policy) (rate(ratelimit_hit_total{policy=~\"$policy\"}[5m]))",
+          "legendFormat": "{{policy}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Progressive Penalty Blocks",
+      "id": 12,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 3,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (policy) (rate(ratelimit_penalty_applied_total{policy=~\"$policy\"}[5m]))",
+          "legendFormat": "{{policy}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests by Status Code",
+      "id": 13,
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 38 },
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 18,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean", "max"] },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (rate(http_requests_total{job=~\"$job\",route=~\"$route\"}[5m]))",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    }
+  ]
+}
