@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { FindOtpDto, GenerateOtpDto, VerifyOtpDto } from "../dto/otp.dto";
 import { IOtpService } from "../interfaces/otp.service.interface";
 import { NotificationType, OTP } from "generated/prisma/client";
@@ -13,9 +13,12 @@ import { IDeviceInfoService } from "src/device-info/interfaces";
 import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 import { ErrorCode } from "src/common/enums";
+import { Cron, CronExpression } from "@nestjs/schedule";
 
 @Injectable()
 export class OtpService implements IOtpService {
+  private readonly logger = new Logger(OtpService.name);
+
   constructor(
     private configService: ConfigService,
     private deviceInfoService: IDeviceInfoService,
@@ -267,6 +270,27 @@ export class OtpService implements IOtpService {
           error: ErrorCode.GENERAL_ERROR,
         };
       }
+    }
+  }
+
+  @Cron(CronExpression.EVERY_12_HOURS)
+  async clearExpiredOtps() {
+    try {
+       const expiredOtps = await this.otpRepository.getOTPs({
+        where: {
+          expiresAt: {
+            lte: new Date()
+          }
+        }
+       });
+
+       this.logger.debug(`Found ${expiredOtps.length} expired OTPs`);
+
+      expiredOtps.map(async (expiredOtp) => {
+        await this.otpRepository.deleteOTP({ where: { id: expiredOtp.id } });
+      });
+    } catch(error) {
+      console.log(error);
     }
   }
 }
