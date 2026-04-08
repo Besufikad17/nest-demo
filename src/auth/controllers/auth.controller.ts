@@ -75,7 +75,7 @@ export class AuthController {
     group: "public",
     limits: [{ scope: "ip", limit: 20, windowSec: 60 }],
   })
-  async googleAuth() {}
+  async googleAuth() { }
 
   @Get("google/callback")
   @UseGuards(AuthGuard("google"))
@@ -143,14 +143,26 @@ export class AuthController {
       { scope: "user", limit: 30, windowSec: 60 },
     ],
   })
-  refreshTokens(
+  async refreshTokens(
     @Headers("authorization") auth: string,
     @GetClientIp() ip: string,
     @GetDeviceInfo() deviceInfo: IDeviceInfo,
     @GetUser() user: IUser
   ) {
-    return this.authService.refreshToken({
+    return await this.authService.refreshToken({
       userId: user.id, email: user.email!, currentRefreshToken: auth.split(" ")[1]
     }, deviceInfo, ip);
+  }
+
+  @Post("signout")
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponseWithData(EmptyBodyResponse)
+  async signOut(
+    @GetClientIp() ip: string,
+    @GetDeviceInfo() deviceInfo: IDeviceInfo,
+    @GetUser() user: IUser
+  ) {
+    return await this.authService.signOut(user.id, deviceInfo, ip);
   }
 }

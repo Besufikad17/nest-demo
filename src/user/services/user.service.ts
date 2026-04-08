@@ -65,8 +65,9 @@ export class UserService implements IUserService {
           isActive: true,
           accountStatus: true,
           lastLogin: true,
+          tokenVersion: true,
           twoStepEnabled: allowSensitiveFields,
-          ...(exposeSecrets ? { passwordHash: allowSensitiveFields } : {}),
+          ...(exposeSecrets ? { passwordHash: true } : {}),
           userTwoStepVerifications: allowSensitiveFields ? {
             omit: {
               secret: true

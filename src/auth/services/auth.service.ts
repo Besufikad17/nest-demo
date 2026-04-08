@@ -23,6 +23,7 @@ import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { AuthErrorCode, ErrorCode } from "src/common/enums";
 import { IDeviceInfoService } from "src/device-info/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
+import { User } from "generated/prisma/client";
 @Injectable()
 export class AuthService implements IAuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -43,16 +44,18 @@ export class AuthService implements IAuthService {
     private deviceInfoService: IDeviceInfoService
   ) { }
 
-  private async generateToken(userId: string, email: string): Promise<string> {
+  private async generateToken(user: User): Promise<string> {
     const secretKey = this.configService.get<string>("JWT_SECRET");
     if (!secretKey) {
       throw new Error("JWT_SECRET_KEY is not defined");
     }
 
+    const { id, email, tokenVersion } = user;
     return this.jwtService.sign<any>(
       {
-        sub: userId,
-        email: email
+        sub: id,
+        email,
+        tokenVersion
       },
       {
         secret: secretKey,
@@ -61,9 +64,10 @@ export class AuthService implements IAuthService {
     );
   }
 
-  private async generateRefreshToken(userId: string, deviceId: string, email: string, currentRefreshToken?: string, currentRefreshTokenExpiryDate?: Date) {
+  private async generateRefreshToken(user: User, deviceId: string, currentRefreshToken?: string, currentRefreshTokenExpiryDate?: Date) {
+    const { id, email, tokenVersion } = user;
     const newRefreshToken = this.jwtService.sign<any>(
-      { sub: userId, email: email },
+      { sub: id, email, tokenVersion },
       {
         secret: this.configService.get<string>("JWT_SECRET"),
         expiresIn: this.configService.get("REFRESH_TOKEN_EXPIRES_IN") || "30d"
@@ -73,7 +77,7 @@ export class AuthService implements IAuthService {
     if (currentRefreshToken && currentRefreshTokenExpiryDate) {
       const tokenExists = await this.refreshTokenRepository.findRefreshToken({
         where: {
-          userId: userId,
+          userId: id,
           refreshToken: newRefreshToken
         }
       });
@@ -84,7 +88,7 @@ export class AuthService implements IAuthService {
 
       await this.refreshTokenRepository.createRefreshToken({
         data: {
-          userId,
+          userId: id,
           deviceId,
           refreshToken: currentRefreshToken,
           expiresAt: currentRefreshTokenExpiryDate
@@ -99,7 +103,7 @@ export class AuthService implements IAuthService {
     try {
       const { email, phoneNumber, password } = loginDto;
 
-      const { data: user } = await this.userService.findUser({ email: email, phoneNumber: phoneNumber }, RoleEnums.USER, true);
+      const { data: user } = await this.userService.findUser({ email: email, phoneNumber: phoneNumber }, RoleEnums.ADMIN, true);
 
       if (!user) {
         throw new HttpException({ message: "User not found!!", code: ErrorCode.USER_NOT_FOUND }, HttpStatus.BAD_REQUEST);
@@ -153,8 +157,8 @@ export class AuthService implements IAuthService {
         success: true,
         message: "User successfully logged in",
         data: {
-          accessToken: await this.generateToken(user.id, user.email!),
-          refreshToken: await this.generateRefreshToken(user.id, deviceId, email)
+          accessToken: await this.generateToken(user),
+          refreshToken: await this.generateRefreshToken(user, deviceId)
         },
         error: null
       };
@@ -278,25 +282,30 @@ export class AuthService implements IAuthService {
     try {
       const { email, googleId, firstName, lastName } = user;
 
-      const userInDb = await this.userSSOService.findUserSSO({ provider: "GOOGLE", providerUserId: googleId, email: email });
-      if (userInDb) {
+      const userSSO = await this.userSSOService.findUserSSO({ provider: "GOOGLE", providerUserId: googleId, email: email });
+      if (userSSO) {
+        const { data: userInDb } = await this.userService.findUser(
+          { id: userSSO.userId },
+          RoleEnums.ADMIN, false
+        );
+
         await this.userActivityService.addUserActivity({
-          userId: userInDb.userId,
+          userId: userSSO.userId,
           action: "LOGIN_WITH_GOOGLE_SSO",
           actionTimestamp: new Date(),
         });
 
-        await this.userService.updateUser({ isActive: true, accountStatus: UserAccountStatus.ACTIVE }, userInDb.userId);
+        await this.userService.updateUser({ isActive: true, accountStatus: UserAccountStatus.ACTIVE }, userSSO.userId);
 
         return {
           success: true,
           message: "User info fetched successfully",
-          data: await this.generateToken(userInDb.userId, email),
+          data: await this.generateToken(userInDb),
           error: null
         };
       }
 
-      const newUser = await this.userService.createUser({ 
+      const newUser = await this.userService.createUser({
         email,
         firstName,
         lastName
@@ -312,7 +321,7 @@ export class AuthService implements IAuthService {
       return {
         success: true,
         message: "User info fetched successfully",
-        data: await this.generateToken(newUser.id, email),
+        data: await this.generateToken(newUser),
         error: null
       };
     } catch (error) {
@@ -477,19 +486,71 @@ export class AuthService implements IAuthService {
 
   async refreshToken(refreshTokenDto: RefreshTokenDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<IAuthResponse>> {
     try {
-      const { userId, email, currentRefreshToken } = refreshTokenDto;
+      const { userId, currentRefreshToken } = refreshTokenDto;
 
+      const { data: user } = await this.userService.findUser(
+        { id: userId },
+        RoleEnums.ADMIN, false
+      );
       const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       return {
         success: true,
         message: "Token refreshed successfully",
         data: {
-          accessToken: await this.generateToken(userId, email),
+          accessToken: await this.generateToken(user),
           refreshToken: await this.generateRefreshToken(
-            userId, deviceId, email, currentRefreshToken,
+            user, deviceId, currentRefreshToken,
             currentRefreshToken ?
               new Date(decodeToken(currentRefreshToken).exp) : undefined)
         }
+      };
+    } catch (error) {
+      console.log(error);
+      if (error instanceof HttpException) {
+        return {
+          success: false,
+          message: error.message,
+          data: null,
+          error: error.getResponse(),
+        };
+      } else {
+        return {
+          success: false,
+          message: "Error occurred check the log in the server",
+          data: null,
+          error: ErrorCode.GENERAL_ERROR,
+        };
+      }
+    }
+  }
+
+  async signOut(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
+    try {
+      const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.ADMIN, false);
+
+      await this.userService.updateUser({
+        tokenVersion: user.tokenVersion + 1
+      }, userId, deviceInfo, ip);
+
+      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const refreshToken = await this.refreshTokenRepository.findRefreshToken({
+        where: {
+          userId,
+          deviceId
+        }
+      });
+
+      if (refreshToken) {
+        await this.refreshTokenRepository.deleteRefreshToken({
+          where: {
+            id: refreshToken.id
+          }
+        });
+      }
+
+      return {
+        success: true,
+        message: 'Signed out'
       };
     } catch (error) {
       console.log(error);

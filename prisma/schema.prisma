@@ -20,6 +20,7 @@ model User {
   isActive                 Boolean                   @default(false) @map("is_active")
   accountStatus            UserAccountStatus         @default(INACTIVE) @map("account_status")
   twoStepEnabled           Boolean                   @default(false) @map("two_step_enabled")
+  tokenVersion             Int                       @default(0) @map("token_version")
   otp                      OTP[]
   userTwoStepVerifications UserTwoStepVerification[]
   userRoles                UserRole[]

@@ -1,4 +1,4 @@
-import { IsBoolean, IsDate, IsEmail, IsEmpty, IsEnum, IsNotEmpty, IsObject, IsString, IsUUID, ValidateIf } from "class-validator";
+import { IsBoolean, IsDate, IsEmail, IsEmpty, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, IsUUID, ValidateIf } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { IsValidPhoneNumber } from "src/common/validators/phone.validator";
 import { UserAccountStatus, Prisma } from "generated/prisma/client";
@@ -77,6 +77,10 @@ export class UpdateUserDto {
   @IsBoolean()
   @ValidateIf((obj) => obj.twoStepEnabled !== undefined && obj.twoStepEnabled !== null && obj.twoStepEnabled !== "")
   readonly twoStepEnabled?: boolean;
+
+  @IsNumber()
+  @ValidateIf((obj) => obj.tokenVersion !== undefined && obj.tokenVersion !== null && obj.tokenVersion !== "")
+  readonly tokenVersion?: number;
 }
 
 export class FindUsersDto {

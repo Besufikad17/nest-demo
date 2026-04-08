@@ -48,4 +48,10 @@ export abstract class IAuthService {
     deviceInfo: IDeviceInfo,
     ip: string
   ): Promise<IApiResponse<IAuthResponse>>;
+
+  abstract signOut(
+    userId: string,
+    deviceInfo: IDeviceInfo,
+    ip: string
+  ): Promise<IApiResponse<null>>;
 }

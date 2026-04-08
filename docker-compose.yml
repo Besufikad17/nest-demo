@@ -54,9 +54,7 @@ services:
     ports:
       - "${REDIS_PORT}:6379"
     environment:
-      REDIS_ARGS: "--requirepass ${REDIS_PASSWORD}"
-    sysctls:
-      - vm.overcommit_memory=1
+      REDIS_ARGS: "--requirepass ${REDIS_PASSWORD}" 
     volumes:
       - redis_data:/data
     networks:
