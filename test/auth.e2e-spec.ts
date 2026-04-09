@@ -339,4 +339,41 @@ describe('Auth Module (e2e)', () => {
       expect(response.body.data).toHaveProperty('accessToken');
     });
   });
+
+  describe('POST /auth/signout', () => {
+    it('should sign out successfully and invalidate current access token', async () => {
+      const { email, password } = await createVerifiedUser();
+      await createVerifiedOtp(email, 'TWO_FACTOR_AUTHENTICATION', 'EMAIL');
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .set('Device-Info', deviceInfoHeader)
+        .send({ email, password })
+        .expect(200);
+
+      const accessToken = loginRes.body.data.accessToken;
+
+      const signOutRes = await request(app.getHttpServer())
+        .post('/api/v1/auth/signout')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('Device-Info', deviceInfoHeader)
+        .expect(200);
+
+      expect(signOutRes.body).toHaveProperty('success', true);
+      expect(signOutRes.body).toHaveProperty('message', 'Signed out');
+
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/signout')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('Device-Info', deviceInfoHeader)
+        .expect(401);
+    });
+
+    it('should fail with 401 when Authorization header is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/signout')
+        .set('Device-Info', deviceInfoHeader)
+        .expect(401);
+    });
+  });
 });
