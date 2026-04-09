@@ -26,6 +26,15 @@ export class DeviceInfoService implements IDeviceInfoService {
         }
     }
 
+    async getDeviceInfoById(id: string): Promise<DeviceInfo | null> {
+        try {
+            return await this.deviceInfoRepository.findDeviceInfo({ where: { id } });
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
     async getSessions(userId: string): Promise<IApiResponse<DeviceInfo[]>> {
         try {
             const data = await this.deviceInfoRepository.findDeviceInfos({

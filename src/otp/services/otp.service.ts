@@ -105,7 +105,7 @@ export class OtpService implements IOtpService {
       await this.notificationService.createNotification({ ...notificationPayload });
 
       if (generateOTPDto.userId && flag === "create") {
-        const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+        const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
 
         await this.userActivityService.addUserActivity({
           userId: generateOTPDto.userId,
@@ -173,7 +173,7 @@ export class OtpService implements IOtpService {
 
       const { userId } = generateOTPDto;
       if (userId) {
-        const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+        const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
         await this.userActivityService.addUserActivity({
           userId,
           action: "REQUEST_RESEND_OTP",
@@ -240,7 +240,7 @@ export class OtpService implements IOtpService {
       await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { status: "VERIFIED" } });
 
       if (userId) {
-        const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+        const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
         await this.userActivityService.addUserActivity({
           userId: verifyOtpDto.userId,
           action: "VALIDATE_OTP",

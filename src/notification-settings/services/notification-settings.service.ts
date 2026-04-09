@@ -90,7 +90,7 @@ export class NotificationSettingsService implements INotificationSettingsService
         }
       });
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "UPDATE_NOTIFICATION_SETTINGS",

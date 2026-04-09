@@ -20,10 +20,11 @@ import { IOtpService } from "src/otp/interfaces";
 import { INotificationService } from "src/notification/interfaces";
 import { NotificationType, UserAccountStatus, UserTwoFactorMethodType } from "generated/prisma/enums";
 import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
-import { AuthErrorCode, ErrorCode } from "src/common/enums";
+import { AuthErrorCode, ErrorCode, SessionErrorCode } from "src/common/enums";
 import { IDeviceInfoService } from "src/device-info/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 import { User } from "generated/prisma/client";
+import { DeviceInfoSessionStreamService } from "src/device-info/services/device-info-session-stream.service";
 @Injectable()
 export class AuthService implements IAuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -41,7 +42,8 @@ export class AuthService implements IAuthService {
     private userRoleService: IUserRoleService,
     private roleService: IRoleService,
     private otpService: IOtpService,
-    private deviceInfoService: IDeviceInfoService
+    private deviceInfoService: IDeviceInfoService,
+    private deviceInfoSessionStreamService: DeviceInfoSessionStreamService
   ) { }
 
   private async generateToken(user: User): Promise<string> {
@@ -137,7 +139,14 @@ export class AuthService implements IAuthService {
       }
       await this.userService.updateUser({ lastLogin: new Date() }, user.id);
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
+      const { deviceId, isNew } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
+
+      if (isNew) {
+        const session = await this.deviceInfoService.getDeviceInfoById(deviceId);
+        if (!session) throw new HttpException({ message: 'Session not found!!', code: SessionErrorCode.SESSION_NOT_FOUND }, HttpStatus.NOT_FOUND);
+        this.deviceInfoSessionStreamService.emitSession(session);
+      }
+
       await this.userActivityService.addUserActivity({
         userId: user.id,
         action: email ? "LOGIN_WITH_EMAIL" : "LOGIN_WITH_PHONE",
@@ -238,7 +247,7 @@ export class AuthService implements IAuthService {
         twoStepEnabled: true
       }, id);
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, id, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, id, ip);
       await this.userActivityService.addUserActivity({
         userId: id,
         action: "REGISTER_WITH_EMAIL",
@@ -387,7 +396,7 @@ export class AuthService implements IAuthService {
         passwordHash: newPassword
       }, user?.id!);
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
       await this.userActivityService.addUserActivity({
         userId: user?.id!,
         action: "PASSWORD_RESET",
@@ -451,7 +460,7 @@ export class AuthService implements IAuthService {
         passwordHash: newPassword
       }, user?.id!);
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
       await this.userActivityService.addUserActivity({
         userId: user.id,
         action: "ACCOUNT_RECOVERY",
@@ -492,7 +501,7 @@ export class AuthService implements IAuthService {
         { id: userId },
         RoleEnums.ADMIN, false
       );
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       return {
         success: true,
         message: "Token refreshed successfully",
@@ -532,7 +541,7 @@ export class AuthService implements IAuthService {
         tokenVersion: user.tokenVersion + 1
       }, userId, deviceInfo, ip);
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       const refreshToken = await this.refreshTokenRepository.findRefreshToken({
         where: {
           userId,

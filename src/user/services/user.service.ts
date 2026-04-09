@@ -218,7 +218,8 @@ export class UserService implements IUserService {
 
       let deviceId = null;
       if (deviceInfo) {
-        deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+        const session = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+        deviceId = session.deviceId;
       }
 
       await this.userActivityService.addUserActivity({
@@ -288,7 +289,7 @@ export class UserService implements IUserService {
         }
       });
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, id, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, id, ip);
       await this.userActivityService.addUserActivity({
         userId: id,
         action: "DELETE_ACCOUNT",

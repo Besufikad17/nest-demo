@@ -82,7 +82,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           }
         });
 
-        const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+        const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
         await this.userActivityService.addUserActivity({
           userId,
           action: "ADD_TWO_STEP_VERIFICATION",
@@ -253,7 +253,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         }
       }
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "UPDATE_TWO_STEP_VERIFICATION",
@@ -326,7 +326,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException("Invalid 2FA code!!", HttpStatus.BAD_REQUEST);
       }
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "VERIFY_TWO_FACTOR_CODE",
@@ -374,7 +374,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException("2FA not found!!", HttpStatus.BAD_REQUEST);
       }
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "DELETE_TWO_STEP_VERIFICATION",
@@ -436,7 +436,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         },
       });
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "ADD_PASSKEY_REQUEST",
@@ -510,7 +510,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         }
       });
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "ADD_PASSKEY",
@@ -550,7 +550,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         rpID: "nest-demo.com"
       });
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "VERIFY_PASSKEY_REQUEST",
@@ -616,7 +616,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException("Error verifying passkey!!", HttpStatus.BAD_REQUEST);
       }
 
-      const deviceId = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
+      const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
         userId: userId,
         action: "VERIFY_PASSKEY",
