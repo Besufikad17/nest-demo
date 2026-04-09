@@ -548,6 +548,13 @@ export class AuthService implements IAuthService {
         });
       }
 
+      await this.userActivityService.addUserActivity({
+        userId,
+        action: "SIGN_OUT",
+        actionTimestamp: new Date(),
+        deviceId
+      });
+
       return {
         success: true,
         message: 'Signed out'
