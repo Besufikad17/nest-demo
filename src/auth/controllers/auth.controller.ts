@@ -155,7 +155,7 @@ export class AuthController {
   }
 
   @Post("signout")
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard, DeviceInfoGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOkResponseWithData(EmptyBodyResponse)
   async signOut(
