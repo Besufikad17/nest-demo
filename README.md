@@ -109,3 +109,25 @@ Example staged rollout:
 1. Start with `RATE_LIMIT_MODE=monitor` and all groups enabled.
 2. Switch to enforce for `public` first: `RATE_LIMIT_MODE=enforce`, `RATE_LIMIT_ENABLED_GROUPS=public`.
 3. Expand to `public,sensitive`, then `public,sensitive,read`.
+
+## Recent changes & testing notes
+
+- **Structured service errors**: services now return structured error objects in the `error` field (not stringified). Handled service errors expose a readable `message` and an `error` payload — tests assert against `response.body.error.message`.
+- **OTP / 2FA behaviour**:
+    - Registration, login and sensitive actions require verified OTPs. The test helpers insert VERIFIED OTP records directly into the `oTP` table when needed.
+    - For actions that verify OTP by user id, services now fall back to checking an OTP by the user's email or phone when `userId`-linked OTP is missing (this matches test helpers that sometimes create OTPs without a `userId`).
+    - Authenticator (TOTP) 2FA requires a stored `secret`. Verification will fail with a descriptive error if the authenticator method is not configured or the secret is missing — reconfigure the user's 2FA in that case.
+- **Running e2e tests**:
+    - Ensure the DB is migrated & seeded (`npx prisma migrate dev` and `npm run seed`).
+    - Recommended env for tests: `RATE_LIMIT_MODE=monitor RATE_LIMIT_ENABLED_GROUPS=public,sensitive,read` and `JWT_SECRET` set.
+    - Run all e2e tests:
+        ```bash
+        npm run test:e2e
+        ```
+    - Run specific specs (faster while iterating):
+        ```bash
+        npx jest --runInBand --testPathPattern=test/auth.e2e-spec.ts
+        npx jest --runInBand --testPathPattern=test/user.e2e-spec.ts
+        ```
+
+If tests still fail, check the service error payloads (they are returned as objects) and the OTP entries in the `oTP` table used by tests.
