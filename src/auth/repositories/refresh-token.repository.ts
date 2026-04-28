@@ -19,7 +19,7 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
     return await this.prisma.refreshTokens.findMany(findRefreshTokensArgs);
   }
 
-  async deleteRefreshToken(deleteRefreshTokenArgs: Prisma.RefreshTokensDeleteArgs): Promise<any> {
-    return await this.prisma.refreshTokens.delete(deleteRefreshTokenArgs);
+  async deleteRefreshToken(deleteRefreshTokenArgs: Prisma.RefreshTokensDeleteArgs): Promise<void> {
+    await this.prisma.refreshTokens.delete(deleteRefreshTokenArgs);
   }
 }

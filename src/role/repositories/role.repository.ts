@@ -8,22 +8,22 @@ export class RoleRepository implements IRoleRepository {
   constructor(private prisma: PrismaService) { }
 
   async createRole(createRoleArgs: Prisma.RolesCreateArgs): Promise<Roles> {
-    return this.prisma.roles.create(createRoleArgs);
+    return await this.prisma.roles.create(createRoleArgs);
   }
 
   async findRole(findRoleArgs: Prisma.RolesFindFirstArgs): Promise<Roles | null> {
-    return this.prisma.roles.findFirst(findRoleArgs);
+    return await this.prisma.roles.findFirst(findRoleArgs);
   }
 
   async findRoles(findRolesArgs: Prisma.RolesFindManyArgs): Promise<Roles[]> {
-    return this.prisma.roles.findMany(findRolesArgs);
+    return await this.prisma.roles.findMany(findRolesArgs);
   }
 
   async updateRole(updateRoleArgs: Prisma.RolesUpdateArgs): Promise<Roles> {
-    return this.prisma.roles.update(updateRoleArgs);
+    return await this.prisma.roles.update(updateRoleArgs);
   }
 
-  async deleteRole(deleteRoleArgs: Prisma.RolesDeleteArgs): Promise<any> {
-    return this.prisma.roles.delete(deleteRoleArgs);
+  async deleteRole(deleteRoleArgs: Prisma.RolesDeleteArgs): Promise<void> {
+    await this.prisma.roles.delete(deleteRoleArgs);
   }
 }

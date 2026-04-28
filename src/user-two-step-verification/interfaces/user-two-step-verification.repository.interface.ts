@@ -19,5 +19,5 @@ export abstract class IUserTwoStepVerificationRepository {
 
   abstract deleteUserTwoStepVerification(
     deleteUserTwoStepVerificationArgs: Prisma.UserTwoStepVerificationDeleteArgs
-  ): Promise<any>;
+  ): Promise<void>;
 } 

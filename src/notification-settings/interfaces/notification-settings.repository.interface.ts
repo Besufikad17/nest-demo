@@ -5,5 +5,5 @@ export abstract class INotificationSettingsRepository {
   abstract findNotifcationSettings(findNotificationSettingsArgs: Prisma.NotificationSettingsFindManyArgs): Promise<NotificationSettings[]>;
   abstract findNotificationSetting(findNotificationSettingArgs: Prisma.NotificationSettingsFindFirstArgs): Promise<NotificationSettings | null>;
   abstract updateNotificationSetting(updateNotificationSettingArgs: Prisma.NotificationSettingsUpdateArgs): Promise<NotificationSettings>;
-  abstract deleteNotificationSetting(deleteNotificationSettingArgs: Prisma.NotificationSettingsDeleteArgs): Promise<any>;
+  abstract deleteNotificationSetting(deleteNotificationSettingArgs: Prisma.NotificationSettingsDeleteArgs): Promise<void>;
 }

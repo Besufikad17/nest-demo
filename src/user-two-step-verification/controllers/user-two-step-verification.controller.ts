@@ -14,8 +14,15 @@ import { IDeviceInfo, IUser } from "src/common/interfaces";
 import { IUserTwoStepVerificationService } from "../interfaces";
 import { GetClientIp, GetDeviceInfo, PaginationLimit, RateLimitPolicy } from "src/common/decorators";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
-import { Create2FAResponse, PublicKeyCredentialCreationOptionsJSONResponse, PublicKeyCredentialRequestOptionsJSONResponse, UserTwoStepVerificationResponse, Verify2FAResponse } from "../entities/user-two-step-verification.entity";
+import {
+  Create2FAResponse,
+  PublicKeyCredentialCreationOptionsJSONResponse,
+  PublicKeyCredentialRequestOptionsJSONResponse,
+  UserTwoStepVerificationResponse,
+  Verify2FAResponse
+} from "../entities/user-two-step-verification.entity";
 import { EmptyBodyResponse } from "src/common/entities/api.entity";
+import { omit } from "src/common/helpers/data";
 
 @ApiTags("user-two-step-verification")
 @Controller("auth/2fa")
@@ -95,10 +102,10 @@ export class UserTwoStepVerificationController {
     @GetClientIp() ip: string,
     @GetDeviceInfo() deviceInfo: IDeviceInfo
   ) {
-    const { id, ...withoutId } = updateUsetTwoStepVerificationDto;
+    const userWithoutId = omit(updateUsetTwoStepVerificationDto, ["id"]);
     return await this.userTwoStepVerificationService.updateUserTwoStepVerification({
       id: methodId,
-      ...withoutId
+      ...userWithoutId
     }, user.id, deviceInfo, ip);
   }
 

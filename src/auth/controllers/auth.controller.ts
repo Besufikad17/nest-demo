@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
 import { LoginDto, RecoverAccountDto, RegisterDto, ResetPasswordDto, } from "../dto";
-import { IAuthService } from "../interfaces";
+import { IAuthService, IGoogleUser } from "../interfaces";
 import { AuthGuard } from "@nestjs/passport";
 import { ApiTags } from "@nestjs/swagger";
 import { DeviceInfoGuard, JwtGuard } from "src/common/guards";
@@ -11,6 +11,7 @@ import { AuthResponse } from "../entities/auth.entity";
 import { ApiOkResponseWithData } from "src/common/helpers/swagger.helper";
 import { GetClientIp, GetDeviceInfo, RateLimitPolicy } from "src/common/decorators";
 import { IDeviceInfo } from "src/common/interfaces";
+import { Request } from "express";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -86,7 +87,7 @@ export class AuthController {
     group: "public",
     limits: [{ scope: "ip", limit: 20, windowSec: 60 }],
   })
-  async googleAuthCallback(@Req() req: any) {
+  async googleAuthCallback(@Req() req: Request & { user: IGoogleUser }) {
     return await this.authService.authUserByGoogleSSO(req.user);
   }
 

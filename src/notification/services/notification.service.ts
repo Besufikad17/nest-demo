@@ -8,6 +8,7 @@ import { Queue } from "bullmq";
 import { InjectQueue } from "@nestjs/bullmq";
 import { IApiResponse } from "src/common/interfaces";
 import { ErrorCode } from "src/common/enums";
+import { omit } from "src/common/helpers/data";
 
 @Injectable()
 export class NotificationService implements INotificationService {
@@ -20,8 +21,7 @@ export class NotificationService implements INotificationService {
 
   async createNotification(createNotificationDto: CreateNotificationDto): Promise<void> {
     try {
-      const { email, ...notificationData } = createNotificationDto;
-
+      const notificationData = omit(createNotificationDto, ['email']);
       const notification = await this.notificationRepository.createNotification({
         data: { ...notificationData }
       });
@@ -97,7 +97,7 @@ export class NotificationService implements INotificationService {
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -155,7 +155,7 @@ export class NotificationService implements INotificationService {
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {

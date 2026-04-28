@@ -5,5 +5,5 @@ export abstract class IUserRoleRepository {
   abstract findUserRole(findUserRoleArgs: Prisma.UserRoleFindFirstArgs): Promise<UserRole | null>;
   abstract findUserRoles(findUserRolesArgs: Prisma.UserRoleFindManyArgs): Promise<UserRole[]>;
   abstract updateUserRole(updateUserRoleArgs: Prisma.UserRoleUpdateArgs): Promise<UserRole>;
-  abstract deleteUserRole(deleteUserRoleArgs: Prisma.UserRoleDeleteArgs): Promise<any>;
+  abstract deleteUserRole(deleteUserRoleArgs: Prisma.UserRoleDeleteArgs): Promise<void>;
 }

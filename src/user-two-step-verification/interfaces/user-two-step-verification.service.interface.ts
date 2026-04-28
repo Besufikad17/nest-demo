@@ -47,7 +47,7 @@ export abstract class IUserTwoStepVerificationService {
     ip: string
   ): Promise<IApiResponse<IVerify2FAResponse>>;
 
-  abstract deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>>;
+  abstract deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>>;
 
   abstract requestAddPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<PublicKeyCredentialCreationOptionsJSON>>;
 

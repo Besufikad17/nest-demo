@@ -23,7 +23,7 @@ export class UserRoleRepository implements IUserRoleRepository {
     return await this.prisma.userRole.update(updateUserRoleArgs);
   }
 
-  async deleteUserRole(deleteUserRoleArgs: Prisma.UserRoleDeleteArgs): Promise<any> {
-    return await this.prisma.userRole.delete(deleteUserRoleArgs);
+  async deleteUserRole(deleteUserRoleArgs: Prisma.UserRoleDeleteArgs): Promise<void> {
+    await this.prisma.userRole.delete(deleteUserRoleArgs);
   }
 }

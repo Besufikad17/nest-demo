@@ -23,7 +23,7 @@ export class FCMTokenRepository implements IFCMTokenRepository {
     return await this.prisma.fCMToken.update(updateFcmTokenArgs);
   }
 
-  async deleteFCMToken(deleteFcmTokenArgs: Prisma.FCMTokenDeleteArgs): Promise<any> {
-    return await this.prisma.fCMToken.delete(deleteFcmTokenArgs);
+  async deleteFCMToken(deleteFcmTokenArgs: Prisma.FCMTokenDeleteArgs): Promise<void> {
+    await this.prisma.fCMToken.delete(deleteFcmTokenArgs);
   }
 }

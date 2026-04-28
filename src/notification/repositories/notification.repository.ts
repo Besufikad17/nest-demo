@@ -23,7 +23,7 @@ export class NotificationRepository implements INotificationRepository {
     return await this.prisma.notification.update(updateNotificationArgs);
   }
 
-  async deleteNotification(deleteNotificationArgs: Prisma.NotificationDeleteArgs): Promise<any> {
-    return await this.prisma.notification.delete(deleteNotificationArgs);
+  async deleteNotification(deleteNotificationArgs: Prisma.NotificationDeleteArgs): Promise<void> {
+    await this.prisma.notification.delete(deleteNotificationArgs);
   }
 }

@@ -14,5 +14,5 @@ export class SendPushNotificationDto {
 
   @IsObject()
   @ValidateIf((obj) => obj.data !== undefined && obj.data !== null && obj.data !== '')
-  readonly data?: Object;
+  readonly data?: object;
 }

@@ -9,6 +9,8 @@ import {
   RateLimitScope,
 } from "src/common/rate-limit/interfaces/rate-limit-policy.interface";
 import { RateLimitStore } from "src/common/rate-limit/rate-limit.store";
+import { Request } from "express";
+import { User } from "../interfaces";
 
 @Injectable()
 export class RateLimitService {
@@ -47,7 +49,7 @@ export class RateLimitService {
     return this.mode === "enforce";
   }
 
-  extractIp(request: any): string {
+  extractIp(request: Request): string {
     const forwarded = request.headers["x-forwarded-for"];
     if (Array.isArray(forwarded) && forwarded.length > 0) {
       return forwarded[0].split(",")[0].trim();
@@ -60,7 +62,7 @@ export class RateLimitService {
     return request.ip || request.socket?.remoteAddress || "unknown";
   }
 
-  extractIdentity(request: any, identityFields?: string[]): string | undefined {
+  extractIdentity(request: Request, identityFields?: string[]): string | undefined {
     const fallbackFields = ["email", "phoneNumber", "value", "userId"];
     const fields = (identityFields && identityFields.length > 0) ? identityFields : fallbackFields;
 
@@ -82,7 +84,7 @@ export class RateLimitService {
     return undefined;
   }
 
-  extractUserId(request: any): string | undefined {
+  extractUserId(request: Request & { user: User }): string | undefined {
     if (request.user?.id) {
       return request.user.id;
     }

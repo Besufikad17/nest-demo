@@ -12,8 +12,8 @@ describe("PaginationInterceptor", () => {
     interceptor = new PaginationInterceptor(reflector);
   });
 
-  const makeExecutionContext = (query: any, withPolicy = true): ExecutionContext => {
-    const request = { query } as any;
+  const makeExecutionContext = (query: unknown, withPolicy = true): ExecutionContext => {
+    const request = { query } as unknown;
 
     const handler = () => undefined;
     if (withPolicy) {

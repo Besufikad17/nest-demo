@@ -113,7 +113,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -160,7 +160,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -201,7 +201,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -279,7 +279,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -313,13 +313,19 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new HttpException("2FA not found!!", HttpStatus.BAD_REQUEST);
       }
 
-      if (!twoFaMethod) {
-        throw new HttpException("Please add 2FA Authenticator method first!!", HttpStatus.BAD_REQUEST);
+      if (twoFaMethod.methodType !== UserTwoFactorMethodType.AUTHENTICATOR) {
+        throw new HttpException("Authenticator 2FA method not configured for this user", HttpStatus.BAD_REQUEST);
       }
+
+      if (!twoFaMethod.secret) {
+        throw new HttpException("Authenticator secret not found, please reconfigure 2FA", HttpStatus.BAD_REQUEST);
+      }
+
+      const secret = typeof twoFaMethod.secret === 'string' ? twoFaMethod.secret : String(twoFaMethod.secret);
 
       const valid = authenticator.verify({
         token: twoFaCode,
-        secret: twoFaMethod.secret,
+        secret,
       });
 
       if (!valid) {
@@ -346,9 +352,9 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
       if (error instanceof HttpException) {
         return {
           success: false,
-          message: error.message,
+          message: (error.getResponse() as { message: string })?.message || error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse() as string,
         }
       } else {
         return {
@@ -361,7 +367,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     }
   }
 
-  async deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
+  async deleteUserTwoStepVerification(id: string, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
       const twoFaMethod = await this.userTwoStepVerificationRepository.findUserTwoStepVerification({
         where: {
@@ -395,7 +401,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -456,7 +462,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -529,7 +535,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -570,7 +576,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -599,7 +605,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         throw new Error(`Could not find passkey ${verifyPasskeyDto.response.id} for user ${user.id}`);
       }
 
-      let verification = await verifyAuthenticationResponse({
+      const verification = await verifyAuthenticationResponse({
         response: verifyPasskeyDto.response,
         expectedChallenge: currentOptions.challenge,
         expectedOrigin: origin,
@@ -638,7 +644,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {

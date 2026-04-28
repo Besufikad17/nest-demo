@@ -1,6 +1,6 @@
 import { Prisma, UserActions } from "generated/prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, IsUUID, ValidateIf } from "class-validator";
+import { IsDate, IsEnum, IsNotEmpty, IsObject, IsUUID, ValidateIf } from "class-validator";
 
 export class AddUserActivityDto {
   @IsNotEmpty()

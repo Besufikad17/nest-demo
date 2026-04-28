@@ -9,7 +9,6 @@ export function parseUserAgent(userAgent: string): IDeviceInfo {
     device: result.device.model || "Unknown",
     os: result.os.name || "Unknown",
     browser: result.browser.name || "Unknown",
-    browserVersion: result.browser.version || "Unknown",
     type: result.device.type || "desktop",
   };
 }

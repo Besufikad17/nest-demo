@@ -28,7 +28,7 @@ export abstract class IAuthService {
     ip: string
   ): Promise<IApiResponse<IAuthResponse>>;
 
-  abstract authUserByGoogleSSO(user: any): Promise<IApiResponse<any>>;
+  abstract authUserByGoogleSSO(user: IGoogleUser): Promise<IApiResponse<string>>;
 
   abstract resetPassword(
     resetPasswordDto: ResetPasswordDto,

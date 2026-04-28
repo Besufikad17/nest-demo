@@ -23,7 +23,7 @@ export class DeletedUserRepository implements IDeletedUserRepository {
     return await this.prisma.deletedUser.update(updateDeletedUserArgs);
   }
 
-  async deleteDeletedUser(deletedDeletedUserArgs: Prisma.DeletedUserDeleteArgs): Promise<any> {
-    return await this.prisma.deletedUser.delete(deletedDeletedUserArgs);
+  async deleteDeletedUser(deletedDeletedUserArgs: Prisma.DeletedUserDeleteArgs): Promise<void> {
+    await this.prisma.deletedUser.delete(deletedDeletedUserArgs);
   }
 }

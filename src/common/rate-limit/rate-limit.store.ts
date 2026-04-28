@@ -48,6 +48,7 @@ export class RateLimitStore implements OnModuleDestroy {
           this.logger.warn(`Failed to connect redis for rate-limit store; using memory fallback: ${error.message}`);
         });
     } catch (error) {
+      console.error(error);
       this.useMemory = true;
       this.logger.warn("Failed to initialize redis for rate-limit store; using memory fallback");
     }

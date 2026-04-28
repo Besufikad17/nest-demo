@@ -2,7 +2,7 @@ import { applyDecorators, Type } from "@nestjs/common";
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from "@nestjs/swagger";
 import { ApiResponse } from "../entities/api.entity";
 
-export const ApiOkResponseWithData = <TModel extends Type<any>>(
+export const ApiOkResponseWithData = <TModel extends Type<unknown>>(
   model: TModel,
   isArray = false,
 ) => {

@@ -1,11 +1,21 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { Inject, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { INotificationRepository, SendNotificationJobData } from '../interfaces';
 import { MailService } from '../services';
 import { IFCMTokenService } from 'src/fcm-token/interfaces';
 import { IFirebaseService } from 'src/firebase/interfaces';
 import { getEmailHtml } from '../utils/mail.util';
+
+interface NotificationJobResult {
+  success: boolean;
+}
+
+type NotificationJob = Job<
+  SendNotificationJobData,
+  NotificationJobResult,
+  'notification'
+>;
 
 @Processor('notification')
 export class NotificationProcessor extends WorkerHost {
@@ -19,22 +29,23 @@ export class NotificationProcessor extends WorkerHost {
     super()
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
+  async process(job: NotificationJob): Promise<void> {
     this.logger.debug('Start processing notifications...');
-    const { userId, message, type, email, phoneNumber, title }: SendNotificationJobData = job.data;
+    const { userId, message, type, email, title } = job.data;
 
     switch (type) {
-      case 'EMAIL':
+      case 'EMAIL': {
         await this.mailService.sendEmail({
           to: email,
           html: getEmailHtml(message),
           subject: title,
         });
         break;
-      case 'PUSH':
-        const fcmTokens = await this.fcmTokenService.getTokens(userId!);
+      }
+      case 'PUSH': {
+        const fcmTokens = await this.fcmTokenService.getTokens(userId);
 
-        for (let fcmToken of fcmTokens) {
+        for (const fcmToken of fcmTokens) {
           await this.firebaseService.sendPushNotification({
             title,
             body: message,
@@ -42,6 +53,7 @@ export class NotificationProcessor extends WorkerHost {
           });
         }
         break;
+      }
       default:
         return;
     }

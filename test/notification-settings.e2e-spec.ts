@@ -7,7 +7,7 @@ import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'src/common/utils/hash.utils';
-import { NotificationType } from 'generated/prisma/client';
+import { Notification, NotificationType } from 'generated/prisma/client';
 import { OTPIdentifier, OTPType } from 'generated/prisma/enums';
 import { RoleEnums } from 'src/user-role/enums/role.enum';
 import { INotificationService } from 'src/notification/interfaces';
@@ -152,7 +152,7 @@ describe('Notification Settings Module (e2e)', () => {
 
       expect(Array.isArray(response.body.data)).toBe(true);
       expect(response.body.data.length).toBeGreaterThanOrEqual(2);
-      expect(response.body.data.every((item: any) => item.userId === user.id)).toBe(true);
+      expect(response.body.data.every((item: Notification) => item.userId === user.id)).toBe(true);
     });
 
     it('should return 401 without token', async () => {

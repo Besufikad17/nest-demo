@@ -5,5 +5,5 @@ export abstract class IUserRepository {
   abstract findUser(findFirstUserArgs: Prisma.UserFindFirstArgs): Promise<User | null>;
   abstract findUsers(findUsersArgs: Prisma.UserFindManyArgs): Promise<User[]>;
   abstract updateUser(updateUserArgs: Prisma.UserUpdateArgs): Promise<User>;
-  abstract deleteUser(deleteUserArgs: Prisma.UserDeleteArgs): Promise<any>;
+  abstract deleteUser(deleteUserArgs: Prisma.UserDeleteArgs): Promise<void>;
 }

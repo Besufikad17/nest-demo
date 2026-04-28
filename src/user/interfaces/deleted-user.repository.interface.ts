@@ -5,5 +5,5 @@ export abstract class IDeletedUserRepository {
   abstract findDeletedUsers(findDeletedUserArgs: Prisma.DeletedUserFindManyArgs): Promise<DeletedUser[]>;
   abstract findDeletedUser(findDeletedUsersArgs: Prisma.DeletedUserFindFirstArgs): Promise<DeletedUser | null>;
   abstract updateDeletedUser(updateDeletedUserArgs: Prisma.DeletedUserUpdateArgs): Promise<DeletedUser>;
-  abstract deleteDeletedUser(deletedDeletedUserArgs: Prisma.DeletedUserDeleteArgs): Promise<any>;
+  abstract deleteDeletedUser(deletedDeletedUserArgs: Prisma.DeletedUserDeleteArgs): Promise<void>;
 }

@@ -13,7 +13,7 @@ export async function addOrGetDeviceId(
     userId: string,
     ip: string
 ): Promise<AddOrGetDeviceIdResponse> {
-    const { device, browserVersion, type, ...deviceInfoDetails } = deviceInfo;
+    const { device, type, ...deviceInfoDetails } = deviceInfo;
     const deviceType = type === "desktop" ? DeviceType.DESKTOP :
         type === "mobile" ? DeviceType.MOBILE :
             type === "tablet" ? DeviceType.TABLET : DeviceType.OTHER

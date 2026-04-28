@@ -57,7 +57,7 @@ export class NotificationSettingsService implements INotificationSettingsService
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {

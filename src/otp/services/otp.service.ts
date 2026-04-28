@@ -63,9 +63,9 @@ export class OtpService implements IOtpService {
         await this.otpRepository.deleteOTP({ where: { id: otp.id } });
       }
 
-      let generatedValue: string = `${Math.floor(100000 + Math.random() * 900000)}`;
-      let otpCode: string = await hash(generatedValue, this.configService.get<number>("BCRYPT_SALT") || 10);
-      var expiresAt = new Date();
+      const generatedValue: string = `${Math.floor(100000 + Math.random() * 900000)}`;
+      const otpCode: string = await hash(generatedValue, this.configService.get<number>("BCRYPT_SALT") || 10);
+      const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
 
       await this.otpRepository.createOTP({
@@ -126,7 +126,7 @@ export class OtpService implements IOtpService {
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -190,7 +190,7 @@ export class OtpService implements IOtpService {
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -227,7 +227,7 @@ export class OtpService implements IOtpService {
         throw new HttpException("OTP expired!!", HttpStatus.BAD_REQUEST);
       }
 
-      let otpMatch: boolean = await compare(otpCode, otp.otpCode);
+      const otpMatch: boolean = await compare(otpCode, otp.otpCode);
       if (!otpMatch) {
         await this.otpRepository.updateOTP({ where: { id: otp.id }, data: { attempts: otp.attempts - 1 } });
         throw new HttpException("Invalid code!!", HttpStatus.BAD_REQUEST);
@@ -260,7 +260,7 @@ export class OtpService implements IOtpService {
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {
@@ -276,20 +276,20 @@ export class OtpService implements IOtpService {
   @Cron(CronExpression.EVERY_12_HOURS)
   async clearExpiredOtps() {
     try {
-       const expiredOtps = await this.otpRepository.getOTPs({
+      const expiredOtps = await this.otpRepository.getOTPs({
         where: {
           expiresAt: {
             lte: new Date()
           }
         }
-       });
+      });
 
-       this.logger.debug(`Found ${expiredOtps.length} expired OTPs`);
+      this.logger.debug(`Found ${expiredOtps.length} expired OTPs`);
 
       expiredOtps.map(async (expiredOtp) => {
         await this.otpRepository.deleteOTP({ where: { id: expiredOtp.id } });
       });
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
   }

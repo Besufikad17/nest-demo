@@ -12,9 +12,9 @@ export class ApiResponse<T> implements IApiResponse<T> {
   data: T | null;
 
   @ApiProperty({ description: "Error details if the request was not successful", required: false })
-  error: any;
+  error: string;
 
-  constructor(success: boolean, message: string, data: T | null, error: any) {
+  constructor(success: boolean, message: string, data: T | null, error: string) {
     this.success = success;
     this.message = message;
     this.data = data;
@@ -22,4 +22,4 @@ export class ApiResponse<T> implements IApiResponse<T> {
   }
 }
 
-export class EmptyBodyResponse {}
+export class EmptyBodyResponse { }

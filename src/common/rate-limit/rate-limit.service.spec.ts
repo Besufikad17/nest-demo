@@ -28,7 +28,7 @@ describe("RateLimitService", () => {
           provide: ConfigService,
           useValue: {
             get: (key: string) => {
-              const config: Record<string, any> = {
+              const config: Record<string, unknown> = {
                 RATE_LIMIT_MODE: "enforce",
                 RATE_LIMIT_ENABLED_GROUPS: "public,sensitive,read",
               };

@@ -17,6 +17,17 @@ const uniquePhone = () => `+555${Date.now().toString().slice(-6)}${Math.floor(Ma
 const primaryDeviceHeader = 'Mozilla/5.0 (Session Test Device 1.0)';
 const secondaryDeviceHeader = 'Mozilla/5.0 (Session Test Device 2.0)';
 
+interface Session {
+  id: string;
+  userId: string;
+  deviceInfo?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  isActive?: boolean;
+  createdAt?: string; // or Date depending on your serialization
+  updatedAt?: string;
+}
+
 describe('Device Info Module - Sessions (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -143,7 +154,7 @@ describe('Device Info Module - Sessions (e2e)', () => {
     expect(response.body.message).toBe('Sessions fetched');
     expect(Array.isArray(response.body.data)).toBe(true);
     expect(response.body.data.length).toBeGreaterThanOrEqual(1);
-    expect(response.body.data.every((session: any) => session.userId === userId)).toBe(true);
+    expect(response.body.data.every((session: Session) => session.userId === userId)).toBe(true);
   });
 
   it('should remove a session by id', async () => {

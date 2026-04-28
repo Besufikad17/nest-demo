@@ -23,7 +23,7 @@ export class UserTwoStepVerificationRepository implements IUserTwoStepVerificati
     return await this.prisma.userTwoStepVerification.update(updateUserTwoStepVerificationArgs);
   }
 
-  async deleteUserTwoStepVerification(deleteUserTwoStepVerificationArgs: Prisma.UserTwoStepVerificationDeleteArgs): Promise<any> {
-    return await this.prisma.userTwoStepVerification.delete(deleteUserTwoStepVerificationArgs);
+  async deleteUserTwoStepVerification(deleteUserTwoStepVerificationArgs: Prisma.UserTwoStepVerificationDeleteArgs): Promise<void> {
+    await this.prisma.userTwoStepVerification.delete(deleteUserTwoStepVerificationArgs);
   }
 }

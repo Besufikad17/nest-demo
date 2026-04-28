@@ -10,6 +10,7 @@ import { hash } from 'src/common/utils/hash.utils';
 import { INotificationService } from 'src/notification/interfaces';
 import { NotificationProcessor } from 'src/notification/processors/notification.processor';
 import { OTPIdentifier, OTPType } from 'generated/prisma/enums';
+import { User } from 'generated/prisma/client';
 
 // Helper for unique test data
 const uniqueEmail = () => `fcm-test-user-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`;
@@ -20,7 +21,7 @@ describe('FCM Token Module (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let authToken: string;
-  let user: any;
+  let user: User;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -53,8 +54,8 @@ describe('FCM Token Module (e2e)', () => {
   afterAll(async () => {
     await prisma.fCMToken.deleteMany(); // Cleanup tokens
     if (user) {
-        // Cleanup user if needed, though usually DB is reset or we rely on unique data
-        // await prisma.user.delete({ where: { id: user.id } }); // Cascades often handle this, but explicit cleanup is good
+      // Cleanup user if needed, though usually DB is reset or we rely on unique data
+      // await prisma.user.delete({ where: { id: user.id } }); // Cascades often handle this, but explicit cleanup is good
     }
     await prisma.$disconnect();
     await app.close();
@@ -82,7 +83,7 @@ describe('FCM Token Module (e2e)', () => {
 
     const userRole = await prisma.roles.findFirst({ where: { roleName: 'user' } });
     if (!userRole) {
-        throw new Error('Role "user" not found. Database seeding might be required.');
+      throw new Error('Role "user" not found. Database seeding might be required.');
     }
 
     user = await prisma.user.create({
@@ -126,9 +127,9 @@ describe('FCM Token Module (e2e)', () => {
 
   it('should register a new FCM token', async () => {
     authToken = await createVerifiedUserAndLogin();
-    
+
     const fcmToken = 'test-fcm-token-123';
-    
+
     // Note: Controller path is 'fcm-token', method path is 'fcm-token/register'.
     // Combined path: /api/v1/fcm-token/fcm-token/register
     await request(app.getHttpServer())
@@ -146,12 +147,12 @@ describe('FCM Token Module (e2e)', () => {
 
     // Verify in DB
     const storedToken = await prisma.fCMToken.findFirst({
-        where: {
-            token: fcmToken,
-            userId: user.id
-        }
+      where: {
+        token: fcmToken,
+        userId: user.id
+      }
     });
-    
+
     expect(storedToken).toBeDefined();
     expect(storedToken.token).toBe(fcmToken);
   });
@@ -161,22 +162,22 @@ describe('FCM Token Module (e2e)', () => {
       .post('/api/v1/fcm-token/fcm-token/register')
       .send({
         token: 'some-token',
-        userId: 'some-uuid' 
+        userId: 'some-uuid'
       })
       .expect(401);
   });
 
   it('should fail with 400 if validation fails (missing token)', async () => {
-     // Ensure we have a token
-     if (!authToken) authToken = await createVerifiedUserAndLogin();
+    // Ensure we have a token
+    if (!authToken) authToken = await createVerifiedUserAndLogin();
 
-     await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/api/v1/fcm-token/fcm-token/register')
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         userId: user.id
         // token missing
       })
-      .expect(400); 
+      .expect(400);
   });
 });

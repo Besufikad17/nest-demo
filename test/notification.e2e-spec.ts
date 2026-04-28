@@ -48,7 +48,7 @@ describe('Notification Module (e2e)', () => {
       }),
     );
     await app.init();
-    
+
     prisma = app.get(PrismaService);
   });
 
@@ -60,8 +60,8 @@ describe('Notification Module (e2e)', () => {
   // --- Helpers ---
 
   const createVerifiedOtp = async (
-    target: { value?: string, userId?: string }, 
-    type: OTPType, 
+    target: { value?: string, userId?: string },
+    type: OTPType,
     identifier: OTPIdentifier = 'EMAIL'
   ) => {
     await prisma.oTP.create({
@@ -73,7 +73,7 @@ describe('Notification Module (e2e)', () => {
         otpCode: await hash('123456', 10),
         status: 'VERIFIED',
         expiresAt: new Date(Date.now() + 1000 * 60 * 10), // 10 mins
-        updatedAt: new Date(), 
+        updatedAt: new Date(),
       }
     });
   };
@@ -83,7 +83,7 @@ describe('Notification Module (e2e)', () => {
     const phone = uniquePhone();
     const password = 'StrongPass123!';
     const passwordHash = await hash(password, 10);
-    
+
     // Ensure role exists
     const role = await prisma.roles.findFirst({ where: { roleName } });
     if (!role) throw new Error(`Role "${roleName}" not found`);
@@ -120,24 +120,24 @@ describe('Notification Module (e2e)', () => {
       .send({ email, password })
       .expect(200);
 
-    return { 
-      user, 
-      accessToken: loginRes.body.data.accessToken, 
-      email, 
-      phone 
+    return {
+      user,
+      accessToken: loginRes.body.data.accessToken,
+      email,
+      phone
     };
   };
 
   const createNotificationForUser = async (userId: string, title = 'Test Notif', message = 'Hello') => {
-      return await prisma.notification.create({
-          data: {
-              userId,
-              type: NotificationType.EMAIL,
-              title,
-              message,
-              status: NotificationStatus.SENT
-          }
-      });
+    return await prisma.notification.create({
+      data: {
+        userId,
+        type: NotificationType.EMAIL,
+        title,
+        message,
+        status: NotificationStatus.SENT
+      }
+    });
   };
 
   // --- Tests ---
@@ -145,7 +145,7 @@ describe('Notification Module (e2e)', () => {
   describe('GET /notification/all', () => {
     it('should retrieve notifications for logged in user', async () => {
       const { user, accessToken } = await createAndLoginUser(RoleEnums.USER);
-      
+
       // Seed some notifications
       await createNotificationForUser(user.id, 'User Notif 1');
       await createNotificationForUser(user.id, 'User Notif 2');
@@ -168,20 +168,20 @@ describe('Notification Module (e2e)', () => {
     });
 
     it('should support pagination (skip/take)', async () => {
-        const { user, accessToken } = await createAndLoginUser(RoleEnums.USER);
-        
-        // Create 5 notifs
-        for (let i = 0; i < 5; i++) {
-            await createNotificationForUser(user.id, `Paginated Notif ${i}`);
-        }
+      const { user, accessToken } = await createAndLoginUser(RoleEnums.USER);
 
-        const response = await request(app.getHttpServer())
-            .get('/api/v1/notification/all')
-            .query({ take: 2, skip: 1 })
-            .set('Authorization', `Bearer ${accessToken}`)
-            .expect(200);
-        
-        expect(response.body.data.length).toBe(2);
+      // Create 5 notifs
+      for (let i = 0; i < 5; i++) {
+        await createNotificationForUser(user.id, `Paginated Notif ${i}`);
+      }
+
+      const response = await request(app.getHttpServer())
+        .get('/api/v1/notification/all')
+        .query({ take: 2, skip: 1 })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(response.body.data.length).toBe(2);
     });
   });
 
@@ -200,8 +200,8 @@ describe('Notification Module (e2e)', () => {
     });
 
     it('should return 400/404 if notification not found or belongs to another user', async () => {
-      const { user, accessToken } = await createAndLoginUser(RoleEnums.USER);
-      
+      const { accessToken } = await createAndLoginUser(RoleEnums.USER);
+
       // Another user's notification
       const otherUserSetup = await createAndLoginUser(RoleEnums.USER);
       const otherNotif = await createNotificationForUser(otherUserSetup.user.id, 'Other User Notif');
@@ -213,13 +213,13 @@ describe('Notification Module (e2e)', () => {
     });
 
     it('should return 400 for non-existent ID', async () => {
-        const { accessToken } = await createAndLoginUser(RoleEnums.USER);
-        const randomId = '00000000-0000-0000-0000-000000000000';
+      const { accessToken } = await createAndLoginUser(RoleEnums.USER);
+      const randomId = '00000000-0000-0000-0000-000000000000';
 
-        await request(app.getHttpServer())
-          .get(`/api/v1/notification/${randomId}`)
-          .set('Authorization', `Bearer ${accessToken}`)
-          .expect(400);
+      await request(app.getHttpServer())
+        .get(`/api/v1/notification/${randomId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(400);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { IDeviceInfoRepository, IDeviceInfoService } from '../interfaces';
 import { DeviceInfo, DeviceType } from 'generated/prisma/client';
 import { CreateDeviceInfoDto, GetDeviceInfoDto, UpdateDeviceInfoDto } from '../dto/device-info.dto';
@@ -56,7 +56,7 @@ export class DeviceInfoService implements IDeviceInfoService {
                     success: false,
                     message: error.message,
                     data: null,
-                    error: error.getResponse(),
+                    error: error.getResponse().toString(),
                 };
             } else {
                 return {
@@ -84,7 +84,7 @@ export class DeviceInfoService implements IDeviceInfoService {
                 where: { id }
             });
 
-            const { device, browserVersion, type, ...deviceInfoDetails } = deviceInfo;
+            const { device, type, ...deviceInfoDetails } = deviceInfo;
             const deviceType = type === "desktop" ? DeviceType.DESKTOP :
                 type === "mobile" ? DeviceType.MOBILE :
                     type === "tablet" ? DeviceType.TABLET : DeviceType.OTHER
@@ -133,7 +133,7 @@ export class DeviceInfoService implements IDeviceInfoService {
                     success: false,
                     message: error.message,
                     data: null,
-                    error: error.getResponse(),
+                    error: error.getResponse().toString(),
                 };
             } else {
                 return {

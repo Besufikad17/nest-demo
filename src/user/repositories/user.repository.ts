@@ -23,7 +23,7 @@ export class UserRepository implements IUserRepository {
     return await this.prisma.user.update(updateUserArgs);
   }
 
-  async deleteUser(deleteUserArgs: Prisma.UserDeleteArgs): Promise<any> {
-    return await this.prisma.user.delete(deleteUserArgs);
+  async deleteUser(deleteUserArgs: Prisma.UserDeleteArgs): Promise<void> {
+    await this.prisma.user.delete(deleteUserArgs);
   }
 }

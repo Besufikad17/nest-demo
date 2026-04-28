@@ -12,7 +12,7 @@ import { RateLimitService } from "src/common/rate-limit/rate-limit.service";
 export class RateLimitOutcomeInterceptor implements NestInterceptor {
   constructor(private readonly rateLimitService: RateLimitService) { }
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const rateLimitContext: RateLimitContext | undefined = request.__rateLimitContext;
 

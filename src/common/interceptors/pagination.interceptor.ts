@@ -14,7 +14,7 @@ import { PaginationPolicyOptions } from "src/common/rate-limit/interfaces/rate-l
 export class PaginationInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) { }
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const policy = this.reflector.getAllAndOverride<PaginationPolicyOptions>(
       PAGINATION_POLICY_KEY,
       [context.getHandler(), context.getClass()],

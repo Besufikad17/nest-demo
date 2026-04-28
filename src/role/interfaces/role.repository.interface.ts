@@ -5,5 +5,5 @@ export abstract class IRoleRepository {
   abstract findRole(findRoleArgs: Prisma.RolesFindFirstArgs): Promise<Roles | null>;
   abstract findRoles(findRolesArgs: Prisma.RolesFindManyArgs): Promise<Roles[]>;
   abstract updateRole(updateRoleArgs: Prisma.RolesUpdateArgs): Promise<Roles>;
-  abstract deleteRole(deleteRoleArgs: Prisma.RolesDeleteArgs): Promise<any>;
+  abstract deleteRole(deleteRoleArgs: Prisma.RolesDeleteArgs): Promise<void>;
 }

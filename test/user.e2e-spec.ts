@@ -19,7 +19,6 @@ const uniquePhone = () => `+555${Date.now().toString().slice(-6)}${Math.floor(Ma
 describe('User Module (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let consoleLogSpy: jest.SpyInstance;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -45,9 +44,9 @@ describe('User Module (e2e)', () => {
       }),
     );
     await app.init();
-    
+
     prisma = app.get(PrismaService);
-    
+
     // Silence console logs
     // consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
   });
@@ -61,8 +60,8 @@ describe('User Module (e2e)', () => {
   // --- Helpers ---
 
   const createVerifiedOtp = async (
-    target: { value?: string, userId?: string }, 
-    type: OTPType, 
+    target: { value?: string, userId?: string },
+    type: OTPType,
     identifier: OTPIdentifier = 'EMAIL'
   ) => {
     await prisma.oTP.create({
@@ -74,7 +73,7 @@ describe('User Module (e2e)', () => {
         otpCode: await hash('123456', 10),
         status: 'VERIFIED',
         expiresAt: new Date(Date.now() + 1000 * 60 * 10), // 10 mins
-        updatedAt: new Date(), 
+        updatedAt: new Date(),
       }
     });
   };
@@ -84,7 +83,7 @@ describe('User Module (e2e)', () => {
     const phone = uniquePhone();
     const password = 'StrongPass123!';
     const passwordHash = await hash(password, 10);
-    
+
     // Ensure role exists
     const role = await prisma.roles.findFirst({ where: { roleName } });
     if (!role) throw new Error(`Role "${roleName}" not found`);
@@ -121,11 +120,11 @@ describe('User Module (e2e)', () => {
       .send({ email, password })
       .expect(200);
 
-    return { 
-      user, 
-      accessToken: loginRes.body.data.accessToken, 
-      email, 
-      phone 
+    return {
+      user,
+      accessToken: loginRes.body.data.accessToken,
+      email,
+      phone
     };
   };
 
@@ -145,11 +144,11 @@ describe('User Module (e2e)', () => {
     });
 
     it('should fail without token', async () => {
-        // Can't easily use createAndLoginUser because it gives us a valid token, 
-        // effectively we just pick a random ID
-        await request(app.getHttpServer())
-          .get(`/api/v1/user/some-id`)
-          .expect(401);
+      // Can't easily use createAndLoginUser because it gives us a valid token, 
+      // effectively we just pick a random ID
+      await request(app.getHttpServer())
+        .get(`/api/v1/user/some-id`)
+        .expect(401);
     });
   });
 
@@ -186,7 +185,7 @@ describe('User Module (e2e)', () => {
       // Setup OTP for the update action (requires verifying 2FA OTP again technically, or "ACTION_VERIFICATION" - 
       // The controller calls: otpService.getOTP({ userId: user.id, type: "TWO_FACTOR_AUTHENTICATION" });
       // So we need a fresh verified OTP of that type linked to the USER_ID.
-      
+
       await createVerifiedOtp({ userId: user.id }, 'TWO_FACTOR_AUTHENTICATION', 'EMAIL'); // The controller looks up by userId
 
       const response = await request(app.getHttpServer())
@@ -195,14 +194,9 @@ describe('User Module (e2e)', () => {
         .set('device-info', 'test-device')
         .send({
           firstName: newFirstName
-        })
-        .expect((res) => {
-          if (res.status !== 202) {
-             console.log('PATCH Failed Body:', JSON.stringify(res.body, null, 2));
-          }
-        })
-        .expect(202);
+        });
 
+      expect(response.statusCode).toBe(202);
       // Verify update
       const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
       expect(updatedUser?.firstName).toBe(newFirstName);
@@ -222,7 +216,7 @@ describe('User Module (e2e)', () => {
           firstName: 'ShouldSucceed'
         })
         .expect(202);
-      
+
       expect(response.body.success).toBe(true);
     });
 
@@ -231,7 +225,7 @@ describe('User Module (e2e)', () => {
 
       // Delete all OTPs for this user (including login OTP) to force failure
       await prisma.oTP.deleteMany({
-         where: { value: user.email }
+        where: { value: user.email }
       });
 
       const response = await request(app.getHttpServer())
@@ -249,24 +243,25 @@ describe('User Module (e2e)', () => {
   });
 
   describe('DELETE /user', () => {
-      // NOTE: User controller has @Delete() mapped to deleteAccount
-      // It uses @GetUser() user.id.
+    // NOTE: User controller has @Delete() mapped to deleteAccount
+    // It uses @GetUser() user.id.
     it('should delete own account', async () => {
-        const { user, accessToken } = await createAndLoginUser(RoleEnums.USER);
+      const { user, accessToken } = await createAndLoginUser(RoleEnums.USER);
 
-        await request(app.getHttpServer())
-            .delete('/api/v1/user')
-            .set('Authorization', `Bearer ${accessToken}`)
-            .set('device-info', 'test-device')
-            .expect(202); // HttpStatus.ACCEPTED
-        
-        // Check if user is deleted (or soft deleted?)
-        // Repo is `deleted-user.repository`. It seems it migrates data or marks status.
-        // Assuming user is no longer retrieved by standard find.
-        
-        const deletedUser = await prisma.user.findUnique({ where: { id: user.id } });
-        // Depending on implementation, it might be gone or status changed.
-        // Let's assume the basic requirement is the 202 response for now.
+      await request(app.getHttpServer())
+        .delete('/api/v1/user')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .set('device-info', 'test-device')
+        .expect(202); // HttpStatus.ACCEPTED
+
+      // Check if user is deleted (or soft deleted?)
+      // Repo is `deleted-user.repository`. It seems it migrates data or marks status.
+      // Assuming user is no longer retrieved by standard find.
+
+      const deletedUser = await prisma.user.findUnique({ where: { id: user.id } });
+      expect(deletedUser).toBe(null);
+      // Depending on implementation, it might be gone or status changed.
+      // Let's assume the basic requirement is the 202 response for now.
     });
   });
 });

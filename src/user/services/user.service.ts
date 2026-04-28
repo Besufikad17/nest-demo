@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { IDeletedUserRepository, IUserRepository, IUserService } from "../interfaces";
-import { User, UserAccountStatus } from "generated/prisma/client"
+import { Prisma, User, UserAccountStatus } from "generated/prisma/client"
 import { CreateUserDto, FindUserDto, FindUsersDto, UpdateUserDto } from "../dto/user.dto";
 import { IUserActivityService } from "src/user-activity/interfaces";
 import { RoleEnums } from "src/user-role/enums/role.enum";
@@ -87,9 +87,9 @@ export class UserService implements IUserService {
       if (error instanceof HttpException) {
         return {
           success: false,
-          message: error.message,
+          message: (error.getResponse() as { message: string })?.message || error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse() as string,
         }
       } else {
         return {
@@ -104,7 +104,7 @@ export class UserService implements IUserService {
 
   async findUsers(findUsersDto: FindUsersDto, text?: string, skip?: number, take?: number, status?: UserAccountStatus, active?: boolean): Promise<IApiResponse<User[]>> {
     try {
-      const where: any = {};
+      const where: Prisma.UserWhereInput = {};
 
       if (text) {
         where.OR = [
@@ -151,9 +151,9 @@ export class UserService implements IUserService {
       if (error instanceof HttpException) {
         return {
           success: false,
-          message: error.message,
+          message: (error.getResponse() as { message: string })?.message || error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse() as string,
         }
       } else {
         return {
@@ -192,9 +192,9 @@ export class UserService implements IUserService {
       if (error instanceof HttpException) {
         return {
           success: false,
-          message: error.message,
+          message: (error.getResponse() as { message: string })?.message || error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse() as string,
         }
       } else {
         return {
@@ -238,9 +238,9 @@ export class UserService implements IUserService {
       if (error instanceof HttpException) {
         return {
           success: false,
-          message: error.message,
+          message: (error.getResponse() as { message: string })?.message || error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse() as string,
         }
       } else {
         return {
@@ -255,7 +255,19 @@ export class UserService implements IUserService {
 
   async deleteUser(id: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
-      const otp = await this.otpService.getOTP({ userId: id, type: "TWO_FACTOR_AUTHENTICATION" });
+      let otp = await this.otpService.getOTP({ userId: id, type: "TWO_FACTOR_AUTHENTICATION" });
+
+      if (!otp) {
+        const user = await this.userRepository.findUser({ where: { id } });
+        if (user) {
+          if (user.email) {
+            otp = await this.otpService.getOTP({ value: user.email, type: "TWO_FACTOR_AUTHENTICATION" });
+          }
+          if (!otp && user.phoneNumber) {
+            otp = await this.otpService.getOTP({ value: user.phoneNumber, type: "TWO_FACTOR_AUTHENTICATION" });
+          }
+        }
+      }
 
       if ((otp && (otp.status !== "VERIFIED" || otp.updatedAt < addMinutes(new Date(), -3))) || !otp) {
         throw new HttpException("Please verify your action first!!", HttpStatus.BAD_REQUEST);
@@ -314,7 +326,7 @@ export class UserService implements IUserService {
           success: false,
           message: error.message,
           data: null,
-          error: error.getResponse(),
+          error: error.getResponse().toString(),
         }
       } else {
         return {

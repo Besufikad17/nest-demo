@@ -19,12 +19,13 @@ import { IRoleService } from "src/role/interfaces";
 import { IOtpService } from "src/otp/interfaces";
 import { INotificationService } from "src/notification/interfaces";
 import { NotificationType, UserAccountStatus, UserTwoFactorMethodType } from "generated/prisma/enums";
-import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
+import { IApiResponse, IDeviceInfo, JwtPayload } from "src/common/interfaces";
 import { AuthErrorCode, ErrorCode, SessionErrorCode } from "src/common/enums";
 import { IDeviceInfoService } from "src/device-info/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 import { User } from "generated/prisma/client";
 import { DeviceInfoSessionStreamService } from "src/device-info/services/device-info-session-stream.service";
+
 @Injectable()
 export class AuthService implements IAuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -53,7 +54,7 @@ export class AuthService implements IAuthService {
     }
 
     const { id, email, tokenVersion } = user;
-    return this.jwtService.sign<any>(
+    return this.jwtService.sign<JwtPayload>(
       {
         sub: id,
         email,
@@ -68,7 +69,7 @@ export class AuthService implements IAuthService {
 
   private async generateRefreshToken(user: User, deviceId: string, currentRefreshToken?: string, currentRefreshTokenExpiryDate?: Date) {
     const { id, email, tokenVersion } = user;
-    const newRefreshToken = this.jwtService.sign<any>(
+    const newRefreshToken = this.jwtService.sign<JwtPayload>(
       { sub: id, email, tokenVersion },
       {
         secret: this.configService.get<string>("JWT_SECRET"),
@@ -174,12 +175,12 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        return {
-          success: false,
-          message: error.message,
-          data: null,
-          error: error.getResponse(),
-        };
+          return {
+            success: false,
+            message: (error.getResponse() as { message: string })?.message || error.message,
+            data: null,
+            error: error.getResponse() as string,
+          };
       } else {
         return {
           success: false,
@@ -218,7 +219,7 @@ export class AuthService implements IAuthService {
         }, HttpStatus.BAD_REQUEST);
       }
 
-      let hashedPassword: string = await hash(password, this.configService.get<number>("BCRYPT_SALT") || 10);
+      const hashedPassword: string = await hash(password, this.configService.get<number>("BCRYPT_SALT") || 10);
       const { id } = await this.userService.createUser({
         passwordHash: hashedPassword,
         ...userWithoutPassword
@@ -226,9 +227,16 @@ export class AuthService implements IAuthService {
 
       const userRole = await this.roleService.getRole({ roleName: "user" });
 
+      if (!userRole) {
+        throw new HttpException({
+          message: "Role `user` not found",
+          code: AuthErrorCode.USER_ROLE_NOT_FOUND
+        }, HttpStatus.NOT_FOUND);
+      }
+
       await this.userRoleService.addUserRole({
         userId: id,
-        roleId: userRole?.id!
+        roleId: userRole.id
       });
 
       await this.notificationSettingsService.addNotificationSetting({
@@ -263,12 +271,12 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        return {
-          success: false,
-          message: error.message,
-          data: null,
-          error: error.getResponse(),
-        }
+          return {
+            success: false,
+            message: (error.getResponse() as { message: string })?.message || error.message,
+            data: null,
+            error: error.getResponse() as string,
+          }
       } else if (error.code === "P2002") {
         return {
           success: false,
@@ -280,14 +288,13 @@ export class AuthService implements IAuthService {
         return {
           success: false,
           message: "Error occurred check the log in the server",
-          data: null,
           error: ErrorCode.GENERAL_ERROR,
         };
       }
     }
   }
 
-  async authUserByGoogleSSO(user: IGoogleUser): Promise<IApiResponse<any>> {
+  async authUserByGoogleSSO(user: IGoogleUser): Promise<IApiResponse<string>> {
     try {
       const { email, googleId, firstName, lastName } = user;
 
@@ -336,34 +343,41 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        return {
-          success: false,
-          message: error.message,
-          data: null,
-          error: error.getResponse(),
-        }
+          return {
+            success: false,
+            message: (error.getResponse() as { message: string })?.message || error.message,
+            data: null,
+            error: error.getResponse() as string,
+          }
       } else {
         return {
           success: false,
           message: "Error occurred check the log in the server",
-          data: null,
           error: ErrorCode.GENERAL_ERROR,
         };
       }
     }
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
+  async resetPassword(resetPasswordDto: ResetPasswordDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
       const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, true, userId);
+      if (!user) {
+        throw new HttpException({
+          message: "User not found",
+          code: ErrorCode.USER_NOT_FOUND
+        }, HttpStatus.NOT_FOUND);
+      }
+
       const twoFactorMethod = await this.userTwoStepService.finUserTwoStepVerification(userId);
 
       if (
-        twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ||
-        twoFactorMethod?.methodType === UserTwoFactorMethodType.SMS
+        twoFactorMethod &&
+        (twoFactorMethod.methodType === UserTwoFactorMethodType.EMAIL ||
+          twoFactorMethod.methodType === UserTwoFactorMethodType.SMS)
       ) {
         const otp = await this.otpService.getOTP({
-          value: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? user?.email! : user?.phoneNumber!,
+          value: twoFactorMethod.methodType === UserTwoFactorMethodType.EMAIL ? user.email! : user.phoneNumber!,
           type: "PASSWORD_RESET",
           identifier: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? "EMAIL" : "PHONE"
         });
@@ -383,7 +397,7 @@ export class AuthService implements IAuthService {
         }, HttpStatus.BAD_REQUEST);
       }
 
-      const currentPasswordMatch: boolean = await compare(resetPasswordDto.currentPassword, user?.passwordHash || "");
+      const currentPasswordMatch: boolean = await compare(resetPasswordDto.currentPassword, user.passwordHash || "");
       if (!currentPasswordMatch) {
         throw new HttpException({
           message: "Current password doesn't match!!",
@@ -394,11 +408,11 @@ export class AuthService implements IAuthService {
       const newPassword = await hash(resetPasswordDto.newPassword, this.configService.get<number>("BCRYPT_SALT") || 10);
       await this.userService.updateUser({
         passwordHash: newPassword
-      }, user?.id!);
+      }, user.id!);
 
       const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
       await this.userActivityService.addUserActivity({
-        userId: user?.id!,
+        userId: user.id!,
         action: "PASSWORD_RESET",
         actionTimestamp: new Date(),
         deviceId
@@ -412,24 +426,22 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        return {
-          success: false,
-          message: error.message,
-          data: null,
-          error: error.getResponse(),
-        };
+          return {
+            success: false,
+            message: (error.getResponse() as { message: string })?.message || error.message,
+            error: error.getResponse() as string,
+          };
       } else {
         return {
           success: false,
           message: "Error occurred check the log in the server",
-          data: null,
           error: ErrorCode.GENERAL_ERROR,
         };
       }
     }
   }
 
-  async recoverAccount(recoverAccountDto: RecoverAccountDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<any>> {
+  async recoverAccount(recoverAccountDto: RecoverAccountDto, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
     try {
       const { data: user } = await this.userService.findUser({
         email: recoverAccountDto.value,
@@ -442,11 +454,14 @@ export class AuthService implements IAuthService {
 
       const twoFactorMethod = await this.userTwoStepService.finUserTwoStepVerification(user.id);
 
-      if (twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL || twoFactorMethod?.methodType === UserTwoFactorMethodType.SMS) {
+      if (
+        twoFactorMethod &&
+        (twoFactorMethod.methodType === UserTwoFactorMethodType.EMAIL || twoFactorMethod.methodType === UserTwoFactorMethodType.SMS)
+      ) {
         const otp = await this.otpService.getOTP({
-          value: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? user?.email! : user?.phoneNumber!,
+          value: twoFactorMethod.methodType === UserTwoFactorMethodType.EMAIL ? user.email! : user.phoneNumber!,
           type: "ACCOUNT_RECOVERY",
-          identifier: twoFactorMethod?.methodType === UserTwoFactorMethodType.EMAIL ? "EMAIL" : "PHONE"
+          identifier: twoFactorMethod.methodType === UserTwoFactorMethodType.EMAIL ? "EMAIL" : "PHONE"
         });
 
         if (!otp || otp.status !== "VERIFIED" || otp.updatedAt < addMinutes(new Date(), -3)) {
@@ -458,7 +473,7 @@ export class AuthService implements IAuthService {
 
       await this.userService.updateUser({
         passwordHash: newPassword
-      }, user?.id!);
+      }, user.id!);
 
       const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, user.id, ip);
       await this.userActivityService.addUserActivity({
@@ -476,17 +491,15 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        return {
-          success: false,
-          message: error.message,
-          data: null,
-          error: error.getResponse(),
-        };
+          return {
+            success: false,
+            message: (error.getResponse() as { message: string })?.message || error.message,
+            error: error.getResponse() as string,
+          };
       } else {
         return {
           success: false,
           message: "Error occurred check the log in the server",
-          data: null,
           error: ErrorCode.GENERAL_ERROR,
         };
       }
@@ -516,12 +529,11 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        return {
-          success: false,
-          message: error.message,
-          data: null,
-          error: error.getResponse(),
-        };
+          return {
+            success: false,
+            message: (error.getResponse() as { message: string })?.message || error.message,
+            error: error.getResponse() as string,
+          };
       } else {
         return {
           success: false,
@@ -571,12 +583,11 @@ export class AuthService implements IAuthService {
     } catch (error) {
       console.log(error);
       if (error instanceof HttpException) {
-        return {
-          success: false,
-          message: error.message,
-          data: null,
-          error: error.getResponse(),
-        };
+          return {
+            success: false,
+            message: (error.getResponse() as { message: string })?.message || error.message,
+            error: error.getResponse() as string,
+          };
       } else {
         return {
           success: false,

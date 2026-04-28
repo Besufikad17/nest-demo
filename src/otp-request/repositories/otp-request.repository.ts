@@ -19,7 +19,7 @@ export class OtpRequestRepository implements IOtpRequestRepository {
     return await this.prisma.oTPRequests.update(updateOTPRequestArgs);
   }
 
-  async deleteOTPRequest(deleteOTPRequestArgs: Prisma.OTPRequestsDeleteArgs): Promise<any> {
-    return await this.prisma.oTPRequests.delete(deleteOTPRequestArgs);
+  async deleteOTPRequest(deleteOTPRequestArgs: Prisma.OTPRequestsDeleteArgs): Promise<void> {
+    await this.prisma.oTPRequests.delete(deleteOTPRequestArgs);
   }
 }

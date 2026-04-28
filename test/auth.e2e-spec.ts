@@ -117,7 +117,7 @@ describe('Auth Module (e2e)', () => {
       const phone = uniquePhone();
 
       // Prerequisites: Valid verified OTPs for both email and phone
-      let rand = Math.floor(Math.random() * 1);
+      const rand = Math.floor(Math.random() * 1);
       if (rand === 0) {
         await createVerifiedOtp(email, 'ACCOUNT_VERIFICATION', 'EMAIL');
       } else {
@@ -231,7 +231,7 @@ describe('Auth Module (e2e)', () => {
 
   describe('POST /auth/password/reset', () => {
     it('should reset password successfully', async () => {
-      const { user, password, email } = await createVerifiedUser();
+      const { password, email } = await createVerifiedUser();
 
       // We need a valid token to access this route
       // To get token, we must login. To login, verify 2FA.

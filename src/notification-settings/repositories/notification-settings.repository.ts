@@ -23,7 +23,7 @@ export class NotificationSettingsRepository implements INotificationSettingsRepo
     return await this.prisma.notificationSettings.update(updateNotificationSettingArgs);
   }
 
-  async deleteNotificationSetting(deleteNotificationSettingArgs: Prisma.NotificationSettingsDeleteArgs): Promise<any> {
-    return await this.prisma.notificationSettings.delete(deleteNotificationSettingArgs);
+  async deleteNotificationSetting(deleteNotificationSettingArgs: Prisma.NotificationSettingsDeleteArgs): Promise<void> {
+    await this.prisma.notificationSettings.delete(deleteNotificationSettingArgs);
   }
 }

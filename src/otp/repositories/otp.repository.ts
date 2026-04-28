@@ -24,6 +24,6 @@ export class OtpRepository implements IOtpRepository {
   }
 
   async deleteOTP(deleteOTPArgs: Prisma.OTPDeleteArgs) {
-    return await this.prismaService.oTP.delete(deleteOTPArgs);
+    await this.prismaService.oTP.delete(deleteOTPArgs);
   }
 }

@@ -5,5 +5,5 @@ export abstract class IOtpRepository {
   abstract getOTP(findOTPDArgs: Prisma.OTPFindFirstArgs): Promise<OTP | null>;
   abstract getOTPs(findOTPsArgs: Prisma.OTPFindManyArgs): Promise<OTP[]>;
   abstract updateOTP(updateOTPArgs: Prisma.OTPUpdateArgs): Promise<OTP>;
-  abstract deleteOTP(deleteOTPArgs: Prisma.OTPDeleteArgs): Promise<any>;
+  abstract deleteOTP(deleteOTPArgs: Prisma.OTPDeleteArgs): Promise<void>;
 }
