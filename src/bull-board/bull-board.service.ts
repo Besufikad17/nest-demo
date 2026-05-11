@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { INestApplication } from '@nestjs/common';
-import * as basicAuth from 'express-basic-auth';
+import basicAuth from 'express-basic-auth';
 
 @Injectable()
 export class BullBoardService implements OnModuleInit {
@@ -46,4 +46,3 @@ export class BullBoardService implements OnModuleInit {
     );
   }
 }
-

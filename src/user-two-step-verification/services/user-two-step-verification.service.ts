@@ -18,7 +18,7 @@ import {
   VerifyPasskeyDto,
   VerifyUserTwoStepVerificationDto
 } from "../dto/user-two-step-verification.dto";
-import { authenticator } from "otplib";
+import { generateSecret, generateURI, verifySync } from "otplib";
 import { toDataURL } from "qrcode";
 import { IUserService } from "src/user/interfaces";
 import { IWebAuthnCredentialService } from "src/web-authn-credential/interfaces/web-authn-credential.service.interface";
@@ -71,8 +71,12 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
       let qrCode = null;
       if (methodType === UserTwoFactorMethodType.AUTHENTICATOR) {
-        const secret = authenticator.generateSecret();
-        const otpAuthUrl = authenticator.keyuri(email, "nest-demo", secret);
+        const secret = generateSecret();
+        const otpAuthUrl = generateURI({
+          issuer: "nest-demo",
+          label: email,
+          secret,
+        });
         qrCode = await toDataURL(otpAuthUrl);
         await this.userTwoStepVerificationRepository.createUserTwoStepVerification({
           data: {
@@ -323,12 +327,12 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
       const secret = typeof twoFaMethod.secret === 'string' ? twoFaMethod.secret : String(twoFaMethod.secret);
 
-      const valid = authenticator.verify({
+      const valid = verifySync({
         token: twoFaCode,
         secret,
       });
 
-      if (!valid) {
+      if (!valid.valid) {
         throw new HttpException("Invalid 2FA code!!", HttpStatus.BAD_REQUEST);
       }
 
