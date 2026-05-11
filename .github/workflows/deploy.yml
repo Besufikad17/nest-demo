@@ -4,68 +4,163 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     environment: prod
-    
+
     steps:
-      - name: Validate secrets
+      - name: Validate GitHub Secrets
         run: |
           if [ -z "${{ secrets.EC2_HOST }}" ]; then
             echo "EC2_HOST secret is not set or is empty"
             exit 1
           fi
+
           if [ -z "${{ secrets.EC2_USER }}" ]; then
             echo "EC2_USER secret is not set or is empty"
             exit 1
           fi
+
           if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then
             echo "EC2_SSH_KEY secret is not set or is empty"
             exit 1
           fi
+
+          if [ -z "${{ secrets.BW_ACCESS_TOKEN }}" ]; then
+            echo "BW_ACCESS_TOKEN secret is not set or is empty"
+            exit 1
+          fi
+
           echo "All required secrets are present"
-          echo "Host length: $(echo -n '${{ secrets.EC2_HOST }}' | wc -c) characters"
-          echo "User length: $(echo -n '${{ secrets.EC2_USER }}' | wc -c) characters"
-          echo "Key length: $(echo -n '${{ secrets.EC2_SSH_KEY }}' | wc -c) characters"
-      
+
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
+      - name: Load Secrets From Bitwarden
+        id: bitwarden-secrets
+        uses: bitwarden/sm-action@v2
+        with:
+          access_token: ${{ secrets.BW_ACCESS_TOKEN }}
+          base_url: https://vault.bitwarden.com
+          secrets: |
+            fff4df98-07ae-4623-8a7a-b44700865c8c > API_BASE_URL
+            fcfc7b98-6198-4d4e-9d92-b447008813c7 > BULLBOARD_PASSWORD
+            568f6726-8846-4e8e-9807-b44700882dce > DATABASE_URL
+            c8b46158-4af9-4182-9ce2-b447008843be > FIREBASE_APPLICATION_TYPE
+            0a5e88bc-9fd0-4e59-970e-b44700885bd9 > FIREBASE_PROJECT_ID
+            86745412-d68c-4d30-9a58-b4470088729a > FIREBASE_PRIVATE_ID
+            002fae39-f540-4bf5-bd5e-b4470088a088 > FIREBASE_CLIENT_EMAIL
+            bb3997ed-d9dd-47c2-8c47-b44700888f25 > FIREBASE_PRIVATE_KEY
+            e08c0884-fd4c-41b9-97a5-b4470088d118 > FIREBASE_CLIENT_ID
+            657d8da2-f891-43d0-b495-b4470088e738 > FIREBASE_AUTH_URI
+            162a341a-1f3e-44d5-9223-b44700890101 > FIREBASE_TOKEN_URI
+            bc1bc13a-eb82-44bc-9f2e-b44700891689 > FIREBASE_CLIENT_CERT_URL
+            a151e497-4bfb-4ed5-9da4-b44700892d86 > FIREBASE_UNIVERSE_DOMAIN
+            56ee6b92-8438-4d10-8bc2-b447008940cd > GOOGLE_CLIENT_ID
+            9333ed1a-6ce4-4e68-b583-b44700895275 > GOOGLE_CLIENT_SECRET
+            068e4243-8ec6-4894-b0a2-b44700896606 > GOOGLE_CALLBACK_URL
+            a857ca13-6336-496a-88df-b44700897a69 > GRAFANA_PORT
+            607324ea-2553-480f-99e8-b44700899391 > JWT_SECRET
+            b7bcbe64-7434-4f5d-9c5d-b4470089ab77 > MAIL_HOST
+            6a3cf298-2045-47f7-9b57-b4470089befc > MAIL_PORT
+            aed1c72e-f682-4c9d-a247-b4470089d02e > MAIL_SECURE
+            12dce784-14cb-405b-8ed2-b447008a14e1 > MAIL_PASS
+            7f02fe2a-6681-4bc2-8afa-b447008a277a > MAIL_USER
+            2018f375-13ef-4916-846e-b447008a3d62 > MAIL_FROM
+            54905147-25ca-4dc0-9fc9-b447008a4d54 > PORT
+            86c376f8-7b15-46f2-a0a6-b447008a5ff4 > POSTGRES_USER
+            9b86d7d1-a957-45c4-acc3-b447008a79d7 > POSTGRES_PASSWORD
+            e0c4bf9a-74e6-4390-b639-b447008a8a75 > POSTGRES_DB
+            ee8dada2-d9dd-427d-932c-b447008aa3f3 > POSTGRES_PORT
+            8507b30f-e90a-435d-af54-b447008ab48c > PROMETHEUS_PORT
+            863868d9-dd7e-4819-bf36-b447008ac375 > RATE_LIMIT_MODE
+            f0621727-086d-42fc-bd6b-b447008ad5c0 > RATE_LIMIT_ENABLED_GROUPS
+            ce091754-962d-48bf-a3b1-b447008ae59b > REDIS_PORT
+            e3c6bd61-6e65-4a67-b36d-b447008af6c0 > REDIS_HOST
+            69fd0eab-d2aa-4f6f-98e5-b447008b06f2 > REDIS_PASSWORD
+            8acabecd-d32d-49e4-84f2-b447008b1600 > REDIS_INSIGHT_PORT
+            1d5b56a8-683a-4f11-bf16-b447008b2a53 > SHADOW_DATABASE_URL
+
+      - name: Generate .env file
+        run: |
+          cat <<EOF > .env
+          API_BASE_URL=${{ env.API_BASE_URL }}
+          BULLBOARD_PASSWORD=${{ env.BULLBOARD_PASSWORD }}
+          DATABASE_URL=${{ env.DATABASE_URL }}
+          FIREBASE_APPLICATION_TYPE=${{ env.FIREBASE_APPLICATION_TYPE }}
+          FIREBASE_PROJECT_ID=${{ env.FIREBASE_PROJECT_ID }}
+          FIREBASE_PRIVATE_ID=${{ env.FIREBASE_PRIVATE_ID }}
+          FIREBASE_CLIENT_EMAIL=${{ env.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY=${{ env.FIREBASE_PRIVATE_KEY }}
+          FIREBASE_CLIENT_ID=${{ env.FIREBASE_CLIENT_ID }}
+          FIREBASE_AUTH_URI=${{ env.FIREBASE_AUTH_URI }}
+          FIREBASE_TOKEN_URI=${{ env.FIREBASE_TOKEN_URI }}
+          FIREBASE_CLIENT_CERT_URL=${{ env.FIREBASE_CLIENT_CERT_URL }}
+          FIREBASE_UNIVERSE_DOMAIN=${{ env.FIREBASE_UNIVERSE_DOMAIN }}
+          GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CALLBACK_URL=${{ env.GOOGLE_CALLBACK_URL }}
+          GRAFANA_PORT=${{ env.GRAFANA_PORT }}
+          JWT_SECRET=${{ env.JWT_SECRET }}
+          MAIL_HOST=${{ env.MAIL_HOST }}
+          MAIL_PORT=${{ env.MAIL_PORT }}
+          MAIL_SECURE=${{ env.MAIL_SECURE }}
+          MAIL_PASS=${{ env.MAIL_PASS }}
+          MAIL_USER=${{ env.MAIL_USER }}
+          MAIL_FROM=${{ env.MAIL_FROM }}
+          PORT=${{ env.PORT }}
+          POSTGRES_USER=${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ env.POSTGRES_DB }}
+          POSTGRES_PORT=${{ env.POSTGRES_PORT }}
+          PROMETHEUS_PORT=${{ env.PROMETHEUS_PORT }}
+          RATE_LIMIT_MODE=${{ env.RATE_LIMIT_MODE }}
+          RATE_LIMIT_ENABLED_GROUPS=${{ env.RATE_LIMIT_ENABLED_GROUPS }}
+          REDIS_PORT=${{ env.REDIS_PORT }}
+          REDIS_HOST=${{ env.REDIS_HOST }}
+          REDIS_PASSWORD=${{ env.REDIS_PASSWORD }}
+          REDIS_INSIGHT_PORT=${{ env.REDIS_INSIGHT_PORT }}
+          SHADOW_DATABASE_URL=${{ env.SHADOW_DATABASE_URL }}
+          EOF
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          # Write SSH key - handle multi-line properly
+
           printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
           chmod 600 ~/.ssh/ec2_key
-          # Add host to known_hosts
+
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 644 ~/.ssh/known_hosts
-          # Verify key file was created correctly
+
           if [ ! -s ~/.ssh/ec2_key ]; then
             echo "Error: SSH key file is empty or not created"
             exit 1
           fi
-          echo "SSH key file created successfully ($(wc -l < ~/.ssh/ec2_key) lines)"
-      
+
+          echo "SSH key file created successfully"
+
       - name: Create deployment archive
         run: |
           echo "Creating deployment archive..."
-          git archive --format=tar.gz --output=deploy.tar.gz HEAD
+          tar --exclude='.git' -czf deploy.tar.gz .
           echo "Archive created: $(du -h deploy.tar.gz | cut -f1)"
-      
+
       - name: Transfer files to EC2
         run: |
           echo "Transferring files to EC2..."
+
           scp -i ~/.ssh/ec2_key \
             -o StrictHostKeyChecking=no \
             -o Compression=yes \
-            deploy.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/
-      
+            deploy.tar.gz .env \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/
+
       - name: Extract files on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -76,16 +171,17 @@ jobs:
           script: |
             mkdir -p projects/backend/nest-demo
             cd projects/backend/nest-demo
+
             echo "Extracting deployment archive..."
-            # Backup .env if it exists
-            [ -f .env ] && cp .env .env.backup || true
-            # Extract archive
+
             tar -xzf /tmp/deploy.tar.gz -C .
-            # Restore .env if it was backed up
-            [ -f .env.backup ] && mv .env.backup .env || true
-            rm /tmp/deploy.tar.gz
+
+            mv /tmp/.env ./.env
+
+            rm -f /tmp/deploy.tar.gz
+
             echo "Files extracted successfully"
-      
+
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -96,12 +192,20 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
+
             echo "Starting deployment..."
-            cd projects/backend/nest-demo || { echo "Failed to cd to projects/backend/nest-demo"; exit 1; }
+
+            cd projects/backend/nest-demo || {
+              echo "Failed to cd to projects/backend/nest-demo"
+              exit 1
+            }
+
             echo "Current directory: $(pwd)"
+
             echo "Stopping containers..."
             sudo docker compose down -v
-            echo "Starting containers..."
-            sudo docker compose --env-file=.env up -d
-            echo "Deployment completed successfully!"
 
+            echo "Starting containers..."
+            sudo docker compose --env-file=.env up -d --build
+
+            echo "Deployment completed successfully!"
