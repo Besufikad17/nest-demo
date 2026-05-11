@@ -30,8 +30,8 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${{ secrets.BW_ACCESS_TOKEN }}" ]; then
-            echo "BW_ACCESS_TOKEN secret is not set or is empty"
+          if [ -z "${{ secrets.BW_TOKEN }}" ]; then
+            echo "BW_TOKEN secret is not set or is empty"
             exit 1
           fi
 
