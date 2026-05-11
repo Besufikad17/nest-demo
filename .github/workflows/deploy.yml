@@ -148,12 +148,8 @@ jobs:
       - name: Create deployment archive
         run: |
           echo "Creating deployment archive..."
-          # Use --exclude and --warning=no-file-changed to ignore the warning
-          tar --exclude='.git' \
-              --exclude='node_modules' \
-              --exclude='deploy.tar.gz' \
-              --warning=no-file-changed \
-              -czf deploy.tar.gz .
+          # Option 1: Use git archive (most reliable)
+          git archive --format=tar.gz --output=deploy.tar.gz HEAD
           echo "Archive created: $(du -h deploy.tar.gz | cut -f1)"
 
       - name: Transfer files to EC2
