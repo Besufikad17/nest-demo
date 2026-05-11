@@ -207,6 +207,6 @@ jobs:
             sudo docker compose down -v
 
             echo "Starting containers..."
-            sudo docker compose --env-file=.env up -d --build
+            sudo docker-compose --env-file=.env up
 
             echo "Deployment completed successfully!"
