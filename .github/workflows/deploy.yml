@@ -44,7 +44,7 @@ jobs:
         id: bitwarden-secrets
         uses: bitwarden/sm-action@v2
         with:
-          access_token: ${{ secrets.BW_ACCESS_TOKEN }}
+          access_token: ${{ secrets.BW_TOKEN }}
           base_url: https://vault.bitwarden.com
           secrets: |
             fff4df98-07ae-4623-8a7a-b44700865c8c > API_BASE_URL
