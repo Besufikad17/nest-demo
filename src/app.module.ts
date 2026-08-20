@@ -79,7 +79,10 @@ import { ScheduleModule } from "@nestjs/schedule";
         REDIS_HOST: Joi.string().required(),
         RATE_LIMIT_MODE: Joi.string().valid("monitor", "enforce").optional(),
         RATE_LIMIT_ENABLED_GROUPS: Joi.string().optional(),
-        SHADOW_DATABASE_URL: Joi.string().required()
+        SHADOW_DATABASE_URL: Joi.string().required(),
+        WEBAUTHN_RP_ID: Joi.string().default("localhost"),
+        WEBAUTHN_RP_NAME: Joi.string().default("nest-demo"),
+        WEBAUTHN_ORIGIN: Joi.string().default("http://localhost:4000")
       }),
     }),
     LoggerModule.forRootAsync({

@@ -122,14 +122,15 @@ model WebAuthnCredential {
   credentialId Bytes                 @map("credential_id")
   publicKey    Bytes                 @map("public_key")
   counter      Int
-  userId       String?               @map("user_id")
+  userId       String                @map("user_id")
   deviceType   UserPasskeyDeviceType @map("device_type")
   backedUp     Boolean
   transports   String
   createdAt    DateTime              @default(now()) @map("created_at")
-  updatedAt    DateTime              @default(now()) @map("updated_at")
-  user         User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([credentialId])
   @@map("web_auth_credential")
 }
 

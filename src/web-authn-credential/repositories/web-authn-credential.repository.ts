@@ -18,4 +18,8 @@ export class WebAuthnCredentialRepository implements IWebAuthnCredentialReposito
   async findWebAuthnCredential(findWebAuthCredentialArgs: Prisma.WebAuthnCredentialFindFirstArgs): Promise<WebAuthnCredential | null> {
     return await this.prisma.webAuthnCredential.findFirst(findWebAuthCredentialArgs);
   }
+
+  async updateWebAuthnCredential(updateWebAuthnCredentialArgs: Prisma.WebAuthnCredentialUpdateArgs): Promise<WebAuthnCredential> {
+    return await this.prisma.webAuthnCredential.update(updateWebAuthnCredentialArgs);
+  }
 }

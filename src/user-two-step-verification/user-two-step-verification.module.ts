@@ -15,9 +15,9 @@ import { DeviceInfoModule } from "src/device-info/device-info.module";
     { provide: Interfaces.IUserTwoStepVerificationRepository, useClass: UserTwoStepVerificationRepository },
     { provide: Interfaces.IUserTwoStepVerificationService, useClass: UserTwoStepVerificationService },
     UserTwoStepVerificationRepository,
-    UserTwoStepVerificationService
+    UserTwoStepVerificationService,
   ],
   exports: [Interfaces.IUserTwoStepVerificationRepository, Interfaces.IUserTwoStepVerificationService],
-  imports: [DeviceInfoModule, PrismaModule, UserModule, WebAuthnCredentialModule, UserActivityModule]
+  imports: [DeviceInfoModule, PrismaModule, UserModule, WebAuthnCredentialModule, UserActivityModule],
 })
 export class UserTwoStepVerificationModule { }

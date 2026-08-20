@@ -22,6 +22,7 @@ import { generateSecret, generateURI, verifySync } from "otplib";
 import { toDataURL } from "qrcode";
 import { IUserService } from "src/user/interfaces";
 import { IWebAuthnCredentialService } from "src/web-authn-credential/interfaces/web-authn-credential.service.interface";
+import { WebAuthnChallengeService } from "src/web-authn-credential/services/web-authn-challenge.service";
 import { parseTransportsToFutureArray } from "src/web-authn-credential/utils/strings";
 import { IUserActivityService } from "src/user-activity/interfaces";
 import { RoleEnums } from "src/user-role/enums/role.enum";
@@ -29,6 +30,7 @@ import { IApiResponse, IDeviceInfo } from "src/common/interfaces";
 import { addOrGetDeviceId } from "src/common/helpers/device-id.helper";
 import { IDeviceInfoService } from "src/device-info/interfaces";
 import { ErrorCode } from "src/common/enums";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class UserTwoStepVerificationService implements IUserTwoStepVerificationService {
@@ -37,8 +39,26 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     private userActivityService: IUserActivityService,
     private userTwoStepVerificationRepository: UserTwoStepVerificationRepository,
     private userService: IUserService,
-    private webAuthnCredentialService: IWebAuthnCredentialService
+    private webAuthnCredentialService: IWebAuthnCredentialService,
+    private webAuthnChallengeService: WebAuthnChallengeService,
+    private configService: ConfigService,
   ) { }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  private get rpID(): string {
+    return this.configService.get<string>("WEBAUTHN_RP_ID") || "localhost";
+  }
+
+  private get rpName(): string {
+    return this.configService.get<string>("WEBAUTHN_RP_NAME") || "nest-demo";
+  }
+
+  private get origin(): string {
+    return this.configService.get<string>("WEBAUTHN_ORIGIN") || "http://localhost:4000";
+  }
+
+  // ─── Core 2FA methods ─────────────────────────────────────────────────────
 
   async createUserTwoStepVerification(
     createUserTwoStepVerificationDto: CreateUserTwoStepVerificationDto,
@@ -153,7 +173,7 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
       const data = await this.userTwoStepVerificationRepository.findUserTwoStepVerifications({ where: { userId: userId } });
 
       return {
-        success: false,
+        success: true, // Fix: was incorrectly set to false
         message: 'Two step verifications fetched.',
         data,
       };
@@ -418,11 +438,15 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
     }
   }
 
-  async requestAddPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<PublicKeyCredentialCreationOptionsJSON>> {
+  // ─── Passkey methods ──────────────────────────────────────────────────────
+
+  async requestAddPasskey(
+    userId: string,
+    deviceInfo: IDeviceInfo,
+    ip: string,
+  ): Promise<IApiResponse<PublicKeyCredentialCreationOptionsJSON>> {
     try {
       const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
-
-      console.log(userId);
 
       if (!user) {
         throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
@@ -430,15 +454,15 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
 
       const passkeys = await this.webAuthnCredentialService.findWebAuthCredentials(user.id);
 
-      const data = await generateRegistrationOptions({
-        rpName: "nest-demo",
-        rpID: "nest-demo.com",
+      const options = await generateRegistrationOptions({
+        rpName: this.rpName,
+        rpID: this.rpID,
         userID: Buffer.from(user.id),
         userName: user.email || user.phoneNumber!,
         attestationType: "none",
-        excludeCredentials: passkeys.map(passkey => ({
-          id: passkey.id,
-          transports: parseTransportsToFutureArray(passkey.transports)
+        excludeCredentials: passkeys.map((passkey) => ({
+          id: Buffer.from(passkey.credentialId).toString("base64url"),
+          transports: parseTransportsToFutureArray(passkey.transports),
         })),
         authenticatorSelection: {
           residentKey: "required",
@@ -446,18 +470,21 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         },
       });
 
+      // Persist the challenge so addPasskey can retrieve it (one-time use).
+      await this.webAuthnChallengeService.setRegistrationChallenge(userId, options.challenge);
+
       const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
-        userId: userId,
+        userId,
         action: "ADD_PASSKEY_REQUEST",
         actionTimestamp: new Date(),
-        deviceId
+        deviceId,
       });
 
       return {
         success: true,
-        message: 'Passkey added.',
-        data,
+        message: "Passkey registration options generated.",
+        data: options,
       };
     } catch (error) {
       console.log(error);
@@ -467,35 +494,45 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           message: error.message,
           data: null,
           error: error.getResponse().toString(),
-        }
-      } else {
-        return {
-          success: false,
-          message: "Error occurred check the log in the server",
-          data: null,
-          error: ErrorCode.GENERAL_ERROR,
         };
       }
+      return {
+        success: false,
+        message: "Error occurred check the log in the server",
+        data: null,
+        error: ErrorCode.GENERAL_ERROR,
+      };
     }
   }
 
-  async addPasskey(addPasskeyDto: AddPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<null>> {
+  async addPasskey(
+    addPasskeyDto: AddPasskeyDto,
+    userId: string,
+    deviceInfo: IDeviceInfo,
+    ip: string,
+  ): Promise<IApiResponse<null>> {
     try {
       const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
-
       if (!user) throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
 
-      const { data: currentOptions }: IApiResponse<PublicKeyCredentialCreationOptionsJSON> = await this.requestAddPasskey(user.id, deviceInfo, ip);
+      // Retrieve and consume the stored challenge (one-time use).
+      const challenge = await this.webAuthnChallengeService.getAndDeleteRegistrationChallenge(userId);
+      if (!challenge) {
+        throw new HttpException(
+          "Registration challenge not found or expired. Please request a new one.",
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
       const { verified, registrationInfo } = await verifyRegistrationResponse({
         response: addPasskeyDto.response,
-        expectedChallenge: currentOptions.challenge,
-        expectedOrigin: "http://localhost:4000",
-        expectedRPID: "nest-demo.com",
+        expectedChallenge: challenge,
+        expectedOrigin: this.origin,
+        expectedRPID: this.rpID,
       });
 
       if (!verified || !registrationInfo) {
-        throw new HttpException("Error authenticating passkey!!", HttpStatus.BAD_REQUEST);
+        throw new HttpException("Passkey registration verification failed.", HttpStatus.BAD_REQUEST);
       }
 
       const { credential, credentialDeviceType, credentialBackedUp } = registrationInfo;
@@ -505,32 +542,56 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         publicKey: Buffer.from(credential.publicKey),
         counter: credential.counter,
         userId: user.id,
-        transports: credential.transports!,
+        transports: credential.transports ?? [],
         deviceType: credentialDeviceType,
-        backedUp: credentialBackedUp
+        backedUp: credentialBackedUp,
       });
 
-      await this.userTwoStepVerificationRepository.createUserTwoStepVerification({
-        data: {
-          userId: user.id,
-          methodType: "PASSKEYS",
-          methodDetail: "Authentication using passkeys (biometrics)",
-          isPrimary: true,
-          isEnabled: true
-        }
+      // Upsert the PASSKEYS 2FA method — avoid duplicate rows on subsequent registrations.
+      const existing = await this.userTwoStepVerificationRepository.findUserTwoStepVerification({
+        where: { userId: user.id, methodType: UserTwoFactorMethodType.PASSKEYS },
       });
+
+      if (!existing) {
+        // Demote any current primary method first
+        const currentPrimary = await this.userTwoStepVerificationRepository.findUserTwoStepVerification({
+          where: { userId: user.id, isPrimary: true },
+        });
+        if (currentPrimary) {
+          await this.userTwoStepVerificationRepository.updateUserTwoStepVerification({
+            where: { id: currentPrimary.id },
+            data: { isPrimary: false, isEnabled: currentPrimary.isEnabled },
+          });
+        }
+
+        await this.userTwoStepVerificationRepository.createUserTwoStepVerification({
+          data: {
+            userId: user.id,
+            methodType: UserTwoFactorMethodType.PASSKEYS,
+            methodDetail: "Authentication using passkeys (biometrics)",
+            isPrimary: true,
+            isEnabled: true,
+          },
+        });
+      } else if (!existing.isEnabled) {
+        // Re-enable if it was previously disabled
+        await this.userTwoStepVerificationRepository.updateUserTwoStepVerification({
+          where: { id: existing.id },
+          data: { isEnabled: true },
+        });
+      }
 
       const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
-        userId: userId,
+        userId,
         action: "ADD_PASSKEY",
         actionTimestamp: new Date(),
-        deviceId
+        deviceId,
       });
 
       return {
         success: true,
-        message: "Passkey authenticated successfully"
+        message: "Passkey registered successfully.",
       };
     } catch (error) {
       console.log(error);
@@ -540,38 +601,50 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           message: error.message,
           data: null,
           error: error.getResponse().toString(),
-        }
-      } else {
-        return {
-          success: false,
-          message: "Error occurred check the log in the server",
-          data: null,
-          error: ErrorCode.GENERAL_ERROR,
         };
       }
+      return {
+        success: false,
+        message: "Error occurred check the log in the server",
+        data: null,
+        error: ErrorCode.GENERAL_ERROR,
+      };
     }
   }
 
-  async requestVerifyPasskey(userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<PublicKeyCredentialRequestOptionsJSON>> {
+  async requestVerifyPasskey(
+    userId: string,
+    deviceInfo: IDeviceInfo,
+    ip: string,
+  ): Promise<IApiResponse<PublicKeyCredentialRequestOptionsJSON>> {
     try {
-      const data = await generateAuthenticationOptions({
-        allowCredentials: [],
+      // Load the user's registered passkeys so the authenticator knows which credentials to use.
+      const passkeys = await this.webAuthnCredentialService.findWebAuthCredentials(userId);
+
+      const options = await generateAuthenticationOptions({
+        rpID: this.rpID,
+        allowCredentials: passkeys.map((pk) => ({
+          id: Buffer.from(pk.credentialId).toString("base64url"),
+          transports: parseTransportsToFutureArray(pk.transports),
+        })),
         userVerification: "preferred",
-        rpID: "nest-demo.com"
       });
+
+      // Persist the challenge for verifyPasskey to consume.
+      await this.webAuthnChallengeService.setAuthenticationChallenge(userId, options.challenge);
 
       const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
-        userId: userId,
+        userId,
         action: "VERIFY_PASSKEY_REQUEST",
         actionTimestamp: new Date(),
-        deviceId
+        deviceId,
       });
 
       return {
         success: true,
-        message: 'Passkey added.',
-        data,
+        message: "Passkey authentication options generated.",
+        data: options,
       };
     } catch (error) {
       console.log(error);
@@ -581,39 +654,53 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           message: error.message,
           data: null,
           error: error.getResponse().toString(),
-        }
-      } else {
-        return {
-          success: false,
-          message: "Error occurred check the log in the server",
-          data: null,
-          error: ErrorCode.GENERAL_ERROR,
         };
       }
+      return {
+        success: false,
+        message: "Error occurred check the log in the server",
+        data: null,
+        error: ErrorCode.GENERAL_ERROR,
+      };
     }
   }
 
-  async verifyPasskey(verifyPasskeyDto: VerifyPasskeyDto, userId: string, deviceInfo: IDeviceInfo, ip: string): Promise<IApiResponse<IVerify2FAResponse>> {
+  async verifyPasskey(
+    verifyPasskeyDto: VerifyPasskeyDto,
+    userId: string,
+    deviceInfo: IDeviceInfo,
+    ip: string,
+  ): Promise<IApiResponse<IVerify2FAResponse>> {
     try {
       const { data: user } = await this.userService.findUser({ id: userId }, RoleEnums.USER, false);
-      if (!user) throw new Error("User not found");
+      if (!user) throw new HttpException("User not found!!", HttpStatus.BAD_REQUEST);
 
-      const { data: currentOptions }: IApiResponse<PublicKeyCredentialRequestOptionsJSON> = await this.requestVerifyPasskey(user.id, deviceInfo, ip);
+      // Retrieve and consume the stored challenge (one-time use).
+      const challenge = await this.webAuthnChallengeService.getAndDeleteAuthenticationChallenge(userId);
+      if (!challenge) {
+        throw new HttpException(
+          "Authentication challenge not found or expired. Please request a new one.",
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
       const passkey = await this.webAuthnCredentialService.findWebAuthnCredential({
         userId: user.id,
-        credentialId: Buffer.from(verifyPasskeyDto.response.id)
+        credentialId: Buffer.from(verifyPasskeyDto.response.id),
       });
 
       if (!passkey) {
-        throw new Error(`Could not find passkey ${verifyPasskeyDto.response.id} for user ${user.id}`);
+        throw new HttpException(
+          `Passkey not found for this user.`,
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
-      const verification = await verifyAuthenticationResponse({
+      const { verified, authenticationInfo } = await verifyAuthenticationResponse({
         response: verifyPasskeyDto.response,
-        expectedChallenge: currentOptions.challenge,
-        expectedOrigin: origin,
-        expectedRPID: "nest-demo.com",
+        expectedChallenge: challenge,
+        expectedOrigin: this.origin,
+        expectedRPID: this.rpID,
         credential: {
           id: passkey.id,
           publicKey: passkey.publicKey,
@@ -622,24 +709,27 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
         },
       });
 
-      if (!verification) {
-        throw new HttpException("Error verifying passkey!!", HttpStatus.BAD_REQUEST);
+      if (!verified) {
+        throw new HttpException("Passkey verification failed.", HttpStatus.BAD_REQUEST);
       }
+
+      // Update the counter to protect against replay attacks.
+      await this.webAuthnCredentialService.updateWebAuthnCredential(passkey.id, {
+        counter: authenticationInfo.newCounter,
+      });
 
       const { deviceId } = await addOrGetDeviceId(this.deviceInfoService, deviceInfo, userId, ip);
       await this.userActivityService.addUserActivity({
-        userId: userId,
+        userId,
         action: "VERIFY_PASSKEY",
         actionTimestamp: new Date(),
-        deviceId
+        deviceId,
       });
 
       return {
         success: true,
-        message: "Passkey verfied successfully!!",
-        data: {
-          valid: true
-        }
+        message: "Passkey verified successfully.",
+        data: { valid: true },
       };
     } catch (error) {
       console.log(error);
@@ -649,15 +739,14 @@ export class UserTwoStepVerificationService implements IUserTwoStepVerificationS
           message: error.message,
           data: null,
           error: error.getResponse().toString(),
-        }
-      } else {
-        return {
-          success: false,
-          message: "Error occurred check the log in the server",
-          data: null,
-          error: ErrorCode.GENERAL_ERROR,
         };
       }
+      return {
+        success: false,
+        message: "Error occurred check the log in the server",
+        data: null,
+        error: ErrorCode.GENERAL_ERROR,
+      };
     }
   }
 }
